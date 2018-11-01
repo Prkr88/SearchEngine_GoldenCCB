@@ -1,7 +1,8 @@
 import os
 import re
-from Model.Parse import parse_doc
-
+from Model.Parser import Parser
+import nltk
+nltk.download()
 
 def getFiles():
     counter = 0
@@ -24,8 +25,9 @@ def get_doc_from_file(file_path):
         for doc in data_list:
             if skip_one == 1:
                 doc = "<DOC>" + doc
-                parse_doc(doc)
+                p = Parser(doc)
+
             else:
                 skip_one = 1
 
-'''getFiles()'''
+getFiles()

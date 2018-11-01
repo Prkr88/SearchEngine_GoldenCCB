@@ -73,12 +73,17 @@ class Parser:
     def is_stop_word(self, term):
         if self.dict_stopWords.__contains__(term):
             self.list_tokens.remove(term)
-
+            return True
+        else:
+            return False
     # function skips token checking if the term is a punctuation #
 
     def is_punc(self, term):
-        if self.dict_punc.__contains__(term):  # if the term is not a punctuation
+        if self.dict_punc.__contains__(term):
             self.list_tokens.remove(term)
+            return True
+        else:
+            return False
 
     # function deals with hyphen terms #
 
@@ -127,12 +132,54 @@ class Parser:
                 else:
                     self.add_new_term(term)
             else:  # if term does exist, we add to the dictionary and update the terms parameters
-                    self.add_existing_term(term)
+                self.add_existing_term(term)
+
+    '''this function converts all the number in the document acording to the rules'''
+
+    def numbers_rules(self, num_str):
+        num_edit = num_str.replace(",", "")
+        number_split = num_edit.split(".", 1)
+        before_point = number_split[0]
+        if len(number_split) > 1:
+            after_point = number_split[1]
+        else:
+            after_point = ''
+        if len(before_point) > 9:
+            ans = self.format_num(before_point, 'B', 9, after_point)
+        elif len(before_point) > 6:
+            ans = self.format_num(before_point, 'M', 6, after_point)
+        elif len(before_point) > 3:
+            ans = self.format_num(before_point, 'K', 3, after_point)
+        else:
+            if after_point != '':
+                ans = before_point + '.' + after_point
+            else:
+                ans = before_point
+        print(ans)
+
+    '''this function formats big numbers acording to rules'''
+
+    def format_num(self, number, sign, mode, after_point):
+        zero_killer = 1
+        num_desired_format = number[:-mode] + '.' + number[-mode:]
+        num_desired_format = list(num_desired_format)
+        while num_desired_format[len(num_desired_format) - zero_killer] == '0' and after_point == '':
+            num_desired_format[len(num_desired_format) - zero_killer] = ''
+            zero_killer = zero_killer + 1
+        num_desired_format = "".join(num_desired_format)
+        return num_desired_format + after_point + sign
+
+    def num_precent(self, number):
+        return number + "%"
+
+    def num_dollar(self, number):
+        return number + " Dollars"
 
     # function filters all terms #
 
     def term_filter(self):
         for term in self.list_tokens:
-            self.is_stop_word(term)
-            self.is_punc(term)
-            self.is_regular_term(term)
+            rule_stopword = self.is_stop_word(term)
+            rule_punc = self.is_punc(term)
+            if not rule_stopword and not rule_punc:
+               self.is_regular_term(term)
