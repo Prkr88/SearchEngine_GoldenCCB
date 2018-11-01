@@ -1,7 +1,7 @@
 class TermObject:
 
     """
-add value parameters: position, bold, etc...
+Later: add value parameters: position, bold, etc...
     """
 
     term = ""

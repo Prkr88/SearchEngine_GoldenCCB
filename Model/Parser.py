@@ -20,6 +20,9 @@ class Parser:
                    'may', 'june', 'jun', 'july', 'jul', 'august', 'aug', 'september',
                    'sep', 'october', 'oct', 'november', 'nov', 'december', 'dec'}
 
+    dict_punc = {',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
+                 '\', '"/"', '"\\"', '"!"', " = ', '#'}
+
     # constructor #
 
     def __init__(self, str_doc):
@@ -71,36 +74,65 @@ class Parser:
         if self.dict_stopWords.__contains__(term):
             self.list_tokens.remove(term)
 
+    # function skips token checking if the term is a punctuation #
+
+    def is_punc(self, term):
+        if self.dict_punc.__contains__(term):  # if the term is not a punctuation
+            self.list_tokens.remove(term)
+
+    # function deals with hyphen terms #
+
+    def is_hyphen(self, term):
+        if self.dict_terms.__contains__('-'):  # if term contains hyphen
+            TermObject(term, self.str_doc_id)  # add the whole term "step-by-step"
+            word_split = []
+            while term.__contains__("-"):  # add the split terms
+                word_split = term.split("-")  # step | by-step
+                curr_word = word_split[0]
+                word_split.remove(curr_word)
+                TermObject(curr_word, self.str_doc_id)  # adds term "step"
+            last_word = word_split[0]
+            TermObject(last_word, self.str_doc_id)
+
+    # function adds term from list to dictionary #
+
+    def add_new_term(self, term):
+        TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+
+    # function adds existing term appropriately #
+
+    def add_existing_term(self, term):
+        curr_term = self.dict_terms.get(term)
+        self.term_case_filter(curr_term)
+        curr_term.set_tf()  # updates tf
+        if not curr_term.get_doc:  # updates idf
+            curr_term.set_idf()
+
+    # function deals with term case-sensitivity #
+
+    def term_case_filter(self, term):
+        curr_term = self.dict_terms.get(term)
+        dict_uppercase = curr_term.get_is_uppercase()  # checks case differences and changes appropriately
+        this_uppercase = term.isupper()
+        if dict_uppercase and not this_uppercase:
+            curr_term.set_to_lower_case()
+
     # function filters regular terms #
 
     def is_regular_term(self, term):
         if not isinstance(term, int):  # if the term is not an integer
-            if not self.dict_terms.__contains__(term):  # adds term to dictionary if doesn't exist yet
-                if self.dict_terms.__contains__('-'):  # if term contains hyphen
-                    TermObject(term, self.str_doc_id)  # add the whole term "step-by-step"
-                    word_split = []
-                    while term.__contains__("-"):  # add the split terms
-                        word_split = term.split("-")  # step | by-step
-                        curr_word = word_split[0]
-                        word_split.remove(curr_word)
-                        TermObject(curr_word, self.str_doc_id)  # adds term "step"
-                    last_word = word_split[0]
-                    TermObject(last_word, self.str_doc_id)
+            if not self.dict_terms.__contains__(term):  # entering block to add term to dictionary if doesn't exist yet
+                if self.dict_terms.__contains__('-'):
+                    self.is_hyphen(term)
                 else:
-                    TermObject(term, self.str_doc_id)
-            else:  # if it does exist, we add to the dictionary and update the terms parameters
-                curr_term = self.dict_terms.get(term)
-                dict_uppercase = curr_term.get_is_uppercase()  # checks case differences and changes appropriately
-                this_uppercase = term.isupper()
-                if dict_uppercase and not this_uppercase:
-                    curr_term.set_to_lower_case()
-                curr_term.set_tf()  # updates tf
-                if not curr_term.get_doc:  # updates idf
-                    curr_term.set_idf()
+                    self.add_new_term(term)
+            else:  # if term does exist, we add to the dictionary and update the terms parameters
+                    self.add_existing_term(term)
 
     # function filters all terms #
 
     def term_filter(self):
         for term in self.list_tokens:
             self.is_stop_word(term)
+            self.is_punc(term)
             self.is_regular_term(term)
