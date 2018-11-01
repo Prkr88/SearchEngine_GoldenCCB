@@ -4,6 +4,7 @@ from Model.TermObject import TermObject
 
 
 class Parser:
+
     str_doc = ""
     str_txt = ""
     str_doc_id = ""
@@ -20,7 +21,7 @@ class Parser:
                    'may', 'june', 'jun', 'july', 'jul', 'august', 'aug', 'september',
                    'sep', 'october', 'oct', 'november', 'nov', 'december', 'dec'}
 
-    dict_punc = {',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
+    dict_punc = {'%', ',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
                  '\', '"/"', '"\\"', '"!"', " = ', '#'}
 
     # constructor #
@@ -73,12 +74,18 @@ class Parser:
     def is_stop_word(self, term):
         if self.dict_stopWords.__contains__(term):
             self.list_tokens.remove(term)
+            return True
+        else:
+            return False
 
     # function skips token checking if the term is a punctuation #
 
     def is_punc(self, term):
-        if self.dict_punc.__contains__(term):  # if the term is not a punctuation
+        if self.dict_punc.__contains__(term):
             self.list_tokens.remove(term)
+            return True
+        else:
+            return False
 
     # function deals with hyphen terms #
 
@@ -133,6 +140,7 @@ class Parser:
 
     def term_filter(self):
         for term in self.list_tokens:
-            self.is_stop_word(term)
-            self.is_punc(term)
-            self.is_regular_term(term)
+            rule_stopword = self.is_stop_word(term)
+            rule_punc = self.is_punc(term)
+            if not rule_stopword and not rule_punc:
+                self.is_regular_term(term)
