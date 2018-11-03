@@ -1,6 +1,8 @@
 import re
+import copy
 import nltk
 from Model.TermObject import TermObject
+from Model.CityObject import CityObject
 
 
 class Parser:
@@ -8,8 +10,9 @@ class Parser:
     # initializes strings
 
     str_doc = ""
-    str_txt = ""
     str_doc_id = ""
+    str_city_info = ""
+    str_txt = ""
 
     # initializes lists & dictionaries (are not case sensitive)
 
@@ -19,37 +22,44 @@ class Parser:
 
     list_stopwords = []
 
-    list_months = {'january', 'jan', 'february', 'feb', 'march', 'mar', 'april', 'apr',
-                   'may', 'june', 'jun', 'july', 'jul', 'august', 'aug', 'september',
-                   'sep', 'october', 'oct', 'november', 'nov', 'december', 'dec'}
+    list_keywords = []
 
-    list_punc = {'%', ',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
-                 '\', '"/"', '"\\"', '"!"', " = ', '#'}
+    list_punc = {',', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
+                 '\', ,"``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
 
-    #  static counter
-    """
-    def pIF(self):  # pointer to the inverted file
-        global count
-        self.count += 1
-        return self.count
-    """
+    max_tf = 0  # static var max_tf for the most frequent term in the document
+
     # constructor #
 
     def __init__(self, str_doc):
         if str_doc:  # sets current document
             self.str_doc = str_doc
+        path_stopwords = 'C:\\Users\\edoli\\Desktop\\SearchEngine_GoldenCCB\\resources\\stopwords.txt'
+        path_keywords = 'C:\\Users\\edoli\\Desktop\\SearchEngine_GoldenCCB\\resources\\keywords.txt'
+        self.set_stopwords(path_stopwords)  # sets stop word dictionary
+        self.set_keywords(path_keywords)  # sets key word dictionary
+        self.set_doc_id(str_doc)  # set the doc's id
+        self.set_city_info(str_doc)  # set the city info
+        self.parse_doc()  # starts the parsing
 
-        str_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\stopwords.txt'  # sets stop word dictionary
-        self.get_stopwords(str_path)
+    # function sets the document's id #
 
-        #  self.count = 0  # sets value for hash table
-
-        try:  # gets doc_id
+    def set_doc_id(self, str_doc):
+        try:
             self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc).group(1)
         except AttributeError:
             print("marker <DOCNO> not found")
 
-        self.parse_doc()
+    # function sets the city's info #
+
+    def set_city_info(self, str_doc):
+        try:
+            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc).group(1)
+            info = self.str_city_info.split()
+            str_city_name = info[0]
+            this_city = CityObject(self.str_doc_id, str_city_name)
+        except AttributeError:
+            print("marker <F P=104> not found")
 
     # main function for the parser process #
 
@@ -59,12 +69,19 @@ class Parser:
         #  self.print_list()
         self.term_filter()  # (3) filters list to dictionary
 
-    # function creates stop word list #
+    # function creates stopword list #
 
-    def get_stopwords(self, file_path):
+    def set_stopwords(self, file_path):
         with open(file_path, 'r') as file:
             data = file.read().replace('\n', ' ')
         self.list_stopwords = data.split()
+
+    # function creates keyword list #
+
+    def set_keywords(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        self.list_keywords = data.split()
 
     # function extracts text from a given document #
 
@@ -89,7 +106,7 @@ class Parser:
 
     def print_dict(self):
         for key, value in self.hash_terms.items():
-            var = key, "=>", key, ",", value
+            var = "key: ", key, "=>", "value: ", value
             print(var)
 
     # function skips token checking if the term is a stop word #
@@ -105,6 +122,7 @@ class Parser:
 
     def is_punc(self, term):
         if self.list_punc.__contains__(term):
+            self.list_tokens.remove(term)
             return True
         else:
             return False
@@ -112,43 +130,76 @@ class Parser:
     # function deals with hyphen terms #
 
     def is_hyphen(self, term):
-        self.add_term(term)  # add the whole term "step-by-step"
-        while "-" in term:  # add the split terms
-            word_split = term.rstrip().split('-', 1)  # step | by-step
+        self.add_term(term)
+        while "-" in term:
+            word_split = term.rstrip().split('-', 1)
             curr_word = word_split[0]
-            self.add_term(curr_word)  # adds term "step"
+            self.add_term(curr_word)
             word_split.remove(curr_word)
             term = word_split[0]
-        self.add_term(term)
+            self.add_term(term)
+
+    def count_upper(self, term):
+        count = 0
+        for ch in term:
+            if ch.isupper():
+                count += 1
+        return count
 
     # function adds term appropriately #
 
     def add_term(self, term):
-        found = False
-        is_upper = False
-        other_term = ""
-        if term.lower() in self.hash_terms:
-            other_term = term.lower()
-            is_upper = False
-            found = True
-        elif term.upper() in self.hash_terms: # if the term exists already
-            other_term = term.upper()
-            is_upper = True
-            found = True
-        if found:
-            self.term_case_filter(other_term, is_upper)
-            term.set_tf()  # updates tf
-            if not term.get_doc:  # updates idf
-                term.set_idf()
-        else:  # if the term is new
+
+        this_term = self.term_case_filter(term)
+
+        if this_term is not None:  # if the term exists
+            this_term.set_tf()  # updates tf
+            if this_term.get_tf() > self.max_tf:  # updates max tf for document
+                self.max_tf = this_term.get_tf()
+            if not this_term.get_doc:  # updates idf
+                this_term.set_idf()
+        else:                   # if the term is new
+            if self.count_upper(term) >= 1:
+                term = term.upper()
+            else:
+                term = term.lower()
+            if term not in self.list_keywords:  # deletes tokens that are not from our keywords
+                self.list_tokens.remove(term)
             value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
             self.hash_terms[term] = value
 
-    # function deals with term case-sensitivity #
+    # function deals with term case-sensitivity if the term already exists #
 
-    def term_case_filter(self, this_term, is_upper):
-        if is_upper and this_term:
-            this_term.set_to_lower_case()
+    def term_case_filter(self, term):
+        found = False
+        this_upper = False
+        this_term = None
+
+        if self.count_upper(term) >= 1:
+            other_upper = True
+        else:
+            other_upper = False
+
+        if term.lower() in self.hash_terms:
+            this_upper = False
+            found = True
+        elif term.upper() in self.hash_terms:
+            this_upper = True
+            found = True
+
+        if found and this_upper and not other_upper:  # (1) this:First other:first -> this:first other:first
+            this_term = self.hash_terms[term.upper()]
+            this_term.set_to_lower_case()  # sets term to lower case
+            new_value = copy.deepcopy(this_term)  # creates new lower case term
+            del self.hash_terms[term.upper()]  # deletes old upper case term
+            self.hash_terms[term] = new_value
+            this_term = self.hash_terms[term.lower()]
+        elif found and this_upper and other_upper:
+            this_term = self.hash_terms[term.upper()]  # (2) this:First other:First
+        elif found:
+            this_term = self.hash_terms[term.lower()]  # (3) this:first other:first + (4) this:first other:First
+
+        return this_term
 
     # function filters regular terms #
 
@@ -203,9 +254,18 @@ class Parser:
     # function filters all terms #
 
     def term_filter(self):
+
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)
             if not rule_stopword and not rule_punc:
                 self.is_regular_term(term)
-            self.print_dict()
+
+        #  self.print_list()
+'''
+        for term in self.list_tokens:
+            rule_stopword = self.is_stop_word(term)
+            rule_punc = self.is_punc(term)
+
+        print('done')
+'''
