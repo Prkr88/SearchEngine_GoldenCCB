@@ -4,17 +4,39 @@ class TermObject:
 Later: add value parameters: position, bold, etc...
     """
 
+    """
     term = ""
     tf = 0
     idf = 0
     upper_case = False
-    list_docs = []
+    """
+
+    def s_count(self):  # pointer to the inverted file
+        global count
+        self.count += 1
+        return self.count
+
+    count = 0
 
     def __init__(self, term, doc_id):
         self.term = term
-        self.list_docs.append(doc_id)
+        self.list_docs = [doc_id]
+        self.pIF = self.s_count()
+        self.tf = 1
+        self.idf = 1
         if term.isupper():
             self.upper_case = True
+        else:
+            self.upper_case = False
+
+    def __hash__(self):
+        return hash(self.term)
+
+    def __eq__(self, other):
+        return other == self.term
+
+    def __ne__(self, other):
+        return other != self.term
 
     def set_tf(self):
         self.tf += 1
@@ -27,6 +49,9 @@ Later: add value parameters: position, bold, etc...
 
     def get_doc(self, doc_id):
         self.list_docs.__contains__(doc_id)
+
+    def get_term(self):
+        return self.term
 
     def get_tf(self):
         return self.tf

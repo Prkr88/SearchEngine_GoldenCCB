@@ -5,34 +5,50 @@ from Model.TermObject import TermObject
 
 class Parser:
 
+    # initializes strings
+
     str_doc = ""
     str_txt = ""
     str_doc_id = ""
 
+    # initializes lists & dictionaries (are not case sensitive)
+
+    hash_terms = {}  # hash table representing dictionary of terms
+
     list_tokens = []
 
-    # initializes dictionaries (are not case sensitive)
+    list_stopwords = []
 
-    dict_terms = {}
-
-    dict_stopWords = {'a', 'is', 'the', 'for', 'in', 'on'}
-
-    dict_months = {'january', 'jan', 'february', 'feb', 'march', 'mar', 'april', 'apr',
+    list_months = {'january', 'jan', 'february', 'feb', 'march', 'mar', 'april', 'apr',
                    'may', 'june', 'jun', 'july', 'jul', 'august', 'aug', 'september',
                    'sep', 'october', 'oct', 'november', 'nov', 'december', 'dec'}
 
-    dict_punc = {'%', ',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
+    list_punc = {'%', ',', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '@', '*', '?', '_',
                  '\', '"/"', '"\\"', '"!"', " = ', '#'}
 
+    #  static counter
+    """
+    def pIF(self):  # pointer to the inverted file
+        global count
+        self.count += 1
+        return self.count
+    """
     # constructor #
 
     def __init__(self, str_doc):
-        if str_doc:
+        if str_doc:  # sets current document
             self.str_doc = str_doc
-            try:
-                self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc).group(1)
-            except AttributeError:
-                print("marker <DOCNO> not found")
+
+        str_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\stopwords.txt'  # sets stop word dictionary
+        self.get_stopwords(str_path)
+
+        #  self.count = 0  # sets value for hash table
+
+        try:  # gets doc_id
+            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc).group(1)
+        except AttributeError:
+            print("marker <DOCNO> not found")
+
         self.parse_doc()
 
     # main function for the parser process #
@@ -40,8 +56,15 @@ class Parser:
     def parse_doc(self):
         self.extract_text()  # (1) extracts text from doc
         self.tokenize()  # (2) transfers text to list
-        self.print_list()
+        #  self.print_list()
         self.term_filter()  # (3) filters list to dictionary
+
+    # function creates stop word list #
+
+    def get_stopwords(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        self.list_stopwords = data.split()
 
     # function extracts text from a given document #
 
@@ -55,7 +78,7 @@ class Parser:
 
     def tokenize(self):
         self.list_tokens = nltk.word_tokenize(self.str_txt)
-        re.sub("'t", 'ot', "n't, doesn't, can't, don't")
+        re.sub("'t", 'ot', "n't, doesn't, can't, don't, a's, ain't")
 
     # function prints tokens list #
 
@@ -65,14 +88,14 @@ class Parser:
     # function prints term dictionary #
 
     def print_dict(self):
-        for key, tf, idf in self.dict_terms.items():
-            var = key, "=>", tf, ",", idf
+        for key, value in self.hash_terms.items():
+            var = key, "=>", key, ",", value
             print(var)
 
     # function skips token checking if the term is a stop word #
 
     def is_stop_word(self, term):
-        if self.dict_stopWords.__contains__(term):
+        if self.list_stopwords.__contains__(term):
             self.list_tokens.remove(term)
             return True
         else:
@@ -81,8 +104,7 @@ class Parser:
     # function skips token checking if the term is a punctuation #
 
     def is_punc(self, term):
-        if self.dict_punc.__contains__(term):
-            self.list_tokens.remove(term)
+        if self.list_punc.__contains__(term):
             return True
         else:
             return False
@@ -90,51 +112,52 @@ class Parser:
     # function deals with hyphen terms #
 
     def is_hyphen(self, term):
-        if self.dict_terms.__contains__('-'):  # if term contains hyphen
-            TermObject(term, self.str_doc_id)  # add the whole term "step-by-step"
-            word_split = []
-            while term.__contains__("-"):  # add the split terms
-                word_split = term.split("-")  # step | by-step
-                curr_word = word_split[0]
-                word_split.remove(curr_word)
-                TermObject(curr_word, self.str_doc_id)  # adds term "step"
-            last_word = word_split[0]
-            TermObject(last_word, self.str_doc_id)
+        self.add_term(term)  # add the whole term "step-by-step"
+        while "-" in term:  # add the split terms
+            word_split = term.rstrip().split('-', 1)  # step | by-step
+            curr_word = word_split[0]
+            self.add_term(curr_word)  # adds term "step"
+            word_split.remove(curr_word)
+            term = word_split[0]
+        self.add_term(term)
 
-    # function adds term from list to dictionary #
+    # function adds term appropriately #
 
-    def add_new_term(self, term):
-        TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
-
-    # function adds existing term appropriately #
-
-    def add_existing_term(self, term):
-        curr_term = self.dict_terms.get(term)
-        self.term_case_filter(curr_term)
-        curr_term.set_tf()  # updates tf
-        if not curr_term.get_doc:  # updates idf
-            curr_term.set_idf()
+    def add_term(self, term):
+        found = False
+        is_upper = False
+        other_term = ""
+        if term.lower() in self.hash_terms:
+            other_term = term.lower()
+            is_upper = False
+            found = True
+        elif term.upper() in self.hash_terms: # if the term exists already
+            other_term = term.upper()
+            is_upper = True
+            found = True
+        if found:
+            self.term_case_filter(other_term, is_upper)
+            term.set_tf()  # updates tf
+            if not term.get_doc:  # updates idf
+                term.set_idf()
+        else:  # if the term is new
+            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            self.hash_terms[term] = value
 
     # function deals with term case-sensitivity #
 
-    def term_case_filter(self, term):
-        curr_term = self.dict_terms.get(term)
-        dict_uppercase = curr_term.get_is_uppercase()  # checks case differences and changes appropriately
-        this_uppercase = term.isupper()
-        if dict_uppercase and not this_uppercase:
-            curr_term.set_to_lower_case()
+    def term_case_filter(self, this_term, is_upper):
+        if is_upper and this_term:
+            this_term.set_to_lower_case()
 
     # function filters regular terms #
 
     def is_regular_term(self, term):
-        if not isinstance(term, int):  # if the term is not an integer
-            if not self.dict_terms.__contains__(term):  # entering block to add term to dictionary if doesn't exist yet
-                if self.dict_terms.__contains__('-'):
-                    self.is_hyphen(term)
-                else:
-                    self.add_new_term(term)
-            else:  # if term does exist, we add to the dictionary and update the terms parameters
-                    self.add_existing_term(term)
+        if not isinstance(term, int):  # validates that the term is not an integer
+            if "-" in term:
+                self.is_hyphen(term)
+            else:
+                self.add_term(term)
 
     '''this function converts all the number in the document acording to the rules'''
 
@@ -185,3 +208,4 @@ class Parser:
             rule_punc = self.is_punc(term)
             if not rule_stopword and not rule_punc:
                 self.is_regular_term(term)
+            self.print_dict()
