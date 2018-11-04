@@ -14,10 +14,8 @@ def get_files():
             file_path = os.path.join(root, file)
             get_doc_from_file(file_path)
             counter = counter + 1
-            print(counter)
     print(counter)
-    print(dictinary_cities)
-    print(len(dictinary_cities))
+
 
 
 def get_doc_from_file(file_path):
@@ -29,15 +27,7 @@ def get_doc_from_file(file_path):
         for doc in data_list:
             if skip_one == 1:
                 doc = "<DOC>" + doc
-                # p = Parser(doc)
-                try:
-                    city = ""
-                    city = re.search('<F P=104> (.+?) </F>', data).group(1)
-                    city = city.split(' ')
-                    dictinary_cities[city[1]] = counter
-                    counter += 1
-                except AttributeError:
-                    a = 1
+                p = Parser(doc)
             else:
                 skip_one = 1
 
