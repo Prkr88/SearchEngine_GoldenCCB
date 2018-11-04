@@ -28,7 +28,7 @@ class Parser:
 
     list_keywords = []
 
-    list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
+    list_punc = {',', '\n', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
                  '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
 
     max_tf = 0  # static var max_tf for the most frequent term in the document
@@ -53,7 +53,7 @@ class Parser:
 
     def set_doc_id(self, str_doc):
         try:
-            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc).group(1)
+            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc, re.MULTILINE|re.DOTALL).group(1)
         except AttributeError:
             print("marker <DOCNO> not found")
 
@@ -61,7 +61,7 @@ class Parser:
 
     def set_city_info(self, str_doc):
         try:
-            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc).group(1)
+            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc, re.MULTILINE|re.DOTALL).group(1)
             info = self.str_city_info.split()
             str_city_name = info[0]
             self.add_city(str_city_name)
@@ -75,8 +75,9 @@ class Parser:
             this_city = self.hash_cities[city_name.upper()]
             this_city.set_doc(self.str_doc_id)
         else:
-            this_city = CityObject(self.str_doc_id, city_name)
+            this_city = CityObject(self.str_doc_id, city_name, CityObject.pIF_count)
             self.hash_cities[city_name.upper()] = this_city
+            CityObject.pIF_count += 1
 
     # main function for the parser process #
 
@@ -104,7 +105,7 @@ class Parser:
 
     def extract_text(self):
         try:
-            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc).group(1)
+            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc, re.MULTILINE|re.DOTALL).group(1)
         except AttributeError:
             print("marker <TEXT> not found")
 
@@ -189,8 +190,9 @@ class Parser:
                 term = term.upper()
             else:
                 term = term.lower()
-            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            value = TermObject(term, self.str_doc_id, TermObject.pIF_count)  # Later: remember to remove term from list
             self.hash_terms[term] = value
+            TermObject.pIF_count += 1
 
     # function deals with term case-sensitivity if the term already exists #
 
@@ -218,6 +220,8 @@ class Parser:
             del self.hash_terms[term.upper()]  # deletes old upper case term
             self.hash_terms[term] = new_value
             this_term = self.hash_terms[term.lower()]
+            this_term.set_pIF(TermObject.pIF_count)
+            TermObject.pIF_count += 1
         elif found and this_upper and other_upper:
             this_term = self.hash_terms[term.upper()]  # (2) this:First other:First
         elif found:
@@ -237,7 +241,6 @@ class Parser:
                 self.list_tokens_second_pass.append(term)
         if term in self.list_keywords:
                 self.list_tokens_second_pass.append(term)
-
 
     # convert all numbers according to rules
 
@@ -480,12 +483,27 @@ class Parser:
         except ValueError:
             return False
 
+    # function filters the '@' #
+
+    def rule_at(self, term):
+        if term == '@':
+            index = self.list_tokens.index(term)
+            prev_term = self.list_tokens.__getitem__(index-1)
+            next_term = self.list_tokens.__getitem__(index+1)
+            new_term = prev_term + term + next_term
+            self.list_tokens[index] = ','
+            self.add_term(new_term)
+            return True
+        else:
+            return False
+
     # function filters all terms #
 
     def term_filter(self):
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)
-            if not rule_stopword and not rule_punc:
+            rule_at = self.rule_at(term)
+            if not rule_stopword and not rule_punc and not rule_at:
                 self.is_regular_term(term)
         print(self.max_tf)
