@@ -24,8 +24,8 @@ def get_files():
 def get_doc_from_file(file_path):
     skip_one = 0
     with open(file_path, 'r') as file:
+       # data = file.read().replace('\n', '')
         data = file.read()
-        # data = file.read().replace('', '')
         data_list = data.split("<DOC>")
         for doc in data_list:
             if skip_one == 1:

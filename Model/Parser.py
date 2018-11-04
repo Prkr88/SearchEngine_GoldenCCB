@@ -28,10 +28,14 @@ class Parser:
 
     list_keywords = []
 
-    list_punc = {',', '\n', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
+    list_fractions = []
+
+    list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
                  '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
 
     max_tf = 0  # static var max_tf for the most frequent term in the document
+
+    line_counter = 0  # global line counter in file
 
     # constructor #
 
@@ -166,6 +170,16 @@ class Parser:
             term = word_split[0]
             self.add_term(term)
 
+    def is_hyphen_number_mode(self, term):
+        self.add_term_number_mode(term)
+        while "-" in term:
+            word_split = term.rstrip().split('-', 1)
+            curr_word = word_split[0]
+            self.add_term_number_mode(curr_word)
+            word_split.remove(curr_word)
+            term = word_split[0]
+            self.add_term_number_mode(term)
+
     def count_upper(self, term):
         count = 0
         for ch in term:
@@ -185,7 +199,7 @@ class Parser:
                 self.max_tf = this_term.get_tf()
             if not this_term.get_doc:  # updates idf
                 this_term.set_idf()
-        else:                   # if the term is new
+        else:  # if the term is new
             if self.count_upper(term) >= 1:
                 term = term.upper()
             else:
@@ -193,6 +207,20 @@ class Parser:
             value = TermObject(term, self.str_doc_id, TermObject.pIF_count)  # Later: remember to remove term from list
             self.hash_terms[term] = value
             TermObject.pIF_count += 1
+
+    def add_term_number_mode(self, term):
+        if term in self.hash_terms:  # if the term exists
+            this_term = self.hash_terms[term]
+            this_term.set_tf()  # updates tf
+            if this_term.get_tf() > self.max_tf:  # updates max tf for document
+                self.max_tf = this_term.get_tf()
+            if not this_term.get_doc:  # updates idf
+                this_term.set_idf()
+        else:  # if the term is new
+            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            self.hash_terms[term] = value
+            TermObject.pIF_count += 1
+
 
     # function deals with term case-sensitivity if the term already exists #
 
@@ -238,9 +266,9 @@ class Parser:
             else:
                 self.add_term(term)
         else:
-                self.list_tokens_second_pass.append(term)
+            self.list_tokens_second_pass.append(term)
         if term in self.list_keywords:
-                self.list_tokens_second_pass.append(term)
+            self.list_tokens_second_pass.append(term)
 
     # convert all numbers according to rules
 
@@ -250,14 +278,14 @@ class Parser:
     def convert_numbers_in_list(self):
         index = 0
         # first loop correct number forms
-        while index < len(self.list_tokens):
-            if self.has_numbers(self.list_tokens[index]):
+        while index < len(self.list_tokens_second_pass):
+            if self.has_numbers(self.list_tokens_second_pass[index]):
                 if self.is_year(index):
-                    self.list_tokens[index] = self.numbers_rules(self.list_tokens[index])
+                    self.list_tokens_second_pass[index] = self.numbers_rules(self.list_tokens_second_pass[index])
             index += 1
         # second loop merge according to rules
         index = 0
-        while index < len(self.list_tokens):
+        while index < len(self.list_tokens_second_pass):
             self.edit_list_by_key_word_prices(index)
             if self.two_deleted == 1:
                 self.two_deleted = 0
@@ -265,9 +293,17 @@ class Parser:
                 index += 1
             # third loop take care of dates
             index = 0
-            while index < len(self.list_tokens):
+            while index < len(self.list_tokens_second_pass):
                 self.edit_list_by_key_word_dates(index)
                 index += 1
+            # fourth loop take care of fractions
+            index = 0
+            for term in self.list_tokens_second_pass:
+                if '/' in term:
+                    if index > 0 and '/' not in self.list_tokens_second_pass[index - 1]:
+                        self.is_fraction(index)
+                index += 1
+        self.list_tokens_second_pass = self.list_tokens_second_pass + self.list_fractions
 
     def has_numbers(self, term):
         return any(char.isdigit() for char in term)
@@ -328,11 +364,11 @@ class Parser:
         ans = ""
         need_to_update = 0
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        term_current = self.list_tokens[index]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        term_current = self.list_tokens_second_pass[index]
         temp_term = list(term_current)
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if 'm' in temp_term:
             temp_term[temp_term.index('m')] = 'M'
             term_current = "".join(temp_term)
@@ -345,13 +381,13 @@ class Parser:
             term_current = temp_term + 'M'
         if term_next != "" and term_next == '%' or term_next == 'percent' or term_next == 'percentage':
             ans = self.num_percent(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index + 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index + 1]
         if term_next != "" and term_next == 'Thousand' or term_next == 'Million' or term_next == 'Billion' \
                 or term_next == 'Trillion' or term_next == 'million' or term_next == 'billion' \
                 or term_next == 'trillion' or term_next == 'thousand':
-            if index < len(self.list_tokens) - 2:
-                term_next_next = self.list_tokens[index + 2]
+            if index < len(self.list_tokens_second_pass) - 2:
+                term_next_next = self.list_tokens_second_pass[index + 2]
             if term_prev != "" and term_prev == '$':
                 if term_next == 'Thousand' or term_next == 'thousand':
                     ans = self.format_num_dollar_mode(str(float(term_current) / 1000))
@@ -378,42 +414,42 @@ class Parser:
                     ans = self.format_num(term_current, 'M', 6, '')
                 if term_next == 'Billion' or term_next == 'Trillion' or term_next == 'billion' or term_next == 'trillion':
                     ans = self.format_num(term_current, 'B', 9, '')
-            self.list_tokens[index] = ans
+            self.list_tokens_second_pass[index] = ans
             term_current = ans
-            del self.list_tokens[index + 1]
+            del self.list_tokens_second_pass[index + 1]
             self.two_deleted = 1
-            if index < len(self.list_tokens) and need_to_update == 1:
-                term_next = self.list_tokens[index + 1]
+            if index < len(self.list_tokens_second_pass) and need_to_update == 1:
+                term_next = self.list_tokens_second_pass[index + 1]
         if term_current == 'm' or term_current == 'bn':
             if term_current == 'm':
                 ans = self.format_num(term_prev, 'M', 6, '')
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
             if term_current == 'bn':
                 ans = self.format_num_dollar_mode(term_prev, 'M')
                 term_current = ans
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
                 index -= 1
         if term_next != "" and term_next == 'Dollars' or term_next == 'dollars':
             ans = self.num_dollar(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index + 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index + 1]
         if term_prev != "" and term_prev == '$':
             ans = self.num_dollar(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index - 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index - 1]
 
     def edit_list_by_key_word_dates(self, index):
         term_prev = ""
         term_next = ""
         ans = ""
         month_num = '0'
-        term_current = self.list_tokens[index]
+        term_current = self.list_tokens_second_pass[index]
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if term_current == 'Jan' or term_current == 'JAN' or term_current == 'January' or term_current == 'JANUARY':
             month_num = '01'
         elif term_current == 'Feb' or term_current == 'FEB' or term_current == 'February' or term_current == 'FEBRUARY':
@@ -446,8 +482,8 @@ class Parser:
                     ans = term_prev + '-' + month_num
                 else:
                     ans = month_num + '-' + term_prev
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
             elif self.represents_int(term_next):
                 if len(term_next) == 1:
                     term_next = '0' + term_next
@@ -455,19 +491,25 @@ class Parser:
                     ans = term_next + '-' + month_num
                 else:
                     ans = month_num + '-' + term_next
-                del self.list_tokens[index + 1]
-                self.list_tokens[index] = ans
+                del self.list_tokens_second_pass[index + 1]
+                self.list_tokens_second_pass[index] = ans
 
     def is_year(self, index):
         term_prev = ""
         term_next = ""
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if term_next in self.list_keywords or term_prev in self.list_keywords:
             return True
         return False
+
+    def is_fraction(self, index):
+        to_add = ""
+        if index < len(self.list_tokens_second_pass):
+            to_add = self.list_tokens_second_pass[index - 1] + ' ' + self.list_tokens_second_pass[index]
+        self.list_fractions.append(to_add)
 
     def num_percent(self, number):
         return number + "%"
@@ -497,13 +539,24 @@ class Parser:
         else:
             return False
 
+    # add city line numbers
+    def city_lines_and_docs(self):
+        self.line_counter = self.line_counter + self.str_doc.count('\n')
+
     # function filters all terms #
 
     def term_filter(self):
+        self.city_lines_and_docs()
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)
             rule_at = self.rule_at(term)
             if not rule_stopword and not rule_punc and not rule_at:
                 self.is_regular_term(term)
+        self.convert_numbers_in_list()
+        for term in self.list_tokens_second_pass:
+            if '-' in term:
+                self.is_hyphen_number_mode(term)
+            else:
+                self.add_term_number_mode(term)
         print(self.max_tf)
