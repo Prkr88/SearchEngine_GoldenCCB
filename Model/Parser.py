@@ -14,9 +14,11 @@ class Parser:
     str_city_info = ""
     str_txt = ""
 
-    # initializes lists & dictionaries (are not case sensitive)
+    # initializes lists & dictionaries
 
     hash_terms = {}  # hash table representing dictionary of terms
+
+    hash_cities = {}
 
     list_tokens = []
 
@@ -58,6 +60,7 @@ class Parser:
             info = self.str_city_info.split()
             str_city_name = info[0]
             this_city = CityObject(self.str_doc_id, str_city_name)
+            self.hash_cities[str_city_name] = this_city
         except AttributeError:
             print("marker <F P=104> not found")
 
@@ -163,8 +166,8 @@ class Parser:
                 term = term.upper()
             else:
                 term = term.lower()
-            if term not in self.list_keywords:  # deletes tokens that are not from our keywords
-                self.list_tokens.remove(term)
+            # if term not in self.list_keywords:  # deletes tokens that are not from our keywords
+                # self.list_tokens.remove(term)
             value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
             self.hash_terms[term] = value
 
@@ -260,12 +263,5 @@ class Parser:
             rule_punc = self.is_punc(term)
             if not rule_stopword and not rule_punc:
                 self.is_regular_term(term)
-
         #  self.print_list()
-'''
-        for term in self.list_tokens:
-            rule_stopword = self.is_stop_word(term)
-            rule_punc = self.is_punc(term)
-
         print('done')
-'''
