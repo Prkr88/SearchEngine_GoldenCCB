@@ -28,10 +28,14 @@ class Parser:
 
     list_keywords = []
 
+    list_fractions = []
+
     list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
                  '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
 
     max_tf = 0  # static var max_tf for the most frequent term in the document
+
+    line_counter = 0  # global line counter in file
 
     # constructor #
 
@@ -53,7 +57,7 @@ class Parser:
 
     def set_doc_id(self, str_doc):
         try:
-            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc).group(1)
+            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc, re.MULTILINE | re.DOTALL).group(1)
         except AttributeError:
             print("marker <DOCNO> not found")
 
@@ -61,7 +65,7 @@ class Parser:
 
     def set_city_info(self, str_doc):
         try:
-            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc).group(1)
+            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc, re.MULTILINE | re.DOTALL).group(1)
             info = self.str_city_info.split()
             str_city_name = info[0]
             self.add_city(str_city_name)
@@ -104,7 +108,7 @@ class Parser:
 
     def extract_text(self):
         try:
-            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc).group(1)
+            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc, re.MULTILINE | re.DOTALL).group(1)
         except AttributeError:
             print("marker <TEXT> not found")
 
@@ -165,6 +169,16 @@ class Parser:
             term = word_split[0]
             self.add_term(term)
 
+    def is_hyphen_number_mode(self, term):
+        self.add_term_number_mode(term)
+        while "-" in term:
+            word_split = term.rstrip().split('-', 1)
+            curr_word = word_split[0]
+            self.add_term_number_mode(curr_word)
+            word_split.remove(curr_word)
+            term = word_split[0]
+            self.add_term_number_mode(term)
+
     def count_upper(self, term):
         count = 0
         for ch in term:
@@ -184,11 +198,23 @@ class Parser:
                 self.max_tf = this_term.get_tf()
             if not this_term.get_doc:  # updates idf
                 this_term.set_idf()
-        else:                   # if the term is new
+        else:  # if the term is new
             if self.count_upper(term) >= 1:
                 term = term.upper()
             else:
                 term = term.lower()
+            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            self.hash_terms[term] = value
+
+    def add_term_number_mode(self, term):
+        if term in self.hash_terms:  # if the term exists
+            this_term = self.hash_terms[term]
+            this_term.set_tf()  # updates tf
+            if this_term.get_tf() > self.max_tf:  # updates max tf for document
+                self.max_tf = this_term.get_tf()
+            if not this_term.get_doc:  # updates idf
+                this_term.set_idf()
+        else:  # if the term is new
             value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
             self.hash_terms[term] = value
 
@@ -234,10 +260,9 @@ class Parser:
             else:
                 self.add_term(term)
         else:
-                self.list_tokens_second_pass.append(term)
+            self.list_tokens_second_pass.append(term)
         if term in self.list_keywords:
-                self.list_tokens_second_pass.append(term)
-
+            self.list_tokens_second_pass.append(term)
 
     # convert all numbers according to rules
 
@@ -265,6 +290,14 @@ class Parser:
             while index < len(self.list_tokens_second_pass):
                 self.edit_list_by_key_word_dates(index)
                 index += 1
+            # fourth loop take care of fractions
+            index = 0
+            for term in self.list_tokens_second_pass:
+                if '/' in term:
+                    if index > 0 and '/' not in self.list_tokens_second_pass[index - 1]:
+                        self.is_fraction(index)
+                index += 1
+        self.list_tokens_second_pass = self.list_tokens_second_pass + self.list_fractions
 
     def has_numbers(self, term):
         return any(char.isdigit() for char in term)
@@ -466,6 +499,12 @@ class Parser:
             return True
         return False
 
+    def is_fraction(self, index):
+        to_add = ""
+        if index < len(self.list_tokens_second_pass):
+            to_add = self.list_tokens_second_pass[index - 1] + ' ' + self.list_tokens_second_pass[index]
+        self.list_fractions.append(to_add)
+
     def num_percent(self, number):
         return number + "%"
 
@@ -480,12 +519,23 @@ class Parser:
         except ValueError:
             return False
 
+    # add city line numbers
+    def city_lines_and_docs(self):
+        self.line_counter = self.line_counter + self.str_doc.count('\n')
+
     # function filters all terms #
 
     def term_filter(self):
+        self.city_lines_and_docs()
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)
             if not rule_stopword and not rule_punc:
                 self.is_regular_term(term)
+        self.convert_numbers_in_list()
+        for term in self.list_tokens_second_pass:
+            if '-' in term:
+                self.is_hyphen_number_mode(term)
+            else:
+                self.add_term_number_mode(term)
         print(self.max_tf)
