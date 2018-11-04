@@ -1,9 +1,5 @@
 import json
-import urllib
-import urllib.parse
 import requests
-import optparse
-import sys
 from flask import Response, json, request
 
 
