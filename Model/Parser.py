@@ -60,7 +60,7 @@ class Parser:
             info = self.str_city_info.split()
             str_city_name = info[0]
             this_city = CityObject(self.str_doc_id, str_city_name)
-            self.hash_cities[str_city_name] = this_city
+            self.hash_cities[str_city_name.upper()] = this_city
         except AttributeError:
             print("marker <F P=104> not found")
 
@@ -257,11 +257,9 @@ class Parser:
     # function filters all terms #
 
     def term_filter(self):
-
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)
             if not rule_stopword and not rule_punc:
                 self.is_regular_term(term)
-        #  self.print_list()
-        print('done')
+        print(self.max_tf)
