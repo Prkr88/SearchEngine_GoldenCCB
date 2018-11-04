@@ -244,14 +244,14 @@ class Parser:
     def convert_numbers_in_list(self):
         index = 0
         # first loop correct number forms
-        while index < len(self.list_tokens):
-            if self.has_numbers(self.list_tokens[index]):
+        while index < len(self.list_tokens_second_pass):
+            if self.has_numbers(self.list_tokens_second_pass[index]):
                 if self.is_year(index):
-                    self.list_tokens[index] = self.numbers_rules(self.list_tokens[index])
+                    self.list_tokens_second_pass[index] = self.numbers_rules(self.list_tokens_second_pass[index])
             index += 1
         # second loop merge according to rules
         index = 0
-        while index < len(self.list_tokens):
+        while index < len(self.list_tokens_second_pass):
             self.edit_list_by_key_word_prices(index)
             if self.two_deleted == 1:
                 self.two_deleted = 0
@@ -259,7 +259,7 @@ class Parser:
                 index += 1
             # third loop take care of dates
             index = 0
-            while index < len(self.list_tokens):
+            while index < len(self.list_tokens_second_pass):
                 self.edit_list_by_key_word_dates(index)
                 index += 1
 
@@ -322,11 +322,11 @@ class Parser:
         ans = ""
         need_to_update = 0
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        term_current = self.list_tokens[index]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        term_current = self.list_tokens_second_pass[index]
         temp_term = list(term_current)
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if 'm' in temp_term:
             temp_term[temp_term.index('m')] = 'M'
             term_current = "".join(temp_term)
@@ -339,13 +339,13 @@ class Parser:
             term_current = temp_term + 'M'
         if term_next != "" and term_next == '%' or term_next == 'percent' or term_next == 'percentage':
             ans = self.num_percent(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index + 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index + 1]
         if term_next != "" and term_next == 'Thousand' or term_next == 'Million' or term_next == 'Billion' \
                 or term_next == 'Trillion' or term_next == 'million' or term_next == 'billion' \
                 or term_next == 'trillion' or term_next == 'thousand':
-            if index < len(self.list_tokens) - 2:
-                term_next_next = self.list_tokens[index + 2]
+            if index < len(self.list_tokens_second_pass) - 2:
+                term_next_next = self.list_tokens_second_pass[index + 2]
             if term_prev != "" and term_prev == '$':
                 if term_next == 'Thousand' or term_next == 'thousand':
                     ans = self.format_num_dollar_mode(str(float(term_current) / 1000))
@@ -372,42 +372,42 @@ class Parser:
                     ans = self.format_num(term_current, 'M', 6, '')
                 if term_next == 'Billion' or term_next == 'Trillion' or term_next == 'billion' or term_next == 'trillion':
                     ans = self.format_num(term_current, 'B', 9, '')
-            self.list_tokens[index] = ans
+            self.list_tokens_second_pass[index] = ans
             term_current = ans
-            del self.list_tokens[index + 1]
+            del self.list_tokens_second_pass[index + 1]
             self.two_deleted = 1
-            if index < len(self.list_tokens) and need_to_update == 1:
-                term_next = self.list_tokens[index + 1]
+            if index < len(self.list_tokens_second_pass) and need_to_update == 1:
+                term_next = self.list_tokens_second_pass[index + 1]
         if term_current == 'm' or term_current == 'bn':
             if term_current == 'm':
                 ans = self.format_num(term_prev, 'M', 6, '')
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
             if term_current == 'bn':
                 ans = self.format_num_dollar_mode(term_prev, 'M')
                 term_current = ans
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
                 index -= 1
         if term_next != "" and term_next == 'Dollars' or term_next == 'dollars':
             ans = self.num_dollar(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index + 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index + 1]
         if term_prev != "" and term_prev == '$':
             ans = self.num_dollar(term_current)
-            self.list_tokens[index] = ans
-            del self.list_tokens[index - 1]
+            self.list_tokens_second_pass[index] = ans
+            del self.list_tokens_second_pass[index - 1]
 
     def edit_list_by_key_word_dates(self, index):
         term_prev = ""
         term_next = ""
         ans = ""
         month_num = '0'
-        term_current = self.list_tokens[index]
+        term_current = self.list_tokens_second_pass[index]
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if term_current == 'Jan' or term_current == 'JAN' or term_current == 'January' or term_current == 'JANUARY':
             month_num = '01'
         elif term_current == 'Feb' or term_current == 'FEB' or term_current == 'February' or term_current == 'FEBRUARY':
@@ -440,8 +440,8 @@ class Parser:
                     ans = term_prev + '-' + month_num
                 else:
                     ans = month_num + '-' + term_prev
-                self.list_tokens[index] = ans
-                del self.list_tokens[index - 1]
+                self.list_tokens_second_pass[index] = ans
+                del self.list_tokens_second_pass[index - 1]
             elif self.represents_int(term_next):
                 if len(term_next) == 1:
                     term_next = '0' + term_next
@@ -449,16 +449,16 @@ class Parser:
                     ans = term_next + '-' + month_num
                 else:
                     ans = month_num + '-' + term_next
-                del self.list_tokens[index + 1]
-                self.list_tokens[index] = ans
+                del self.list_tokens_second_pass[index + 1]
+                self.list_tokens_second_pass[index] = ans
 
     def is_year(self, index):
         term_prev = ""
         term_next = ""
         if index > 0:
-            term_prev = self.list_tokens[index - 1]
-        if index < len(self.list_tokens) - 1:
-            term_next = self.list_tokens[index + 1]
+            term_prev = self.list_tokens_second_pass[index - 1]
+        if index < len(self.list_tokens_second_pass) - 1:
+            term_next = self.list_tokens_second_pass[index + 1]
         if term_next in self.list_keywords or term_prev in self.list_keywords:
             return True
         return False
