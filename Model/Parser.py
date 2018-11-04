@@ -22,12 +22,14 @@ class Parser:
 
     list_tokens = []
 
+    list_tokens_second_pass = []
+
     list_stopwords = []
 
     list_keywords = []
 
-    list_punc = {',', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
-                 '\', ,"``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
+    list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '*', '?',
+                 '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
 
     max_tf = 0  # static var max_tf for the most frequent term in the document
 
@@ -48,8 +50,6 @@ class Parser:
         self.parse_doc()  # starts the parsing
 
         # function sets the document's id #
-
-
 
     def set_doc_id(self, str_doc):
         try:
@@ -189,8 +189,6 @@ class Parser:
                 term = term.upper()
             else:
                 term = term.lower()
-            # if term not in self.list_keywords:  # deletes tokens that are not from our keywords
-                # self.list_tokens.remove(term)
             value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
             self.hash_terms[term] = value
 
@@ -230,11 +228,16 @@ class Parser:
     # function filters regular terms #
 
     def is_regular_term(self, term):
-        if not isinstance(term, int):  # validates that the term is not an integer
+        if not self.has_numbers(term):  # validates that the term is not an integer
             if "-" in term:
                 self.is_hyphen(term)
             else:
                 self.add_term(term)
+        else:
+                self.list_tokens_second_pass.append(term)
+        if term in self.list_keywords:
+                self.list_tokens_second_pass.append(term)
+
 
     # convert all numbers according to rules
 
@@ -480,8 +483,6 @@ class Parser:
     # function filters all terms #
 
     def term_filter(self):
-
-
         for term in self.list_tokens:
             rule_stopword = self.is_stop_word(term)
             rule_punc = self.is_punc(term)

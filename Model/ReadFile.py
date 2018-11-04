@@ -12,7 +12,7 @@ p = Parser(str_doc)
 def get_files():
     counter = 0
     for root, dirs, files in os.walk(
-            'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+            'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
         for file in files:
             ''' print(os.path.join(root, file))'''
             file_path = os.path.join(root, file)
