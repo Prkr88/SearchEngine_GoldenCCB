@@ -54,10 +54,15 @@ class CityObject:
         return other != self.city_name
 
     def get_doc(self, doc_id):
-        self.list_docs.__contains__(doc_id)
+        doc = self.list_docs.__contains__(doc_id)
+        return doc
 
     def get_city_name(self):
         return self.city_name
 
     def get_state_name(self):
         return self.state_name
+
+    def set_doc(self, doc_id):
+        if not self.list_docs.__contains__(doc_id):
+            self.list_docs.append(doc_id)

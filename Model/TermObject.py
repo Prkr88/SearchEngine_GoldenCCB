@@ -45,8 +45,12 @@ Later: add value parameters: position, bold, etc...
         self.upper_case = False
         self.term = self.term.lower()
 
+    def set_doc(self, doc_id):
+        if not self.list_docs.__contains__(doc_id):
+            self.list_docs.append(doc_id)
+
     def get_doc(self, doc_id):
-        self.list_docs.__contains__(doc_id)
+        return self.list_docs.__contains__(doc_id)
 
     def get_term(self):
         return self.term

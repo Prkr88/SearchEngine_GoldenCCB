@@ -59,10 +59,19 @@ class Parser:
             self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc).group(1)
             info = self.str_city_info.split()
             str_city_name = info[0]
-            this_city = CityObject(self.str_doc_id, str_city_name)
-            self.hash_cities[str_city_name.upper()] = this_city
+            self.add_city(str_city_name)
         except AttributeError:
             print("marker <F P=104> not found")
+
+    # function adds city #
+
+    def add_city(self, city_name):
+        if city_name.upper in self.hash_cities:
+            this_city = self.hash_cities[city_name.upper()]
+            this_city.set_doc(self.str_doc_id)
+        else:
+            this_city = CityObject(self.str_doc_id, city_name)
+            self.hash_cities[city_name.upper()] = this_city
 
     # main function for the parser process #
 
