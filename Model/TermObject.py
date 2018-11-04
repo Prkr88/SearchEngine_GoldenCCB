@@ -4,12 +4,7 @@ class TermObject:
 Later: add value parameters: position, bold, etc...
     """
 
-    """
-    term = ""
-    tf = 0
-    idf = 0
-    upper_case = False
-    """
+    # static counter for the pointers to the IF
 
     def s_count(self):  # pointer to the inverted file
         global count
@@ -17,6 +12,8 @@ Later: add value parameters: position, bold, etc...
         return self.count
 
     count = 0
+
+    # constructor #
 
     def __init__(self, term, doc_id):
         self.term = term
@@ -46,9 +43,14 @@ Later: add value parameters: position, bold, etc...
 
     def set_to_lower_case(self):
         self.upper_case = False
+        self.term = self.term.lower()
+
+    def set_doc(self, doc_id):
+        if not self.list_docs.__contains__(doc_id):
+            self.list_docs.append(doc_id)
 
     def get_doc(self, doc_id):
-        self.list_docs.__contains__(doc_id)
+        return self.list_docs.__contains__(doc_id)
 
     def get_term(self):
         return self.term
