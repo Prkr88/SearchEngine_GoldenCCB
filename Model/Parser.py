@@ -314,35 +314,33 @@ class Parser:
     # prevent index increment if double delete
     two_deleted = 0
 
-    def convert_numbers_in_list(self):
-        index = 0
-        # first loop correct number forms
-        while index < len(self.list_tokens):
-            term = self.list_tokens[index]
-            if self.has_numbers(term) and '/' not in term and '-' not in term:
-                if not self.is_year(index):
-                    self.list_tokens[index] = self.numbers_rules(term)
-                else:
-                    self.edit_list_by_key_word_dates(index)
-                try:
-                    self.edit_list_by_key_word_prices(index)
-                    if self.two_deleted == 1:
-                        self.two_deleted = 0
-                        index -= 1
-                except ValueError:
-                    print("the argument" + self.list_tokens[index] + " could not be parsed")
-            elif '/' in term:
-                nums_in_fraction = term.split('/', 1)
-                numerator = nums_in_fraction[0]
-                denominator = nums_in_fraction[1]
-                numerator = self.numbers_rules(numerator)
-                denominator = self.numbers_rules(denominator)
-                self.list_tokens[index] = numerator + '/' + denominator
-                if index > 0 and '/' not in self.list_tokens[index - 1]:
-                    if self.has_numbers(self.list_tokens[index - 1]):
-                        to_add = self.is_fraction(index)
-                        self.list_tokens[index] = to_add
-            index += 1
+    def convert_numbers_in_list(self,index):
+    # first loop correct number forms
+        term = self.list_tokens[index]
+        if self.has_numbers(term) and '/' not in term and '-' not in term:
+            if not self.is_year(index):
+                self.list_tokens[index] = self.numbers_rules(term)
+            else:
+                self.edit_list_by_key_word_dates(index)
+            try:
+                self.edit_list_by_key_word_prices(index)
+                if self.two_deleted == 1:
+                    self.two_deleted = 0
+                    index -= 1
+            except ValueError:
+                print("the argument" + self.list_tokens[index] + " could not be parsed")
+        elif '/' in term:
+            nums_in_fraction = term.split('/', 1)
+            numerator = nums_in_fraction[0]
+            denominator = nums_in_fraction[1]
+            numerator = self.numbers_rules(numerator)
+            denominator = self.numbers_rules(denominator)
+            self.list_tokens[index] = numerator + '/' + denominator
+            if index > 0 and '/' not in self.list_tokens[index - 1]:
+                if self.has_numbers(self.list_tokens[index - 1]):
+                    to_add = self.is_fraction(index)
+                    self.list_tokens[index] = to_add
+
 
     def has_numbers(self, term):
         return any(char.isdigit() for char in term)
@@ -626,7 +624,7 @@ class Parser:
                         self.is_regular_term(term)
                         self.word_in_line_counter += 1
             index += 1
-        print(self.max_tf)
+        #print(self.max_tf)
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:

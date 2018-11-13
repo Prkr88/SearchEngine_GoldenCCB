@@ -16,7 +16,7 @@ counter = 0
 def get_files():
     counter = 0
     for root, dirs, files in os.walk(
-            'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
+            'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
         for file in files:
             start = time.time()
             ''' print(os.path.join(root, file))'''
@@ -27,7 +27,7 @@ def get_files():
             del p
             gc.collect()
             end = time.time()
-            print("time for document:" +str(end - start))
+            print("time for file:" +str(end - start))
     print(counter)
 
 
