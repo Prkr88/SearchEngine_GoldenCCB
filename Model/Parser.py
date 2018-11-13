@@ -1,6 +1,4 @@
-import re
 import copy
-import nltk
 import os
 from Model.TermObject import TermObject
 from Model.CityObject import CityObject
@@ -13,7 +11,6 @@ class Parser:
     str_doc_id = ""
     str_city_info = ""
     str_txt = ""
-    # str_txt_test = " 7634/5867 20,500 1993 * * MAY $100 rules 450bn dollars 1993 * * * MAY U.S. Summary:  Newspapers in the Former Yugoslav Republic of 20,500 $100 rules 450bn dollars * * 1993 MAY"
 
     # initializes lists & dictionaries
 
@@ -21,7 +18,11 @@ class Parser:
 
     hash_cities = {}
 
+    list_cities = []
+
     list_tokens = []
+
+    list_tokens_second_pass = []
 
     list_stopwords = []
 
@@ -46,6 +47,8 @@ class Parser:
         project_dir = os.path.dirname(os.path.dirname(__file__))
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords = 'resources\\keywords.txt'  # sets key word dictionary
+        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
+        # self.set_test_file(str_path_test)
         abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
         abs_keyword_path = os.path.join(project_dir, str_path_keywords)
         self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
@@ -54,15 +57,15 @@ class Parser:
     def start_parse(self, str_doc):
         if str_doc:  # sets current document
             self.str_doc = str_doc
-        self.set_doc_id(str_doc)  # set the doc's id
-        #self.set_city_info(str_doc)  # set the city info
+        self.set_doc_id()  # set the doc's id
+        # self.set_city_info()  # Later: use city list and use json 1 time
         self.parse_doc()  # starts the parsing
 
-        # function sets the document's id #
+    # function sets the document's id #
 
-    def set_doc_id(self, str_doc):
+    def set_doc_id(self):
         try:
-            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc, re.MULTILINE | re.DOTALL).group(1)
+            self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
             print(self.str_doc_id)
         except AttributeError:
             a = 0
@@ -70,12 +73,12 @@ class Parser:
 
     # function sets the city's info #
 
-    def set_city_info(self, str_doc):
+    def set_city_info(self):
         try:
-            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc, re.MULTILINE | re.DOTALL).group(1)
-            info = self.str_city_info.split()
-            str_city_name = info[0]
-            self.add_city(str_city_name)
+            self.str_city_info = (self.str_doc.split("</F P=104>", 1)[0]).split("<F P=104>")[1].strip()
+            str_city_name = self.str_city_info[0]
+            self.list_cities.append(str_city_name)
+            # self.add_city(str_city_name)
         except AttributeError:
             a = 0
             # print("marker <F P=104> not found")
@@ -87,15 +90,15 @@ class Parser:
             this_city = self.hash_cities[city_name.upper()]
             this_city.set_doc(self.str_doc_id)
         else:
-            this_city = CityObject(self.str_doc_id, city_name)
+            this_city = CityObject(self.str_doc_id, city_name, CityObject.pIF_count)
             self.hash_cities[city_name.upper()] = this_city
+            CityObject.pIF_count += 1
 
     # main function for the parser process #
 
     def parse_doc(self):
-        # self.extract_text()  # (1) extracts text from doc
-        self.list_tokens = self.str_doc.split()
-        #self.tokenize()  # (2) transfers text to list
+        self.extract_text()  # (1) extracts text from doc
+        self.tokenize()  # (2) transfers text to list
         #  self.print_list()
         self.term_filter()  # (3) filters list to dictionary
 
@@ -105,6 +108,12 @@ class Parser:
         with open(file_path, 'r') as file:
             data = file.read().replace('\n', ' ')
         self.list_stopwords = data.split()
+
+    # function test #
+
+    def set_test_file(self, file_path):
+        with open(file_path, 'r') as file:
+            self.str_txt = file.read().replace('\n', ' ')
 
     # function creates keyword list #
 
@@ -117,7 +126,9 @@ class Parser:
 
     def extract_text(self):
         try:
-            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc, re.MULTILINE | re.DOTALL).group(1)
+            self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
+            self.str_txt = self.str_txt.split("</TEXT>")
+            self.str_txt = self.str_txt[0]
         except AttributeError:
             a = 0
             # print("marker <TEXT> not found")
@@ -129,9 +140,8 @@ class Parser:
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', '* ')
         # print(self.str_txt)
-        self.list_tokens = nltk.word_tokenize(self.str_txt)
+        self.list_tokens = self.str_txt.split()
         # self.list_tokens = [t.split('*', 1)[0] for t in self.list_tokens]
-        #re.sub("'t", 'ot', "n't, doesn't, can't, don't, a's, ain't")
 
     # function prints tokens list #
 
@@ -213,8 +223,9 @@ class Parser:
                     term = term.upper()
                 else:
                     term = term.lower()
-            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            value = TermObject(term, self.str_doc_id, TermObject.pIF_count)  # Later: remember to remove term from list
             self.hash_terms[term] = value
+            TermObject.pIF_count += 1
             value.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
 
     # function deals with term case-sensitivity if the term already exists #
@@ -243,6 +254,8 @@ class Parser:
             del self.hash_terms[term.upper()]  # deletes old upper case term
             self.hash_terms[term] = new_value
             this_term = self.hash_terms[term.lower()]
+            this_term.set_pIF(TermObject.pIF_count)
+            TermObject.pIF_count += 1
         elif found and this_upper and other_upper:
             this_term = self.hash_terms[term.upper()]  # (2) this:First other:First
         elif found:
@@ -254,10 +267,23 @@ class Parser:
 
     def is_regular_term(self, term):
         # if not self.has_numbers(term):  # validates that the term is not an integer
-        if "-" in term:
-            self.is_hyphen(term)
-        else:
-            self.add_term(term)
+        skip = False
+        if term.endswith('.') or term.endswith(',') or term.endswith(':') or term.endswith(';'):
+            term = term[:-1]
+        if term.endswith('"'):
+            term = term[1:-1]
+        if term == '--' or term == "" or term == '-':
+            skip = True
+        if not skip:
+            if "-" in term:
+                self.is_hyphen(term)
+            else:
+                if "@" in term:  # '@' our new rule
+                    list_mail = term.split('@')
+                    self.add_term(list_mail[0])
+                    self.add_term(list_mail[1])
+                    del list_mail
+                self.add_term(term)
         '''else:
             self.list_tokens.append(term)
         if term in self.list_keywords:
