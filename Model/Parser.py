@@ -13,7 +13,7 @@ class Parser:
     str_doc_id = ""
     str_city_info = ""
     str_txt = ""
-    str_txt_test = "20,500 1993 * * MAY $100 rules 450bn dollars 1993 * * * MAY U.S. Summary:  Newspapers in the Former Yugoslav Republic of 20,500 $100 rules 450bn dollars * * 1993 MAY"
+    # str_txt_test = " 7634/5867 20,500 1993 * * MAY $100 rules 450bn dollars 1993 * * * MAY U.S. Summary:  Newspapers in the Former Yugoslav Republic of 20,500 $100 rules 450bn dollars * * 1993 MAY"
 
     # initializes lists & dictionaries
 
@@ -63,8 +63,10 @@ class Parser:
     def set_doc_id(self, str_doc):
         try:
             self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc, re.MULTILINE | re.DOTALL).group(1)
+            print(self.str_doc_id)
         except AttributeError:
-            print("marker <DOCNO> not found")
+            a = 0
+            #print("marker <DOCNO> not found")
 
     # function sets the city's info #
 
@@ -75,7 +77,8 @@ class Parser:
             str_city_name = info[0]
             self.add_city(str_city_name)
         except AttributeError:
-            print("marker <F P=104> not found")
+            a = 0
+            # print("marker <F P=104> not found")
 
     # function adds city #
 
@@ -115,13 +118,14 @@ class Parser:
         try:
             self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc, re.MULTILINE | re.DOTALL).group(1)
         except AttributeError:
-            print("marker <TEXT> not found")
+            a = 0
+            # print("marker <TEXT> not found")
 
     # function receives string and returns list #
 
     def tokenize(self):
-        self.str_txt = self.str_txt_test
-        # self.str_txt = self.str_txt.replace('*', '')
+        # self.str_txt = self.str_txt_test
+        self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', '* ')
         # print(self.str_txt)
         self.list_tokens = nltk.word_tokenize(self.str_txt)
@@ -188,7 +192,7 @@ class Parser:
 
     # function adds term appropriately #
 
-    def  add_term(self, term):
+    def add_term(self, term):
         this_term = None
         if self.has_numbers(term):
             if term in self.hash_terms:  # if the term exists
@@ -201,7 +205,7 @@ class Parser:
                 self.max_tf = this_term.get_tf(self.str_doc_id)
             if not this_term.get_doc:  # updates idf
                 this_term.set_idf(self.str_doc_id)
-            this_term.add_position(self.str_doc_id,self.line_in_doc_counter, self.word_in_line_counter)
+            this_term.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
         else:  # if the term is new
             if not self.has_numbers(term):
                 if self.count_upper(term) >= 1:
@@ -210,7 +214,7 @@ class Parser:
                     term = term.lower()
             value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
             self.hash_terms[term] = value
-            value.add_position(self.str_doc_id,self.line_in_doc_counter, self.word_in_line_counter)
+            value.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
 
     # function deals with term case-sensitivity if the term already exists #
 
@@ -267,7 +271,8 @@ class Parser:
         index = 0
         # first loop correct number forms
         while index < len(self.list_tokens):
-            if self.has_numbers(self.list_tokens[index]):
+            if self.has_numbers(self.list_tokens[index]) and '/' not in self.list_tokens[index] \
+                    and '-' not in self.list_tokens[index]:
                 if not self.is_year(index):
                     self.list_tokens[index] = self.numbers_rules(self.list_tokens[index])
             index += 1
@@ -275,10 +280,14 @@ class Parser:
         index = 0
         while index < len(self.list_tokens):
             if self.has_numbers(self.list_tokens[index]):
-                self.edit_list_by_key_word_prices(index)
-                if self.two_deleted == 1:
-                    self.two_deleted = 0
-                    index -= 1
+                if '-' not in self.list_tokens[index]:
+                    try:
+                        self.edit_list_by_key_word_prices(index)
+                        if self.two_deleted == 1:
+                            self.two_deleted = 0
+                            index -= 1
+                    except ValueError:
+                        print("the argument" + self.list_tokens[index] + " could not be parsed")
             index += 1
         # third loop take care of dates
         index = 0
@@ -289,10 +298,17 @@ class Parser:
         index = 0
         for term in self.list_tokens:
             if '/' in term:
+                nums_in_fraction = term.split('/', 1)
+                numerator = nums_in_fraction[0]
+                denominator = nums_in_fraction[1]
+                numerator = self.numbers_rules(numerator)
+                denominator = self.numbers_rules(denominator)
+                self.list_tokens[index] = numerator + '/' + denominator
                 if index > 0 and '/' not in self.list_tokens[index - 1]:
-                    self.is_fraction(index)
+                    if self.has_numbers(self.list_tokens[index - 1]):
+                        to_add = self.is_fraction(index)
+                        self.list_tokens[index] = to_add
             index += 1
-            self.list_tokens = self.list_tokens + self.list_fractions
 
     def has_numbers(self, term):
         return any(char.isdigit() for char in term)
@@ -341,7 +357,22 @@ class Parser:
         return num_desired_format + after_point + sign
 
     def format_num_dollar_mode(self, number):
+        multy = 0
+        if 'O' in number:
+            number = number.replace('O', '0')
         num_desired_format = number
+        if 'K' in number:
+            multy = 1000
+            number = number.replace('K', '')
+            number = str(float(number) / multy)
+        elif 'M' in number:
+            multy = 1
+            number = number.replace('M', '')
+            number = str(float(number) * multy)
+        elif 'B' in number:
+            multy = 1000
+            number = number.replace('B', '')
+            number = str(float(number) * multy)
         if (float(number)) > 1000:
             num_desired_format = number.replace('.', '')
         return num_desired_format + 'M'
@@ -520,7 +551,8 @@ class Parser:
         to_add = ""
         if index < len(self.list_tokens):
             to_add = self.list_tokens[index - 1] + ' ' + self.list_tokens[index]
-        self.list_fractions.append(to_add)
+            del self.list_tokens[index - 1]
+        return to_add
 
     def num_percent(self, number):
         return number + "%"
@@ -560,7 +592,7 @@ class Parser:
             else:
                 self.word_in_line_counter += 1
                 self.is_regular_term(term)
-        print(self.max_tf)
+        # print(self.max_tf)
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:

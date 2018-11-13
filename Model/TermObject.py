@@ -40,6 +40,8 @@ Later: add value parameters: position, bold, etc...
         return other != self.term
 
     def set_tf(self, doc_id):
+        if doc_id not in self.hash_term_data:
+            self.hash_term_data[doc_id] = TermData()
         term_data = self.hash_term_data[doc_id]
         term_data.update_tf()
 
