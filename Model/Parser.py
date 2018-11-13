@@ -55,7 +55,7 @@ class Parser:
         if str_doc:  # sets current document
             self.str_doc = str_doc
         self.set_doc_id(str_doc)  # set the doc's id
-        self.set_city_info(str_doc)  # set the city info
+        #self.set_city_info(str_doc)  # set the city info
         self.parse_doc()  # starts the parsing
 
         # function sets the document's id #
@@ -93,8 +93,9 @@ class Parser:
     # main function for the parser process #
 
     def parse_doc(self):
-        self.extract_text()  # (1) extracts text from doc
-        self.tokenize()  # (2) transfers text to list
+        # self.extract_text()  # (1) extracts text from doc
+        self.list_tokens = self.str_doc.split()
+        #self.tokenize()  # (2) transfers text to list
         #  self.print_list()
         self.term_filter()  # (3) filters list to dictionary
 
@@ -130,7 +131,7 @@ class Parser:
         # print(self.str_txt)
         self.list_tokens = nltk.word_tokenize(self.str_txt)
         # self.list_tokens = [t.split('*', 1)[0] for t in self.list_tokens]
-        re.sub("'t", 'ot', "n't, doesn't, can't, don't, a's, ain't")
+        #re.sub("'t", 'ot', "n't, doesn't, can't, don't, a's, ain't")
 
     # function prints tokens list #
 
@@ -592,7 +593,7 @@ class Parser:
             else:
                 self.word_in_line_counter += 1
                 self.is_regular_term(term)
-        # print(self.max_tf)
+        print(self.max_tf)
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:
