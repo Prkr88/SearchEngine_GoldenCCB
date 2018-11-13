@@ -18,14 +18,16 @@ def get_files():
     for root, dirs, files in os.walk(
             'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
         for file in files:
-            ''' print(os.path.join(root, file))'''
+            start = time.time()
+            # print(os.path.join(root, file))
             file_path = os.path.join(root, file)
             p = Parser()
             get_doc_from_file(file_path, p)
             counter = counter + 1
             del p
             gc.collect()
-            print(dir())
+            end = time.time()
+            print("time for document:" +str(end - start))
     print(counter)
 
 
@@ -48,6 +50,40 @@ def get_doc_from_file(file_path, parser_object):
                 parser_object.start_parse(doc)
             else:
                 skip_one = 1
+    del data_list
+    gc.collect()
+
+
+'''
+def get_files():
+    counter = 0
+    for x in range(1800):
+        p = Parser()
+        get_doc_from_file(p)
+        counter = counter + 1
+        del p
+        gc.collect()
+        print(dir())
+    print(counter)
+
+
+def get_doc_from_file(parser_object):
+    skip_one = 0
+    doc_counter = 0
+    for x in range(200):
+        if doc_counter == 10:
+            doc_counter = 0
+            del parser_object
+            print("memoey cleared")
+            parser_object = Parser()
+        if skip_one == 1:
+            doc_counter += 1
+            doc = ""
+            parser_object.start_parse(doc)
+        else:
+            skip_one = 1
+    gc.collect()
+'''
 
 start = time.time()
 get_files()

@@ -1,6 +1,4 @@
-import re
 import copy
-import nltk
 import os
 from Model.TermObject import TermObject
 from Model.CityObject import CityObject
@@ -19,6 +17,8 @@ class Parser:
     hash_terms = {}  # hash table representing dictionary of terms
 
     hash_cities = {}
+
+    list_cities = []
 
     list_tokens = []
 
@@ -47,6 +47,8 @@ class Parser:
         project_dir = os.path.dirname(os.path.dirname(__file__))
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords = 'resources\\keywords.txt'  # sets key word dictionary
+        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
+        # self.set_test_file(str_path_test)
         abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
         abs_keyword_path = os.path.join(project_dir, str_path_keywords)
         self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
@@ -55,15 +57,15 @@ class Parser:
     def start_parse(self, str_doc):
         if str_doc:  # sets current document
             self.str_doc = str_doc
-        self.set_doc_id(str_doc)  # set the doc's id
-        self.set_city_info(str_doc)  # set the city info
+        self.set_doc_id()  # set the doc's id
+        # self.set_city_info()  # Later: use city list and use json 1 time
         self.parse_doc()  # starts the parsing
 
     # function sets the document's id #
 
-    def set_doc_id(self, str_doc):
+    def set_doc_id(self):
         try:
-            self.str_doc_id = re.search('<DOCNO>(.+?)</DOCNO>', str_doc, re.MULTILINE | re.DOTALL).group(1)
+            self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
             print(self.str_doc_id)
         except AttributeError:
             a = 0
@@ -71,12 +73,12 @@ class Parser:
 
     # function sets the city's info #
 
-    def set_city_info(self, str_doc):
+    def set_city_info(self):
         try:
-            self.str_city_info = re.search('<F P=104>(.+?)</F>', str_doc, re.MULTILINE|re.DOTALL).group(1)
-            info = self.str_city_info.split()
-            str_city_name = info[0]
-            self.add_city(str_city_name)
+            self.str_city_info = (self.str_doc.split("</F P=104>", 1)[0]).split("<F P=104>")[1].strip()
+            str_city_name = self.str_city_info[0]
+            self.list_cities.append(str_city_name)
+            # self.add_city(str_city_name)
         except AttributeError:
             a = 0
             # print("marker <F P=104> not found")
@@ -107,6 +109,12 @@ class Parser:
             data = file.read().replace('\n', ' ')
         self.list_stopwords = data.split()
 
+    # function test #
+
+    def set_test_file(self, file_path):
+        with open(file_path, 'r') as file:
+            self.str_txt = file.read().replace('\n', ' ')
+
     # function creates keyword list #
 
     def set_keywords(self, file_path):
@@ -118,7 +126,9 @@ class Parser:
 
     def extract_text(self):
         try:
-            self.str_txt = re.search('<TEXT>(.+?)</TEXT>', self.str_doc, re.MULTILINE|re.DOTALL).group(1)
+            self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
+            self.str_txt = self.str_txt.split("</TEXT>")
+            self.str_txt = self.str_txt[0]
         except AttributeError:
             a = 0
             # print("marker <TEXT> not found")
@@ -130,9 +140,8 @@ class Parser:
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', '* ')
         # print(self.str_txt)
-        self.list_tokens = nltk.word_tokenize(self.str_txt)
+        self.list_tokens = self.str_txt.split()
         # self.list_tokens = [t.split('*', 1)[0] for t in self.list_tokens]
-        re.sub("'t", 'ot', "n't, doesn't, can't, don't, a's, ain't")
 
     # function prints tokens list #
 
@@ -214,7 +223,7 @@ class Parser:
                     term = term.upper()
                 else:
                     term = term.lower()
-            value = TermObject(term, self.str_doc_id)  # Later: remember to remove term from list
+            value = TermObject(term, self.str_doc_id, TermObject.pIF_count)  # Later: remember to remove term from list
             self.hash_terms[term] = value
             TermObject.pIF_count += 1
             value.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
@@ -258,10 +267,23 @@ class Parser:
 
     def is_regular_term(self, term):
         # if not self.has_numbers(term):  # validates that the term is not an integer
-        if "-" in term:
-            self.is_hyphen(term)
-        else:
-            self.add_term(term)
+        skip = False
+        if term.endswith('.') or term.endswith(',') or term.endswith(':') or term.endswith(';'):
+            term = term[:-1]
+        if term.endswith('"'):
+            term = term[1:-1]
+        if term == '--' or term == "" or term == '-':
+            skip = True
+        if not skip:
+            if "-" in term:
+                self.is_hyphen(term)
+            else:
+                if "@" in term:  # '@' our new rule
+                    list_mail = term.split('@')
+                    self.add_term(list_mail[0])
+                    self.add_term(list_mail[1])
+                    del list_mail
+                self.add_term(term)
         '''else:
             self.list_tokens.append(term)
         if term in self.list_keywords:
@@ -573,20 +595,6 @@ class Parser:
         except ValueError:
             return False
 
-    # function filters the '@' #
-
-    def rule_at(self, term):
-        if term == '@':
-            index = self.list_tokens.index(term)
-            prev_term = self.list_tokens.__getitem__(index-1)
-            next_term = self.list_tokens.__getitem__(index+1)
-            new_term = prev_term + term + next_term
-            self.list_tokens[index] = ','
-            self.add_term(new_term)
-            return True
-        else:
-            return False
-
     # add city line numbers
     def city_lines_and_docs(self):
         self.line_counter = self.line_counter + self.str_doc.count('\n')
@@ -611,7 +619,7 @@ class Parser:
             else:
                 self.word_in_line_counter += 1
                 self.is_regular_term(term)
-        # print(self.max_tf)
+        print(self.max_tf)
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:

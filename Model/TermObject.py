@@ -21,6 +21,7 @@ Later: add value parameters: position, bold, etc...
     # constructor #
 
     def __init__(self, term, doc_id, pIF):
+        self.hash_term_data = {}
         self.term = term
         self.list_docs = [doc_id]
         self.pIF = pIF
