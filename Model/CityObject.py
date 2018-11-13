@@ -7,20 +7,15 @@ class CityObject:
 
     # static counter for the pointers to the IF
 
-    def s_count(self):  # pointer to the inverted file
-        global count
-        self.count += 1
-        return self.count
-
-    count = 0
+    pIF_count = 0
 
     # constructor #
 
-    def __init__(self, doc_id, city_name):
+    def __init__(self, doc_id, city_name, pIF):
         self.get_api_info(city_name)
         self.list_docs = [doc_id]
         self.doc_pos = ""
-        self.pIF = self.s_count()
+        self.pIF = pIF
 
     # function retrieves API data from server #
 
@@ -62,3 +57,6 @@ class CityObject:
     def set_doc(self, doc_id):
         if not self.list_docs.__contains__(doc_id):
             self.list_docs.append(doc_id)
+
+    def set_pIF(self, pIF):
+        self.pIF = pIF

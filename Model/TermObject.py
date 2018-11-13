@@ -2,25 +2,31 @@ from Model.TermData import TermData
 
 
 class TermObject:
+
     """
 Later: add value parameters: position, bold, etc...
     """
 
     # static counter for the pointers to the IF
 
+    '''
     def s_count(self):  # pointer to the inverted file
         global count
         self.count += 1
         return self.count
+    '''
 
-    count = 0
+    pIF_count = 0
 
     # constructor #
 
-    def __init__(self, term, doc_id):
+    def __init__(self, term, doc_id, pIF):
         self.hash_term_data = {}
         self.term = term
-        self.pIF = self.s_count()
+        self.list_docs = [doc_id]
+        self.pIF = pIF
+        # self.pIF = self.s_count()
+        self.tf = 1
         self.idf = 1
         self.term_data = TermData()
         if doc_id not in self.hash_term_data:
@@ -55,6 +61,16 @@ Later: add value parameters: position, bold, etc...
     def set_to_lower_case(self):
         self.upper_case = False
         self.term = self.term.lower()
+
+    def set_doc(self, doc_id):
+        if not self.list_docs.__contains__(doc_id):
+            self.list_docs.append(doc_id)
+
+    def set_pIF(self, pIF):
+        self.pIF = pIF
+
+    def get_doc(self, doc_id):
+        return self.list_docs.__contains__(doc_id)
 
     def get_term(self):
         return self.term
