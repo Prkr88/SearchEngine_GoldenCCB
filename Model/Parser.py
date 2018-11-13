@@ -66,7 +66,7 @@ class Parser:
     def set_doc_id(self):
         try:
             self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
-            print(self.str_doc_id)
+            #print(self.str_doc_id)
         except AttributeError:
             a = 0
             #print("marker <DOCNO> not found")
@@ -298,33 +298,20 @@ class Parser:
         index = 0
         # first loop correct number forms
         while index < len(self.list_tokens):
-            if self.has_numbers(self.list_tokens[index]) and '/' not in self.list_tokens[index] \
-                    and '-' not in self.list_tokens[index]:
+            term = self.list_tokens[index]
+            if self.has_numbers(term) and '/' not in term and '-' not in term:
                 if not self.is_year(index):
-                    self.list_tokens[index] = self.numbers_rules(self.list_tokens[index])
-            index += 1
-        # second loop merge according to rules
-        index = 0
-        while index < len(self.list_tokens):
-            if self.has_numbers(self.list_tokens[index]):
-                if '-' not in self.list_tokens[index]:
-                    try:
-                        self.edit_list_by_key_word_prices(index)
-                        if self.two_deleted == 1:
-                            self.two_deleted = 0
-                            index -= 1
-                    except ValueError:
-                        print("the argument" + self.list_tokens[index] + " could not be parsed")
-            index += 1
-        # third loop take care of dates
-        index = 0
-        while index < len(self.list_tokens):
-            self.edit_list_by_key_word_dates(index)
-            index += 1
-        # fourth loop take care of fractions
-        index = 0
-        for term in self.list_tokens:
-            if '/' in term:
+                    self.list_tokens[index] = self.numbers_rules(term)
+                else:
+                    self.edit_list_by_key_word_dates(index)
+                try:
+                    self.edit_list_by_key_word_prices(index)
+                    if self.two_deleted == 1:
+                        self.two_deleted = 0
+                        index -= 1
+                except ValueError:
+                    print("the argument" + self.list_tokens[index] + " could not be parsed")
+            elif '/' in term:
                 nums_in_fraction = term.split('/', 1)
                 numerator = nums_in_fraction[0]
                 denominator = nums_in_fraction[1]

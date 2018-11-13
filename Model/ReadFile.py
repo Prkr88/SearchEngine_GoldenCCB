@@ -54,7 +54,7 @@ def get_doc_from_file(file_path, parser_object):
                 parser_object.start_parse(doc)
             else:
                 skip_one = 1
-    print(doc_counter2)
+    #print(doc_counter2)
     del data_list
     gc.collect()
 
