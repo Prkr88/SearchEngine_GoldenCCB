@@ -1,6 +1,10 @@
 import os
 import re
 from Model.Parser import Parser
+import time
+import gc
+
+
 
 '''
 # <F P=104>  Rotterdam NRC HANDELSBLAD </F>
@@ -14,25 +18,38 @@ def get_files():
     for root, dirs, files in os.walk(
             'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
         for file in files:
-            # print(os.path.join(root, file))
+            ''' print(os.path.join(root, file))'''
             file_path = os.path.join(root, file)
-            get_doc_from_file(file_path)
+            p = Parser()
+            get_doc_from_file(file_path, p)
             counter = counter + 1
+            del p
+            gc.collect()
+            print(dir())
     print(counter)
 
 
-def get_doc_from_file(file_path):
+def get_doc_from_file(file_path, parser_object):
     skip_one = 0
     with open(file_path, 'r') as file:
-       # data = file.read().replace('\n', '')
+        # data = file.read().replace('\n', '')
+        doc_counter = 0
         data = file.read()
         data_list = data.split("<DOC>")
         for doc in data_list:
+            if doc_counter == 10:
+                doc_counter = 0
+                del parser_object
+                print("memoey cleared")
+                parser_object = Parser()
             if skip_one == 1:
+                doc_counter += 1
                 doc = "<DOC>" + doc
-                p = Parser(doc)
+                parser_object.start_parse(doc)
             else:
                 skip_one = 1
 
-
+start = time.time()
 get_files()
+end = time.time()
+print(end - start)
