@@ -39,9 +39,7 @@ class Parser:
 
     # constructor #
 
-    def __init__(self, str_doc):
-        if str_doc:  # sets current document
-            self.str_doc = str_doc
+    def __init__(self):
         project_dir = os.path.dirname(os.path.dirname(__file__))
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords = 'resources\\keywords.txt'  # sets key word dictionary
@@ -49,11 +47,15 @@ class Parser:
         abs_keyword_path = os.path.join(project_dir, str_path_keywords)
         self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
         self.set_keywords(abs_keyword_path)  # sets key word dictionary
+
+    def start_parse(self, str_doc):
+        if str_doc:  # sets current document
+            self.str_doc = str_doc
         self.set_doc_id(str_doc)  # set the doc's id
         self.set_city_info(str_doc)  # set the city info
         self.parse_doc()  # starts the parsing
 
-        # function sets the document's id #
+    # function sets the document's id #
 
     def set_doc_id(self, str_doc):
         try:
