@@ -18,22 +18,19 @@ class Parser:
 
     hash_cities = {}
 
-    list_cities = []
+    hash_stopwords = {}
+
+    hash_keywords = {}
+
+    hash_punc = {}
 
     list_tokens = []
-
-    list_tokens_second_pass = []
-
-    list_stopwords = []
-
-    list_keywords = []
 
     list_fractions = []
 
     list_line_seperated = []
 
-    list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '?',
-                 '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
+
 
     max_tf = 0  # static var max_tf for the most frequent term in the document
 
@@ -53,6 +50,7 @@ class Parser:
         abs_keyword_path = os.path.join(project_dir, str_path_keywords)
         self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
         self.set_keywords(abs_keyword_path)  # sets key word dictionary
+        self.set_puncwords()  # sets punctuation vocabulary
 
     def start_parse(self, str_doc):
         if str_doc:  # sets current document
@@ -101,13 +99,17 @@ class Parser:
         self.tokenize()  # (2) transfers text to list
         #  self.print_list()
         self.term_filter()  # (3) filters list to dictionary
+        del self.str_doc
 
     # function creates stopword list #
 
     def set_stopwords(self, file_path):
         with open(file_path, 'r') as file:
             data = file.read().replace('\n', ' ')
-        self.list_stopwords = data.split()
+        list_stopwords = data.split()
+        for word in list_stopwords:
+            self.hash_stopwords[word] = ""
+        del list_stopwords
 
     # function test #
 
@@ -120,7 +122,17 @@ class Parser:
     def set_keywords(self, file_path):
         with open(file_path, 'r') as file:
             data = file.read().replace('\n', ' ')
-        self.list_keywords = data.split()
+        list_keywords = data.split()
+        for word in list_keywords:
+            self.hash_keywords[word] = ""
+        del list_keywords
+
+    def set_puncwords(self):
+        list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '?',
+                     '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
+        for word in list_punc:
+            self.hash_punc[word] = ""
+        del list_punc
 
     # function extracts text from a given document #
 
@@ -158,8 +170,8 @@ class Parser:
     # function skips token checking if the term is a stop word #
 
     def is_stop_word(self, term):
-        if self.list_stopwords.__contains__(term):
-            self.list_tokens.remove(term)
+        if term in self.hash_stopwords:
+            # self.list_tokens.remove(term)
             return True
         else:
             return False
@@ -167,8 +179,8 @@ class Parser:
     # function checking if the term is a key word #
 
     def is_key_word(self, term):
-        if self.list_keywords.__contains__(term):
-            self.list_tokens.remove(term)
+        if term in self.hash_keywords:
+            # self.list_tokens.remove(term)
             return True
         else:
             return False
@@ -176,7 +188,7 @@ class Parser:
     # function skips token checking if the term is a punctuation #
 
     def is_punc(self, term):  #####FIX THIS####
-        if self.list_punc.__contains__(term):
+        if term in self.hash_punc:
             # self.list_tokens.remove(term)
             return True
         else:
@@ -193,6 +205,7 @@ class Parser:
             word_split.remove(curr_word)
             term = word_split[0]
             self.add_term(term)
+        del word_split
 
     def count_upper(self, term):
         count = 0
@@ -263,18 +276,25 @@ class Parser:
 
         return this_term
 
+    # function cleans terms #
+
+    def clean_punc_term(self, term):
+        last_ch = term.strip()[-1]
+        first_ch = term.strip()[0]
+        if last_ch in self.hash_punc:
+            term = term[:-1]
+        if first_ch in self.hash_punc:
+            term = term[1:]
+        if term == '--' or term == "" or term == '-':
+            term = ""
+        return term
+
     # function filters regular terms #
 
     def is_regular_term(self, term):
         # if not self.has_numbers(term):  # validates that the term is not an integer
-        skip = False
-        if term.endswith('.') or term.endswith(',') or term.endswith(':') or term.endswith(';'):
-            term = term[:-1]
-        if term.endswith('"'):
-            term = term[1:-1]
-        if term == '--' or term == "" or term == '-':
-            skip = True
-        if not skip:
+        term = self.clean_punc_term(term)
+        if not term:
             if "-" in term:
                 self.is_hyphen(term)
             else:
@@ -545,7 +565,7 @@ class Parser:
         if index < len(self.list_tokens) - 1:
             index_front = self.ignore_asterisk_front_mode(index)
             term_next = self.list_tokens[index_front]
-        if term_next in self.list_keywords or term_prev in self.list_keywords:
+        if term_next in self.hash_keywords or term_prev in self.hash_keywords:
             return True
         return False
 
@@ -589,23 +609,23 @@ class Parser:
     # function filters all terms #
 
     def term_filter(self):
-        temp_list = []
-        for term in self.list_tokens:
-            rule_stopword = self.is_stop_word(term)
-            rule_punc = self.is_punc(term)
-            if not rule_stopword and not rule_punc:
-                temp_list.append(term)
-        self.list_tokens = temp_list
-        self.convert_numbers_in_list()
-
+        # self.convert_numbers_in_list()
+        index = 0
         for term in self.list_tokens:
             if term == '*':
                 self.line_in_doc_counter += 1
                 self.global_line_counter += 1
                 self.word_in_line_counter = 0
             else:
-                self.word_in_line_counter += 1
-                self.is_regular_term(term)
+                rule_stopword = self.is_stop_word(term)
+                rule_punc = self.is_punc(term)
+                if not rule_stopword and not rule_punc:
+                    if self.has_numbers(term):
+                        self.convert_numbers_in_list(index)
+                    else:
+                        self.is_regular_term(term)
+                        self.word_in_line_counter += 1
+            index += 1
         print(self.max_tf)
 
         '''  self.convert_numbers_in_list()
