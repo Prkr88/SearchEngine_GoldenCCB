@@ -1,10 +1,14 @@
 import copy
 import os
+import time
 from Model.TermObject import TermObject
+from Model.DocObject import DocObject
 from Model.CityObject import CityObject
+from Model.API import API
 
 
 class Parser:
+
     # initializes strings
 
     str_doc = ""
@@ -12,27 +16,27 @@ class Parser:
     str_city_info = ""
     str_txt = ""
 
-    # initializes lists & dictionaries
+    # initializes dictionaries
 
-    hash_terms = {}  # hash table representing dictionary of terms
-
+    hash_terms = {}
+    hash_docs = {}
     hash_cities = {}
 
     hash_stopwords = {}
-
     hash_keywords = {}
-
     hash_punc = {}
 
+    # initializes lists
+
     list_tokens = []
-
     list_fractions = []
+    list_line_separated = []
 
-    list_line_seperated = []
+    # static var max_tf for the most frequent term in the document
 
+    max_tf = 0
 
-
-    max_tf = 0  # static var max_tf for the most frequent term in the document
+    # global vars
 
     global_line_counter = 0  # global line counter in file
     line_in_doc_counter = 0  # global line counter in doc
@@ -44,62 +48,61 @@ class Parser:
         project_dir = os.path.dirname(os.path.dirname(__file__))
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords = 'resources\\keywords.txt'  # sets key word dictionary
-        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
-        # self.set_test_file(str_path_test)
         abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
         abs_keyword_path = os.path.join(project_dir, str_path_keywords)
         self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
         self.set_keywords(abs_keyword_path)  # sets key word dictionary
         self.set_puncwords()  # sets punctuation vocabulary
 
-    def start_parse(self, str_doc):
-        if str_doc:  # sets current document
-            self.str_doc = str_doc
-        self.set_doc_id()  # set the doc's id
-        # self.set_city_info()  # Later: use city list and use json 1 time
-        self.parse_doc()  # starts the parsing
-
-    # function sets the document's id #
-
-    def set_doc_id(self):
-        try:
-            self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
-            #print(self.str_doc_id)
-        except AttributeError:
-            a = 0
-            #print("marker <DOCNO> not found")
-
     # function sets the city's info #
 
     def set_city_info(self):
         try:
-            self.str_city_info = (self.str_doc.split("</F P=104>", 1)[0]).split("<F P=104>")[1].strip()
-            str_city_name = self.str_city_info[0]
-            self.list_cities.append(str_city_name)
-            # self.add_city(str_city_name)
-        except AttributeError:
+            city_info = self.str_doc.split("<F P=104>")[1]
+            city_info = city_info.split("</F>")[0]
+            word_count = len(city_info)
+            city_info = city_info.strip()
+            str_city_name = city_info.partition(' ')[0]
+            str_city_name = self.clean_punc_term(str_city_name)
+            del city_info
+            if word_count > 1:
+                str_city_name = str_city_name.upper()
+            self.str_city_info = str_city_name
+            self.check_city_case(str_city_name)
+        except IndexError:
             a = 0
+            # print(a)
             # print("marker <F P=104> not found")
 
     # function adds city #
 
-    def add_city(self, city_name):
-        if city_name.upper in self.hash_cities:
-            this_city = self.hash_cities[city_name.upper()]
-            this_city.set_doc(self.str_doc_id)
+    def check_city_case(self, city_name):
+        found = False
+        existing_upper_case = False
+        o_curr_city = None
+        if city_name.lower() in self.hash_cities:
+            existing_upper_case = False
+            found = True
+            o_curr_city = self.hash_cities[city_name.lower()]
+        elif city_name.upper() in self.hash_cities:
+            existing_upper_case = True
+            found = True
+            o_curr_city = self.hash_cities[city_name.upper()]
+        if found and o_curr_city is not None:
+            if existing_upper_case and city_name.islower():
+                o_new_city = copy.deepcopy(o_curr_city)
+                o_new_city.set_doc(self.str_doc_id)
+                self.hash_cities[city_name] = o_new_city
+                del self.hash_cities[city_name]
         else:
-            this_city = CityObject(self.str_doc_id, city_name, CityObject.pIF_count)
-            self.hash_cities[city_name.upper()] = this_city
-            CityObject.pIF_count += 1
+            new_city = CityObject(self.str_doc_id, self.str_city_info)
+            self.hash_cities[city_name] = new_city
 
-    # main function for the parser process #
+    # function imports API info #
 
-    def parse_doc(self):
-        self.extract_text()  # (1) extracts text from doc
-        self.tokenize()  # (2) transfers text to list
-        #  self.print_list()
-        self.term_filter()  # (3) filters list to dictionary
-        del self.str_doc
+    def create_api(self):
+        obj_api = API(self.hash_cities)
+        obj_api.get_api_info()
 
     # function creates stopword list #
 
@@ -128,32 +131,11 @@ class Parser:
         del list_keywords
 
     def set_puncwords(self):
-        list_punc = {',', '.', '"', '`', ':', ';', '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '?',
-                     '\', ,"``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
+        list_punc = {',', '"', '?', '-', '.', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '?',
+                     '\', "``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
         for word in list_punc:
             self.hash_punc[word] = ""
         del list_punc
-
-    # function extracts text from a given document #
-
-    def extract_text(self):
-        try:
-            self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
-            self.str_txt = self.str_txt.split("</TEXT>")
-            self.str_txt = self.str_txt[0]
-        except AttributeError:
-            a = 0
-            # print("marker <TEXT> not found")
-
-    # function receives string and returns list #
-
-    def tokenize(self):
-        # self.str_txt = self.str_txt_test
-        self.str_txt = self.str_txt.replace('*', '')
-        self.str_txt = self.str_txt.replace('\n', '* ')
-        # print(self.str_txt)
-        self.list_tokens = self.str_txt.split()
-        # self.list_tokens = [t.split('*', 1)[0] for t in self.list_tokens]
 
     # function prints tokens list #
 
@@ -167,45 +149,7 @@ class Parser:
             var = "key: ", key, "=>", "value: ", value
             print(var)
 
-    # function skips token checking if the term is a stop word #
-
-    def is_stop_word(self, term):
-        if term in self.hash_stopwords:
-            # self.list_tokens.remove(term)
-            return True
-        else:
-            return False
-
-    # function checking if the term is a key word #
-
-    def is_key_word(self, term):
-        if term in self.hash_keywords:
-            # self.list_tokens.remove(term)
-            return True
-        else:
-            return False
-
-    # function skips token checking if the term is a punctuation #
-
-    def is_punc(self, term):  #####FIX THIS####
-        if term in self.hash_punc:
-            # self.list_tokens.remove(term)
-            return True
-        else:
-            return False
-
-    # function deals with hyphen terms #
-
-    def is_hyphen(self, term):
-        self.add_term(term)
-        while "-" in term:
-            word_split = term.rstrip().split('-', 1)
-            curr_word = word_split[0]
-            self.add_term(curr_word)
-            word_split.remove(curr_word)
-            term = word_split[0]
-            self.add_term(term)
-        del word_split
+    # function counts capitalized letters #
 
     def count_upper(self, term):
         count = 0
@@ -214,100 +158,174 @@ class Parser:
                 count += 1
         return count
 
-    # function adds term appropriately #
+    # function checks if the first letter of a string is an upper case #
 
-    def add_term(self, term):
-        this_term = None
-        if self.has_numbers(term):
-            if term in self.hash_terms:  # if the term exists
-                this_term = self.hash_terms[term]
+    def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
+        return 64 < ord(term[0]) < 91
+
+    def is_fully_upper(self, term):
+        if len(term) > 1:
+            return 64 < ord(term[0]) < 91 and 64 < ord(term[1]) < 91
         else:
-            this_term = self.term_case_filter(term)
-        if this_term is not None:  # if the term exists
-            this_term.set_tf(self.str_doc_id)  # updates tf
-            if this_term.get_tf(self.str_doc_id) > self.max_tf:  # updates max tf for document
-                self.max_tf = this_term.get_tf(self.str_doc_id)
-            if not this_term.get_doc:  # updates idf
-                this_term.set_idf(self.str_doc_id)
-            this_term.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
-        else:  # if the term is new
-            if not self.has_numbers(term):
-                if self.count_upper(term) >= 1:
-                    term = term.upper()
-                else:
-                    term = term.lower()
-            value = TermObject(term, self.str_doc_id, TermObject.pIF_count)  # Later: remember to remove term from list
-            self.hash_terms[term] = value
-            TermObject.pIF_count += 1
-            value.add_position(self.str_doc_id, self.line_in_doc_counter, self.word_in_line_counter)
+            return 64 < ord(term[0]) < 91
 
-    # function deals with term case-sensitivity if the term already exists #
-
-    def term_case_filter(self, term):
-        found = False
-        this_upper = False
+    def term_case_filter(self, other_term):
         this_term = None
+        if self.is_first_upper(other_term):  # other = PEN
+            if not self.is_fully_upper(other_term):
+                other_term = other_term.upper()  # Pen -> PEN
+            if other_term in self.hash_terms:  # (1) other=PEN and dict=PEN -> update
+                this_term = self.hash_terms[other_term]
+            else:  # (2) other=PEN and dict=pen -> update
+                temp_term_lower = other_term.lower()  # temp=pen
+                if temp_term_lower in self.hash_terms:  # (2) other=PEN and dict=pen -> update
+                    this_term = self.hash_terms[temp_term_lower]
+            if this_term is not None:
+                this_tf = this_term['tf'] + 1
+                # if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
+                    # self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
+                try:  # if was already seen in curr doc -> we update tf and position
+                    this_term.update({'tf': this_tf})
+                    # curr_doc = this_term[self.str_doc_id]
+                    # new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    # this_term[self.str_doc_id] = list_pos.append(new_pos)
+                except KeyError:  # if first occurrence in doc -> we update tf, idf and hash_docs
+                    this_term.update({'tf': this_tf, 'idf': this_term['idf']+1, 'hash_docs': {'id': self.str_doc_id, 'pos': "n/a"}})
+                return  # end of update (1+2)
+            else:  # (5) if its a new term (other=PEN and dict='none')
+                # list_term_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                # nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': list_term_pos}}
+                nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': "n/a"}}
+                self.hash_terms[other_term] = nested_hash
+                return  # end of adding a new term
+        else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
+            if other_term in self.hash_terms:  # (3) other=pen and dict=pen -> update
+                this_term = self.hash_terms[other_term]
+                this_tf = this_term['tf'] + 1
+                # if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
+                    # self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
+                try:  # if was already seen in curr doc -> we update tf and position
+                    this_term.update({'tf': this_tf})
+                    # curr_doc = this_term[self.str_doc_id]
+                    # new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    # this_term[self.str_doc_id] = list_pos.append(new_pos)
+                except KeyError:  # if first occurrence in doc -> we update tf, idf and hash_docs
+                    this_term.update({'tf': this_tf, 'idf': this_term['idf'] + 1,
+                                      'hash_docs': {'id': self.str_doc_id, 'pos': "n/a"}})
+                return  # end of update (3)
+            else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
+                temp_term_upper = other_term.upper()  # temp = PEN
+                if temp_term_upper in self.hash_terms:
+                    old_term = self.hash_terms[temp_term_upper]  # this_term = PEN
+                    this_term = copy.deepcopy(old_term)  # creates new lower case term 'pen'
+                    this_tf = this_term['tf'] + 1
+                    # if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
+                        # self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
+                    this_term.update({'tf': this_tf})
+                    # curr_doc = this_term[self.str_doc_id]
+                    # new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    # this_term[self.str_doc_id] = list_pos.append(new_pos)
+                    self.hash_terms[other_term] = this_term  # adds 'pen'
+                    del self.hash_terms[temp_term_upper]  # deletes old upper case term 'PEN'
+                    return  # end of update (4)
+                else:  # (5) if its a new term (other=pen and dict='none')
+                    # list_term_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    # nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': list_term_pos}}
+                    nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': "n/a"}}
+                    self.hash_terms[other_term] = nested_hash
+                    return
 
-        if self.count_upper(term) >= 1:
-            other_upper = True
-        else:
-            other_upper = False
+    def make_upper_case(self, term):
+        i = 0
+        word = term
+        for ch in word:
+            if 96 < ord(ch) < 123:
+                word = word[:i] + chr(ord(ch) - 32) + word[i + 1:]
+            i += 1
+        return word
 
-        if term.lower() in self.hash_terms:
-            this_upper = False
-            found = True
-        elif term.upper() in self.hash_terms:
-            this_upper = True
-            found = True
-
-        if found and this_upper and not other_upper:  # (1) this:First other:first -> this:first other:first
-            this_term = self.hash_terms[term.upper()]
-            this_term.set_to_lower_case()  # sets term to lower case
-            new_value = copy.deepcopy(this_term)  # creates new lower case term
-            del self.hash_terms[term.upper()]  # deletes old upper case term
-            self.hash_terms[term] = new_value
-            this_term = self.hash_terms[term.lower()]
-            this_term.set_pIF(TermObject.pIF_count)
-            TermObject.pIF_count += 1
-        elif found and this_upper and other_upper:
-            this_term = self.hash_terms[term.upper()]  # (2) this:First other:First
-        elif found:
-            this_term = self.hash_terms[term.lower()]  # (3) this:first other:first + (4) this:first other:First
-
-        return this_term
+    def make_lower_case(self, term):
+        i = 0
+        word = term
+        for ch in word:
+            if 64 < ord(ch) < 91:
+                word = word[:i] + chr(ord(ch) + 32) + word[i + 1:]
+            i += 1
+        return word
 
     # function cleans terms #
 
-    def clean_punc_term(self, term):
-        last_ch = term.strip()[-1]
-        first_ch = term.strip()[0]
-        if last_ch in self.hash_punc:
-            term = term[:-1]
-        if first_ch in self.hash_punc:
-            term = term[1:]
+    def clean_punc_term2(self, term):
         if term == '--' or term == "" or term == '-':
             term = ""
+        last = term.strip()[-1]
+        first = term[0]
+        if last in self.hash_punc:
+            term = term[:-1]
+        if first in self.hash_punc:
+            term = term[1:]
+        return term
+
+    def clean_punc_term(self, term):
+        if term == '--' or term == '-':
+            term = ""
+        else:
+            size = len(term) - 1
+            last = term[size]
+            first = term[0]
+            if last in self.hash_punc:  # "A-"
+                term = term[:-1]
+                size -= 1
+                if size > 0:
+                    last = term[size]
+                    if last in self.hash_punc:  # "A--"
+                        term = term[:-1]
+            if first in self.hash_punc:
+                term = term[1:]
         return term
 
     # function filters regular terms #
 
-    def is_regular_term(self, term):
-        # if not self.has_numbers(term):  # validates that the term is not an integer
-        term = self.clean_punc_term(term)
-        if not term:
-            if "-" in term:
-                self.is_hyphen(term)
-            else:
-                if "@" in term:  # '@' our new rule
-                    list_mail = term.split('@')
-                    self.add_term(list_mail[0])
-                    self.add_term(list_mail[1])
-                    del list_mail
-                self.add_term(term)
-        '''else:
-            self.list_tokens.append(term)
-        if term in self.list_keywords:
-            self.list_tokens.append(term)'''
+    def is_regular_term(self, term):  # Note: "/F", "word.", "Type:BN", "equipment,", "March]", "approval/disapproval"
+        if term != "-" or term != "":
+            size = len(term) - 1
+            last = term[size]
+            first = term[0]
+            if last in self.hash_punc:  # "term-"
+                term = term[:-1]
+                size -= 1
+                if size > 0:
+                    last = term[size]
+                    if last in self.hash_punc:  # "term--"
+                        term = term[:-1]
+            if first in self.hash_punc:
+                term = term[1:]
+            if "--" in term:  # term1--term2
+                list_double = term.split('--')
+                if list_double[0] != "":
+                    self.term_case_filter(list_double[0])
+                if list_double[1] != "":
+                    self.term_case_filter(list_double[1])
+                del list_double
+            elif "-" in term:  # term1-term2-term3
+                word_split = []
+                while "-" in term:
+                    word_split = term.rstrip().split('-', 1)
+                    curr_word = word_split[0]
+                    if curr_word != '':
+                        self.term_case_filter(curr_word)
+                    word_split.remove(curr_word)
+                    term = word_split[0]
+                    if term != '':
+                        self.term_case_filter(term)
+                del word_split
+            if "@" in term:  # '@' our new rule
+                list_mail = term.split('@')
+                self.term_case_filter(list_mail[0])
+                self.term_case_filter(list_mail[1])
+                del list_mail
+            if term != '':
+                self.term_case_filter(term)
 
     # convert all numbers according to rules
 
@@ -601,12 +619,42 @@ class Parser:
             return False
 
     # add city line numbers
+
     def city_lines_and_docs(self):
         self.line_counter = self.line_counter + self.str_doc.count('\n')
 
+    # function creates a doc object #
+
+    def create_doc_info(self):
+        doc = DocObject(self.str_doc_id, self.max_tf, self.str_city_info)
+        self.hash_docs[self.str_doc_id] = doc
+        for str_obj in self.hash_terms:
+            curr_obj = self.hash_terms[str_obj]
+            if curr_obj.list_docs is not None:
+                if curr_obj.get_doc_exists(self.str_doc_id):
+                    if curr_obj.get_tf(self.str_doc_id) == 1:
+                        doc.set_unique_words()
+
     # function filters all terms #
 
-    def term_filter(self):
+    def start_parse(self, str_doc):
+        if str_doc:  # sets current document
+            self.str_doc = str_doc
+        try:
+            self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
+        except AttributeError:
+            a = 0
+        try:
+            self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
+            self.str_txt = self.str_txt.split("</TEXT>")
+            self.str_txt = self.str_txt[0]
+        except AttributeError:
+            a = 0
+        self.str_txt = self.str_txt.replace('*', '')
+        self.str_txt = self.str_txt.replace('\n', ' * ')
+        self.list_tokens = self.str_txt.split()
+        del self.str_doc
+        del self.str_txt
         # self.convert_numbers_in_list()
         index = 0
         for term in self.list_tokens:
@@ -615,20 +663,16 @@ class Parser:
                 self.global_line_counter += 1
                 self.word_in_line_counter = 0
             else:
-                rule_stopword = self.is_stop_word(term)
-                rule_punc = self.is_punc(term)
-                if not rule_stopword and not rule_punc:
-                    if self.has_numbers(term):
-                        self.convert_numbers_in_list(index)
-                    else:
+                if term not in self.hash_punc and term not in self.hash_stopwords:
+                    # if self.has_numbers(term):
+                        # self.convert_numbers_in_list(index)
+                    # else:
+                        # self.is_regular_term(term)
+                        # self.word_in_line_counter += 1
+                    if not self.has_numbers(term):
                         self.is_regular_term(term)
                         self.word_in_line_counter += 1
             index += 1
-        #print(self.max_tf)
+            # self.create_doc_info()
+        # print("done")
 
-        '''  self.convert_numbers_in_list()
-                   for term in self.list_tokens_second_pass:
-                       if '-' in term:
-                           self.is_hyphen_number_mode(term)
-                       else:
-                           self.add_term_number_mode(term)'''

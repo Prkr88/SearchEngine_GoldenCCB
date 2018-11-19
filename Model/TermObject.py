@@ -31,10 +31,14 @@ Later: add value parameters: position, bold, etc...
         self.term_data = TermData()
         if doc_id not in self.hash_term_data:
             self.hash_term_data[doc_id] = self.term_data
-        if term.isupper():
-            self.upper_case = True
-        else:
-            self.upper_case = False
+        # if 64 < ord(self.term[0]) < 91:
+            # self.is_upper_case = True
+        # else:
+            # self.is_upper_case = False
+        # if term.isupper():
+            # self.upper_case = True
+        # else:
+            # self.upper_case = False
 
     def __hash__(self):
         return hash(self.term)
@@ -50,6 +54,7 @@ Later: add value parameters: position, bold, etc...
             self.hash_term_data[doc_id] = TermData()
         term_data = self.hash_term_data[doc_id]
         term_data.update_tf()
+        self.tf += 1
 
     def add_position(self, doc_id, line, offset):
         term_data = self.hash_term_data[doc_id]
@@ -58,9 +63,11 @@ Later: add value parameters: position, bold, etc...
     def set_idf(self):
         self.idf += 1
 
+    def set_term(self, term):
+        self.term = term
+
     def set_to_lower_case(self):
-        self.upper_case = False
-        self.term = self.term.lower()
+        self.is_upper_case = False
 
     def set_doc(self, doc_id):
         if not self.list_docs.__contains__(doc_id):
@@ -68,6 +75,15 @@ Later: add value parameters: position, bold, etc...
 
     def set_pIF(self, pIF):
         self.pIF = pIF
+
+    def get_is_upper_case(self):
+        return self.is_upper_case
+
+    def get_doc_exists(self, doc_id):
+        if self.list_docs.__contains__(doc_id):
+            return True
+        else:
+            return False
 
     def get_doc(self, doc_id):
         return self.list_docs.__contains__(doc_id)
