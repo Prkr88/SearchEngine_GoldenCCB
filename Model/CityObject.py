@@ -1,39 +1,15 @@
-import json
-import requests
-from flask import Response, json, request
 
 
 class CityObject:
 
-    # static counter for the pointers to the IF
-
-    pIF_count = 0
-
     # constructor #
 
-    def __init__(self, doc_id, city_name, pIF):
-        self.get_api_info(city_name)
+    def __init__(self, doc_id, city_name):
         self.list_docs = [doc_id]
-        self.doc_pos = ""
-        self.pIF = pIF
-
-    # function retrieves API data from server #
-
-    def get_api_info(self, city_name):
-        str_state = ""
-        str_population = ""
-        str_currency = ""
-        url = "http://getcitydetails.geobytes.com/GetCityDetails?fqcn=%s" % city_name
-        response = requests.get(url)
-        if response.ok:
-            json_obj = json.loads(response.content)
-            str_state = json_obj['geobytescountry']
-            str_population = json_obj['geobytespopulation']
-            str_currency = json_obj['geobytescurrency']
         self.city_name = city_name
-        self.state_name = str_state
-        self.population = str_population
-        self.currency = str_currency
+        self.state_name = ""
+        self.state_population = ""
+        self.state_currency = ""
 
     def __hash__(self):
         return hash(self.city_name)
@@ -58,5 +34,12 @@ class CityObject:
         if not self.list_docs.__contains__(doc_id):
             self.list_docs.append(doc_id)
 
-    def set_pIF(self, pIF):
-        self.pIF = pIF
+    def set_state_name(self, other):
+        self.state_name = other
+
+    def set_state_population(self, other):
+        self.state_population = other
+
+    def set_state_currency(self, other):
+        self.state_currency = other
+
