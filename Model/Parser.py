@@ -270,37 +270,6 @@ class Parser:
             i += 1
         return word
 
-    # function cleans terms #
-
-    def clean_punc_term2(self, term):
-        if term == '--' or term == "" or term == '-':
-            term = ""
-        last = term.strip()[-1]
-        first = term[0]
-        if last in self.hash_punc:
-            term = term[:-1]
-        if first in self.hash_punc:
-            term = term[1:]
-        return term
-
-    def clean_punc_term(self, term):
-        if term == '--' or term == '-':
-            term = ""
-        else:
-            size = len(term) - 1
-            last = term[size]
-            first = term[0]
-            if last in self.hash_punc:  # "A-"
-                term = term[:-1]
-                size -= 1
-                if size > 0:
-                    last = term[size]
-                    if last in self.hash_punc:  # "A--"
-                        term = term[:-1]
-            if first in self.hash_punc:
-                term = term[1:]
-        return term
-
     # function filters regular terms #
 
     def is_regular_term(self, term):  # Note: "/F", "word.", "Type:BN", "equipment,", "March]", "approval/disapproval"
