@@ -1,10 +1,10 @@
 import os
-import re
 from Model.Parser import Parser
-import time
 import gc
-
-
+import json
+import cProfile, pstats
+import time
+from io import StringIO
 
 '''
 # <F P=104>  Rotterdam NRC HANDELSBLAD </F>
@@ -13,21 +13,29 @@ p = Parser(str_doc)
 '''
 counter = 0
 
+
 def get_files():
+    vocabulary = {}
     counter = 0
     for root, dirs, files in os.walk(
             'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
         for file in files:
-            start = time.time()
-            ''' print(os.path.join(root, file))'''
-            file_path = os.path.join(root, file)
-            p = Parser()
-            get_doc_from_file(file_path, p)
-            counter = counter + 1
-            del p
-            gc.collect()
-            end = time.time()
-            print("time for file:" +str(end - start))
+            if counter < 500:
+                start = time.time()
+                ''' print(os.path.join(root, file))'''
+                file_path = os.path.join(root, file)
+                p = Parser()
+                get_doc_from_file(file_path, p)
+                counter = counter + 1
+                # vocabulary = {**vocabulary, **p.hash_terms}
+                # with open(
+                #         'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\hashTermsCheck'
+                #         '\\fileNum.' + str(counter)+'.txt','w') as vocb_file:
+                #     vocb_file.write(json.dumps(vocabulary, indent=4, separators=(',', ': ')))
+                del p
+                gc.collect()
+                end = time.time()
+                print("time for file #" + str(counter) + " :" + str(end - start))
     print(counter)
 
 
@@ -54,11 +62,20 @@ def get_doc_from_file(file_path, parser_object):
                 parser_object.start_parse(doc)
             else:
                 skip_one = 1
-    #print(doc_counter2)
+    # print(doc_counter2)
     del data_list
     gc.collect()
 
+
 start = time.time()
+pr = cProfile.Profile()
+pr.enable()  # start profiling
 get_files()
+pr.disable()  # end profiling
+s = StringIO()
+sortby = 'cumulative'
+ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+ps.print_stats()
+print(s.getvalue())
 end = time.time()
 print(end - start)
