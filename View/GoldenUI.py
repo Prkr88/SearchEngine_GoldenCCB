@@ -131,7 +131,7 @@ class Ui_MainWindow(object):
         self.lineEdit_2 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_2.setGeometry(QtCore.QRect(270, 590, 711, 39))
         ######################## Text Field Event ##############################
-        self.lineEdit_2.keyPressEvent(self.clear_text_field_one())
+        #self.lineEdit_2.keyPressEvent(self.clear_text_field_one())
         ######################## Text Field Event ##############################
         self.lineEdit_2.setStyleSheet("QLineEdit {\n"
 " color: #BEBEBE; \n"
@@ -142,7 +142,7 @@ class Ui_MainWindow(object):
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(270, 500, 711, 39))
         ######################## Text Field Event ##############################
-        self.lineEdit.clicked.connect(self.clear_text_field_one)
+        #self.lineEdit.clicked.connect(self.clear_text_field_one)
         ######################## Text Field Event ##############################
         self.lineEdit.setStyleSheet("QLineEdit {\n"
 " color: #BEBEBE; \n"
