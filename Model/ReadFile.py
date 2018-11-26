@@ -4,7 +4,10 @@ import time
 import gc
 import cProfile, pstats
 import time
+import json
+import timeit
 from io import StringIO
+from multiprocessing import Pool ,Lock
 from Model.API import API
 
 '''
@@ -13,88 +16,109 @@ str_doc = """ <DOC><DOCNO> FBIS3-1 </DOCNO><HT>  "cr00000011094001" </HT><HEADER
 p = Parser(str_doc)
 '''
 
-f_counter = 0
 
-# ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
-# ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
-# ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+class ReadFile:
+    f_counter = 0
+    files_list = []
+    complete_list = []
+    mutex = Lock()
+    # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
+    # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+    # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+    def __init__(self , data_path,stopword_path):
+        self.set_file_list()
+        print("***** " +data_path+ " *****")
+        print("***** " +stopword_path+ " *****")
+        p = Pool(processes=2)
+        start = time.time()
+        async_result = p.map_async(self.get_files, self.files_list)
+        p.close()
+        p.join()
+        print("Complete")
+        end = time.time()
+        print('total time (s)= ' + str(end - start))
+        print(self.complete_list)
+        print(*self.complete_list, sep="\n")
 
-
-
-def get_files():
-    vocabulary = {}
-    counter = 0
-    sum = 0
-    for root, dirs, files in os.walk(
-            'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
-        for file in files:
-            if counter < 500:
-                f_start = time.time()
-                ''' print(os.path.join(root, file))'''
+    def set_file_list(self):
+        for root, dirs, files in os.walk('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+            for file in files:
                 file_path = os.path.join(root, file)
-                p = Parser()
-                get_doc_from_file(file_path, p)
-                counter = counter + 1
+                self.files_list.append(file_path)
 
-                # vocabulary = {**vocabulary, **p.hash_terms}
-                # with open(
-                #         'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\hashTermsCheck'
-                #         '\\fileNum.' + str(counter)+'.txt','w') as vocb_file:
-                #     vocb_file.write(json.dumps(vocabulary, indent=4, separators=(',', ': ')))
-                del p
-                gc.collect()
-                f_end = time.time()
-                sum += f_end - f_start
-                print("time for file #" + str(counter) + " :" + str(end - start))
+    def get_files(self, file_path):
+        print(file_path)
+        self.complete_list.append(file_path)
+        vocabulary = {}
+        posting = {}
+        counter = 0
+        sum = 0
+        summary = 0
+        f_start = time.time()
+        p = Parser()
+        self.get_doc_from_file(file_path, p)
+        counter = counter + 1
+        # vocabulary = {**vocabulary, **p.hash_terms}
+        # with open(
+        #         'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\hashTermsCheck'
+        #         '\\fileNum.' + str(counter)+'.txt','w') as vocb_file:
+        #     vocb_file.write(json.dumps(vocabulary, indent=4, separators=(',', ': ')))
+        #del p
+        #gc.collect()
+        f_end = time.time()
+        sum += f_end - f_start
+        summary = summary + (f_end - f_start)
+        #print("time for file #" + str(self.f_counter) + " :" + str(f_end - f_start))
+        self.f_counter += 1
+        #print("avarage per file: " + str(summary/300))
+        #print(counter)
 
-    print(counter)
+    def get_doc_from_file(self, file_path, parser_object):
+        skip_one = 0
+        with open(file_path, 'r') as file:
+            # data = file.read().replace('\n', '')
+            doc_counter = 0
+            doc_counter2 = 0
+            data = file.read()
+            data_list = data.split("<DOC>")
+            del data
+            for doc in data_list:
+                doc_counter2 += 1
+                # if doc_counter == 10:
+                #     doc_counter = 0
+                #     del parser_object
+                #     gc.collect()
+                #     print("memoey cleared after " + str(doc_counter2) + " documents ")
+                #     parser_object = Parser()
+                if skip_one == 1:
+                    doc_counter += 1
+                    doc = "<DOC>" + doc
+                    parser_object.start_parse(doc)
+                else:
+                    skip_one = 1
+
+        """
+        if parser_object.hash_cities.__sizeof__() > 0:
+            hash_cities = copy.deepcopy(parser_object.hash_cities)
+            obj_api = API(hash_cities)
+            obj_api.get_api_info()
+        """
+
+        # print(doc_counter2)
+        del data_list
+        #gc.collect()
 
 
-def get_doc_from_file(file_path, parser_object):
-    skip_one = 0
-    with open(file_path, 'r') as file:
-        # data = file.read().replace('\n', '')
-        doc_counter = 0
-        doc_counter2 = 0
-        data = file.read()
-        data_list = data.split("<DOC>")
-        del data
-        for doc in data_list:
-            doc_counter2 += 1
-            # if doc_counter == 10:
-            #     doc_counter = 0
-            #     del parser_object
-            #     gc.collect()
-            #     print("memoey cleared after " + str(doc_counter2) + " documents ")
-            #     parser_object = Parser()
-            if skip_one == 1:
-                doc_counter += 1
-                doc = "<DOC>" + doc
-                parser_object.start_parse(doc)
-            else:
-                skip_one = 1
 
-    """
-    if parser_object.hash_cities.__sizeof__() > 0:
-        hash_cities = copy.deepcopy(parser_object.hash_cities)
-        obj_api = API(hash_cities)
-        obj_api.get_api_info()
-    """
-
-    # print(doc_counter2)
-    del data_list
-    gc.collect()
-
-
-start = time.time()
-pr = cProfile.Profile()
-pr.enable()  # start profiling
-get_files()
-pr.disable()  # end profiling
-s = StringIO()
-sortby = 'cumulative'
-ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-ps.print_stats()
-print(s.getvalue())
-end = time.time()
-print("corpus time: " + str(end - start))
+        # pr = cProfile.Profile()
+        # pr.enable()  # start profiling
+        #
+        # get_files()
+        # pr.disable()  # end profiling
+        # s = StringIO()
+        # sortby = 'cumulative'
+        # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+        # ps.print_stats()
+        # print(s.getvalue())
+        # end = time.time()
+        # print("corpus time: " + str(end - start))

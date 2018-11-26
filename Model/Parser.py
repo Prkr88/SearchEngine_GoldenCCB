@@ -8,7 +8,6 @@ from Model.API import API
 
 
 class Parser:
-
     # initializes strings
 
     str_doc = ""
@@ -148,7 +147,8 @@ class Parser:
         del list_keywords_prices
 
     def set_puncwords(self):
-        list_punc = {',', '"', '?', '-', '.', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '|', '~', '^', '?',
+        list_punc = {',', '"', '?', '-', '.', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '|', '~',
+                     '^', '?',
                      '\', "``", "``", "\\", """\\""", '"'\\'\\'''", '"!"', "=", "#"}
         for word in list_punc:
             self.hash_punc[word] = ""
@@ -178,7 +178,10 @@ class Parser:
     # function checks if the first letter of a string is an upper case #
 
     def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
-        return 64 < ord(term[0]) < 91
+        try:
+            return 64 < ord(term[0]) < 91
+        except IndexError:
+            pass
 
     def is_fully_upper(self, term):
         if len(term) > 1:
@@ -273,7 +276,7 @@ class Parser:
     # function filters regular terms #
 
     def is_regular_term(self, term):  # Note: "/F", "word.", "Type:BN", "equipment,", "March]", "approval/disapproval"
-        if term != "-" or term != "":
+        if term != "-" and term != '':
             size = len(term) - 1
             last = term[size]
             first = term[0]
@@ -307,8 +310,10 @@ class Parser:
                 del word_split
             if "@" in term:  # '@' our new rule
                 list_mail = term.split('@')
-                self.term_case_filter(list_mail[0])
-                self.term_case_filter(list_mail[1])
+                if list_mail[0]:
+                    self.term_case_filter(list_mail[0])
+                if list_mail[1]:
+                    self.term_case_filter(list_mail[1])
                 del list_mail
             if term != '':
                 self.term_case_filter(term)
@@ -328,7 +333,12 @@ class Parser:
         if '/' not in term and '-' not in term:
             if not self.is_year(index):
                 if '$' not in term and 'bn' not in term and 'm' not in term:
-                    self.list_tokens[index] = self.numbers_rules(term)
+                    try:
+                        float(term)
+                        self.list_tokens[index] = self.numbers_rules(term)
+                    except ValueError:
+                        # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                        return 'SyntaxError{}'
             else:
                 self.edit_list_by_key_word_dates(index)
                 operation_done = 1
@@ -340,7 +350,8 @@ class Parser:
                     # index -= 1
                     return ans
                 except ValueError:
-                    print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                   # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                    return 'SyntaxError{}'
         elif '/' in term:
             nums_in_fraction = term.split('/', 1)
             numerator = nums_in_fraction[0]
@@ -378,8 +389,8 @@ class Parser:
     # convert number term according to rules
 
     def numbers_rules(self, num_str):
-        num_edit = num_str.replace(",", "")
-        number_split = num_edit.split(".", 1)
+        # num_edit = num_str.replace(",", "")
+        number_split = num_str.split(".", 1)
         before_point = number_split[0]
         if len(number_split) > 1:
             after_point = number_split[1]
@@ -669,13 +680,13 @@ class Parser:
         try:
             self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
         except AttributeError:
-            a = 0
+            pass
         try:
             self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
             self.str_txt = self.str_txt.split("</TEXT>")
             self.str_txt = self.str_txt[0]
         except AttributeError:
-            a = 0
+            pass
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')
         self.list_tokens = self.str_txt.split()
@@ -684,22 +695,28 @@ class Parser:
         # self.convert_numbers_in_list()
         index = 0
         for term in self.list_tokens:
-            if term == '*':
-                self.line_in_doc_counter += 1
-                self.global_line_counter += 1
-                self.word_in_line_counter = 0
-            else:
-                if term not in self.hash_punc and term not in self.hash_stopwords:
-                    # if self.has_numbers(term):
-                        # self.convert_numbers_in_list(index)
-                    # else:
-                        # self.is_regular_term(term)
-                        # self.word_in_line_counter += 1
-                    if not self.has_numbers(term):
+            if term != '':
+                if term == '*':
+                    self.line_in_doc_counter += 1
+                    self.global_line_counter += 1
+                    self.word_in_line_counter = 0
+                else:
+                    if ',' in term:
+                        term = term.replace(',', '')
+                        self.list_tokens[index] = term
+                    if term and term not in self.hash_punc and term not in self.hash_stopwords:
+                        try:
+                            if term[0].isdigit() or term[0] == '$':
+                                term = self.convert_numbers_in_list(index)
+                                if term == 'SyntaxError{}':
+                                    term = self.list_tokens[index]
+                                    # print('Term| ' +term+' |inserted.')
+                        except IndexError:
+                            print('dickTerm: ' + term)
                         self.is_regular_term(term)
                         self.word_in_line_counter += 1
-            index += 1
-            # self.create_doc_info()
+                index += 1
+        # self.create_doc_info()
         # print("done")
 
         '''  self.convert_numbers_in_list()
