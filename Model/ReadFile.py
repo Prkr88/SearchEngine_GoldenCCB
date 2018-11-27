@@ -4,10 +4,11 @@ import time
 import gc
 import cProfile, pstats
 import time
+import sys
 import json
 import timeit
 from io import StringIO
-from multiprocessing import Pool ,Lock
+from multiprocessing import Pool ,Lock, Manager
 from Model.API import API
 
 '''
@@ -19,21 +20,34 @@ p = Parser(str_doc)
 
 class ReadFile:
     f_counter = 0
-    files_list = []
     complete_list = []
-    mutex = Lock()
+    #mutex_vocab = Lock()
+    #p_manager = Manager()
+   # mutex_vocab = p_manager.Lock()
+   # mutex_file_counter = Lock()
+    vocabulary = {}
+    hash_terms_collection = {}
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+    # def init_lock(l):
+    #     global lock
+    #     lock = l
+
     def __init__(self , data_path,stopword_path):
-        self.set_file_list()
         print("***** " +data_path+ " *****")
         print("***** " +stopword_path+ " *****")
-        p = Pool(processes=2)
+        #p = Pool(processes=8)
+       # l = Lock()
+        #p = Pool(processes=4, initializer=self.init_lock, initargs=(l,))
         start = time.time()
-        async_result = p.map_async(self.get_files, self.files_list)
-        p.close()
-        p.join()
+        files_list = self.set_file_list()
+        for file_path in files_list:
+            self.parse_file(file_path)
+        #p.map(self.set_file_list, files_list)
+        #async_result = p.map_async(self.set_file_list, files_list)
+        #p.close()
+        #p.join()
         print("Complete")
         end = time.time()
         print('total time (s)= ' + str(end - start))
@@ -41,37 +55,44 @@ class ReadFile:
         print(*self.complete_list, sep="\n")
 
     def set_file_list(self):
+        files_list = []
         for root, dirs, files in os.walk('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
-                self.files_list.append(file_path)
+                files_list.append(file_path)
+        return files_list
 
-    def get_files(self, file_path):
+    def parse_file(self, file_path):
         print(file_path)
-        self.complete_list.append(file_path)
-        vocabulary = {}
-        posting = {}
-        counter = 0
+        # lock.acquire()
+        # self.f_counter += 1
+        # lock.ralease()
+        # self.mutex_file_counter.acquire()
+        # try:
+        self.f_counter += 1
+        # finally:
+        #     self.mutex_file_counter.release()
+        #self.complete_list.append(file_path)
         sum = 0
         summary = 0
         f_start = time.time()
         p = Parser()
         self.get_doc_from_file(file_path, p)
-        counter = counter + 1
-        # vocabulary = {**vocabulary, **p.hash_terms}
-        # with open(
-        #         'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\hashTermsCheck'
-        #         '\\fileNum.' + str(counter)+'.txt','w') as vocb_file:
-        #     vocb_file.write(json.dumps(vocabulary, indent=4, separators=(',', ': ')))
-        #del p
-        #gc.collect()
+        file_terms = p.hash_terms.copy()
+        del p
+        self.merge_file_terms(file_terms)
+        file_terms = {}
+        if self.f_counter % 10 == 0:
+            print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
+            print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
+
+            print("10 done")
         f_end = time.time()
         sum += f_end - f_start
         summary = summary + (f_end - f_start)
         #print("time for file #" + str(self.f_counter) + " :" + str(f_end - f_start))
-        self.f_counter += 1
         #print("avarage per file: " + str(summary/300))
-        #print(counter)
+        print(self.f_counter)
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
@@ -96,29 +117,29 @@ class ReadFile:
                     parser_object.start_parse(doc)
                 else:
                     skip_one = 1
-
-        """
-        if parser_object.hash_cities.__sizeof__() > 0:
-            hash_cities = copy.deepcopy(parser_object.hash_cities)
-            obj_api = API(hash_cities)
-            obj_api.get_api_info()
-        """
-
-        # print(doc_counter2)
         del data_list
-        #gc.collect()
 
+    def merge_file_terms(self, file_terms):
+        for key, value in file_terms.items():
+            vocab = self.vocabulary
+            hash_col = self.hash_terms_collection
+            #self.mutex_vocab.acquire()
+            #try:
+            if key not in self.vocabulary:
+                vocab[key] = 0
+                hash_col[key] = value
+            else:
+                hash_col[key]['tf'] = hash_col[key]['tf'] + file_terms[key]['tf']
+                hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
+                for d_id in file_terms[key]['docs']:
+                    hash_col[key]['docs'][d_id] = 'pos n/a'
 
+            #finally:
+                #self.mutex_vocab.release()
 
-        # pr = cProfile.Profile()
-        # pr.enable()  # start profiling
-        #
-        # get_files()
-        # pr.disable()  # end profiling
-        # s = StringIO()
-        # sortby = 'cumulative'
-        # ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
-        # ps.print_stats()
-        # print(s.getvalue())
-        # end = time.time()
-        # print("corpus time: " + str(end - start))
+                # self.mutex_file_counter.()
+                # try:
+                #     self.f_counter += 1
+                #     counter = self.f_counter
+                # finally:
+                #     self.mutex_file_counter.release()

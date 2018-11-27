@@ -22,6 +22,7 @@ class Ui_MainWindow(object):
 
     def start_program(self):
         if '\\' in self.lineEdit.text() and '\\' in self.lineEdit_2.text():
+            stemmer = self.checkBox.isChecked()
             read_file = ReadFile(self.lineEdit.text(),self.lineEdit_2.text())
         else:
             error_one = ""
@@ -50,6 +51,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1418, 1087)
+        #MainWindow.setFixedSize(1418,800)
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("..//resources/goldenccb_icon_E7q_icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         MainWindow.setWindowIcon(icon)
@@ -96,7 +98,7 @@ class Ui_MainWindow(object):
         self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
         self.pushButton_2.setGeometry(QtCore.QRect(1000, 580, 151, 57))
         ######################## Bottun Event ##############################
-        self.pushButton_2.clicked.connect(self.start_program)
+        self.pushButton_2.clicked.connect(self.browse_two)
         ######################## Bottun Event ##############################
         self.pushButton_2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.pushButton_2.setStyleSheet("QPushButton {\n"
@@ -130,9 +132,6 @@ class Ui_MainWindow(object):
         self.pushButton_2.setObjectName("pushButton_2")
         self.lineEdit_2 = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit_2.setGeometry(QtCore.QRect(270, 590, 711, 39))
-        ######################## Text Field Event ##############################
-        #self.lineEdit_2.keyPressEvent(self.clear_text_field_one())
-        ######################## Text Field Event ##############################
         self.lineEdit_2.setStyleSheet("QLineEdit {\n"
 " color: #BEBEBE; \n"
 "border: 2px solid #cccccc;\n"
@@ -141,9 +140,6 @@ class Ui_MainWindow(object):
         self.lineEdit_2.setObjectName("lineEdit_2")
         self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
         self.lineEdit.setGeometry(QtCore.QRect(270, 500, 711, 39))
-        ######################## Text Field Event ##############################
-        #self.lineEdit.clicked.connect(self.clear_text_field_one)
-        ######################## Text Field Event ##############################
         self.lineEdit.setStyleSheet("QLineEdit {\n"
 " color: #BEBEBE; \n"
 "border: 2px solid #cccccc;\n"
@@ -207,13 +203,16 @@ class Ui_MainWindow(object):
         #self.pushButton_2.pressed.connect(self.lineEdit_2.paste)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.pushButton1.setText(_translate("MainWindow", "browse"))
         self.pushButton_2.setText(_translate("MainWindow", "browse"))
-        self.lineEdit_2.setText(_translate("MainWindow", "Enter Posting Destination Path"))
-        self.lineEdit.setText(_translate("MainWindow", "Enter Corpus and StopWords Path"))
+        self.lineEdit_2.setPlaceholderText(_translate("MainWindow", "Enter Posting Destination Path"))
+        self.lineEdit.setPlaceholderText(_translate("MainWindow", "Enter Corpus and StopWords Path"))
+        self.lineEdit.setClearButtonEnabled(True)
+        self.lineEdit_2.setClearButtonEnabled(True)
         self.checkBox.setText(_translate("MainWindow", "Stemmer"))
         self.pushButton_3.setText(_translate("MainWindow", "Start"))
 
