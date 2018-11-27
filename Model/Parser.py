@@ -716,8 +716,10 @@ class Parser:
                         self.is_regular_term(term)
                         self.word_in_line_counter += 1
                 index += 1
+
+        return self.hash_terms
         # self.create_doc_info()
-        #print("done")
+        # print("done")
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:

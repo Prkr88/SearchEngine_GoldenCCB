@@ -1,5 +1,6 @@
 import os
 from Model.Parser import Parser
+from Model.Indexer import Indexer
 import time
 import gc
 import cProfile, pstats
@@ -27,6 +28,8 @@ class ReadFile:
    # mutex_file_counter = Lock()
     vocabulary = {}
     hash_terms_collection = {}
+    mutex = Lock()
+    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
@@ -48,6 +51,12 @@ class ReadFile:
         #async_result = p.map_async(self.set_file_list, files_list)
         #p.close()
         #p.join()
+        # p = Pool(processes=4)
+        # async_result = p.map_async(self.get_files, self.files_list)
+        # p.close()
+        # p.join()
+        first_file = self.files_list[0]
+        self.get_files(first_file)
         print("Complete")
         end = time.time()
         print('total time (s)= ' + str(end - start))
