@@ -210,12 +210,12 @@ class Parser:
                     # new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
                     # this_term[self.str_doc_id] = list_pos.append(new_pos)
                 except KeyError:  # if first occurrence in doc -> we update tf, idf and hash_docs
-                    this_term.update({'tf': this_tf, 'idf': this_term['idf']+1, 'hash_docs': {'id': self.str_doc_id, 'pos': "n/a"}})
+                    this_term.update({'tf': this_tf, 'idf': this_term['idf']+1, 'hash_docs': {self.str_doc_id : "pos n/a"}})
                 return  # end of update (1+2)
             else:  # (5) if its a new term (other=PEN and dict='none')
                 # list_term_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
                 # nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': list_term_pos}}
-                nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': "n/a"}}
+                nested_hash = {'tf': 1, 'idf': 1, 'docs': {self.str_doc_id : "pos n/a"}}
                 self.hash_terms[other_term] = nested_hash
                 return  # end of adding a new term
         else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
@@ -231,7 +231,7 @@ class Parser:
                     # this_term[self.str_doc_id] = list_pos.append(new_pos)
                 except KeyError:  # if first occurrence in doc -> we update tf, idf and hash_docs
                     this_term.update({'tf': this_tf, 'idf': this_term['idf'] + 1,
-                                      'hash_docs': {'id': self.str_doc_id, 'pos': "n/a"}})
+                                      'hash_docs': {self.str_doc_id : "pos n/a"}})
                 return  # end of update (3)
             else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
                 temp_term_upper = other_term.upper()  # temp = PEN
@@ -251,7 +251,7 @@ class Parser:
                 else:  # (5) if its a new term (other=pen and dict='none')
                     # list_term_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
                     # nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': list_term_pos}}
-                    nested_hash = {'tf': 1, 'idf': 1, 'docs': {'id': self.str_doc_id, 'pos': "n/a"}}
+                    nested_hash = {'tf': 1, 'idf': 1, 'docs': {self.str_doc_id : "pos n/a"}}
                     self.hash_terms[other_term] = nested_hash
                     return
 
@@ -716,6 +716,8 @@ class Parser:
                         self.is_regular_term(term)
                         self.word_in_line_counter += 1
                 index += 1
+
+        return self.hash_terms
         # self.create_doc_info()
         # print("done")
 

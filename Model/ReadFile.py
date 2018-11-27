@@ -1,5 +1,6 @@
 import os
 from Model.Parser import Parser
+from Model.Indexer import Indexer
 import time
 import gc
 import cProfile, pstats
@@ -22,18 +23,22 @@ class ReadFile:
     files_list = []
     complete_list = []
     mutex = Lock()
+    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+
     def __init__(self , data_path,stopword_path):
         self.set_file_list()
         print("***** " +data_path+ " *****")
         print("***** " +stopword_path+ " *****")
-        p = Pool(processes=2)
         start = time.time()
-        async_result = p.map_async(self.get_files, self.files_list)
-        p.close()
-        p.join()
+        # p = Pool(processes=4)
+        # async_result = p.map_async(self.get_files, self.files_list)
+        # p.close()
+        # p.join()
+        first_file = self.files_list[0]
+        self.get_files(first_file)
         print("Complete")
         end = time.time()
         print('total time (s)= ' + str(end - start))
@@ -41,7 +46,7 @@ class ReadFile:
         print(*self.complete_list, sep="\n")
 
     def set_file_list(self):
-        for root, dirs, files in os.walk('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+        for root, dirs, files in os.walk('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 self.files_list.append(file_path)
@@ -93,7 +98,8 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc)
+                    hash_terms = parser_object.start_parse(doc)
+                    self.indexer.update_files(hash_terms)
                 else:
                     skip_one = 1
 

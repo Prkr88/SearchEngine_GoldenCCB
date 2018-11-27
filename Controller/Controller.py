@@ -7,9 +7,7 @@ class Controller:
 
     def __init__(self):
         self.root = Tk()
-        self.view = View(self.root, self)
 
     def start(self):
-        print('start')
-        self.root.resizable(0, 0)
-        self.root.mainloop()
+        view = View(self, self.root)
+
