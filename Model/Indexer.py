@@ -123,9 +123,9 @@ class Indexer:
             vwxyz.close()
         m_arr[6].release()
 
-        self.counter += 1
-        if self.counter == 5:
-            self.sort_file_list(self.file_path1)
+        # self.counter += 1
+        # if self.counter == 5:
+        #     self.sort_file_list(self.file_path1)
         # self.sort_file_hash(self.file_path1)
         # self.sort_file_list(self.file_path1)
 

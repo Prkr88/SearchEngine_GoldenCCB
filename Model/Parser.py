@@ -716,7 +716,7 @@ class Parser:
         # self.convert_numbers_in_list()
         index = 0
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens), 'city_origin': self.str_city_name}})
-        self.set_city()
+        #self.set_city()
         self.set_headers()
         del self.str_doc
         del self.str_txt
@@ -745,7 +745,7 @@ class Parser:
                 index += 1
 
 
-        return self.hash_terms
+        # return self.hash_terms
         # print("done")
 
         '''  self.convert_numbers_in_list()

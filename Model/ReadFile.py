@@ -3,12 +3,14 @@ from asyncio import sleep
 from Model.Parser import Parser
 from Model.Indexer import Indexer
 import time
+import sys
 import gc
 import cProfile, pstats
 import time
 import json
 import timeit
 from io import StringIO
+import multiprocessing
 from multiprocessing import Pool ,Lock, Manager ,Array
 from Model.API import API
 
@@ -54,7 +56,7 @@ class ReadFile:
     files_list = []
     complete_list = []
     mutex = Lock()
-    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
+    indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
 
     def do_job(id):
@@ -120,11 +122,12 @@ class ReadFile:
         p = None
         self.merge_file_terms(file_terms)
         file_terms = {}
-        if f_counter.value % 40 == 0:
-            print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
-            print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
-            with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
-                file.write(str(self.hash_terms_collection))
+        if f_counter.value % 10 == 0:
+            self.indexer.write_temp_posts(self.hash_terms_collection)
+            # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
+            # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
+            # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
+            #     file.write(str(self.hash_terms_collection))
             self.hash_terms_collection = {}
             self.vocabulary = {}
             file_terms = {}
@@ -155,10 +158,10 @@ class ReadFile:
                     doc_counter += 1
                     doc = "<DOC>" + doc
                     # sem.acquire()
-                    hash_terms = parser_object.start_parse(doc)
+                    parser_object.start_parse(doc)
                     # self.voc2str(hash_terms)
                     # sem.release()
-                    self.indexer.write_temp_posts(hash_terms)
+                    #self.indexer.write_temp_posts(hash_terms)
                     # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
 
                 else:
@@ -184,8 +187,8 @@ class ReadFile:
                     vocab[key] = 0
                     hash_col[key] = value
                 else:
-                    hash_col[key]['tf'] = hash_col[key]['tf'] + file_terms[key]['tf']
+                    hash_col[key]['tf_c'] = hash_col[key]['tf_c'] + file_terms[key]['tf_c']
                     hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
-                    for d_id in file_terms[key]['docs']:
-                        hash_col[key]['docs'][d_id] = 'pos n/a'
+                    for d_id in file_terms[key]['hash_docs']:
+                        hash_col[key]['hash_docs'] = file_terms[key]['hash_docs']
         #print("merged")
