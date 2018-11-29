@@ -1,29 +1,28 @@
-# -*- coding: utf-8 -*-
-
-# Form implementation generated from reading ui file 'Golden_First_UI.ui'
-#
-# Created by: PyQt5 UI code generator 5.11.3
-#
-# WARNING! All changes made in this file will be lost!
+from PyQt5 import QtGui, QtWidgets, uic, QtCore
 from Model.ReadFile import ReadFile
-from PyQt5 import QtCore, QtGui, QtWidgets  # noinspection PyUnresolvedReferences
+from View.Dictionary_windowUI import Ui_dictionaty_window
+from View.FeaturesUI import Ui_Features
 
-class Ui_MainWindow(object):
 
-    lineEdit_counter = 0
-    lineEdit_2_counter = 0
+class Gu(QtWidgets.QMainWindow):
+    def __init__(self, path):
+        super(Gu, self).__init__()
+        icon = QtGui.QIcon()
+        uic.loadUi(path, self)
+
+    # Methods
     def browse_one(self):
-        self.lineEdit.clear()
-        self.lineEdit.setText(QtWidgets.QFileDialog.getExistingDirectory(None ,"Select Directory"))
+        self.lineEdit_data_path.clear()
+        self.lineEdit_data_path.setText(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory"))
 
     def browse_two(self):
-        self.lineEdit_2.clear()
-        self.lineEdit_2.setText(QtWidgets.QFileDialog.getExistingDirectory(None ,"Select Directory"))
+        self.lineEdit_posting_dest_path.clear()
+        self.lineEdit_posting_dest_path.setText(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory"))
 
     def start_program(self):
         if '\\' in self.lineEdit.text() and '\\' in self.lineEdit_2.text():
             stemmer = self.checkBox.isChecked()
-            read_file = ReadFile(self.lineEdit.text(),self.lineEdit_2.text())
+            read_file = ReadFile(self.lineEdit.text(), self.lineEdit_2.text())
         else:
             error_one = ""
             error_two = ""
@@ -37,194 +36,93 @@ class Ui_MainWindow(object):
             msgBox.setWindowTitle("Input Error")
             msgBox.setText(error_message)
             msgBox.exec()
-    def clear_text_field_one(self):
-        if self.lineEdit_counter == 0:
-            self.lineEdit_counter = 1
-            self.lineEdit.clear()
-
-    def clear_text_field_two(self):
-        if self.lineEdit_counter == 0:
-            self.lineEdit_2_counter = 1
-            self.lineEdit.clear()
 
 
-    def setupUi(self, MainWindow):
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(1418, 1087)
-        #MainWindow.setFixedSize(1418,800)
+    def show_dictionary(self):
+        self.window = QtWidgets.QScrollArea()
+        self.ui = Ui_dictionaty_window()
+        self.ui.setupUi(self.window)
+        self.window.show()
+
+    def load_dictionary(self):
+        print("Dictionary loaded")
+        self.window = QtWidgets.QScrollArea()
+        self.ui = Ui_dictionaty_window()
+        self.ui.setupUi(self.window)
+        self.window.show()
+
+    def reset_system(self):
+        print("Holy shit System has been reset!")
+
+    def show_features(self):
+        print("Crazy Features")
+        self.window = QtWidgets.QScrollArea()
+        self.ui = Ui_Features()
+        self.ui.setupUi(self.window)
+        self.window.show()
+
+    def show_team(self):
+        print("Amazing Team")
+        self.window = QtWidgets.QScrollArea()
+        self.ui = Ui_dictionaty_window()
+        self.ui.setupUi(self.window)
+        self.window.show()
+
+    # Setup GUI
+    def setup_ui(self):
+        # set Background
+        self.setStyleSheet("background-image: url(..//resources//intro-bg.jpg);")
+
+        # Set Program Icons
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap("..//resources/goldenccb_icon_E7q_icon.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        MainWindow.setWindowIcon(icon)
-        MainWindow.setStyleSheet("background-image: url(..//resources//intro-bg.jpg);")
-        self.centralwidget = QtWidgets.QWidget(MainWindow)
-        self.centralwidget.setObjectName("centralwidget")
-        self.pushButton1 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton1.setGeometry(QtCore.QRect(1000, 490, 151, 57))
-        ######################## Bottun Event ##############################
-        self.pushButton1.clicked.connect(self.browse_one)
-        ######################## Bottun Event ##############################
-        self.pushButton1.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.pushButton1.setStyleSheet("QPushButton {\n"
-"    color: #BEBEBE;\n"
-"    border: 2px solid #555;\n"
-"    border-radius: 20px;\n"
-"    border-style: outset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5\n"
-"        );\n"
-"    padding: 5px;\n"
-"    }\n"
-"\n"
-"QPushButton:hover {\n"
-"    color: #404040;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5\n"
-"        );\n"
-"    }\n"
-"\n"
-"QPushButton:pressed {\n"
-"    border-style: inset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\n"
-"        radius: 1.35, stop: 0 #fff, stop: 1 #ddd\n"
-"        );\n"
-"    }")
-        icon1 = QtGui.QIcon()
-        icon1.addPixmap(QtGui.QPixmap("..//resources/iconfinder_icon-101-folder-search_314678.ico"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
-        self.pushButton1.setIcon(icon1)
-        self.pushButton1.setObjectName("pushButton1")
-        self.pushButton_2 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_2.setGeometry(QtCore.QRect(1000, 580, 151, 57))
-        ######################## Bottun Event ##############################
-        self.pushButton_2.clicked.connect(self.browse_two)
-        ######################## Bottun Event ##############################
-        self.pushButton_2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.pushButton_2.setStyleSheet("QPushButton {\n"
-"    color: #BEBEBE;\n"
-"    border: 2px solid #555;\n"
-"    border-radius: 20px;\n"
-"    border-style: outset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5\n"
-"        );\n"
-"    padding: 5px;\n"
-"    }\n"
-"\n"
-"QPushButton:hover {\n"
-"    color: #404040;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5\n"
-"        );\n"
-"    }\n"
-"\n"
-"QPushButton:pressed {\n"
-"    border-style: inset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\n"
-"        radius: 1.35, stop: 0 #fff, stop: 1 #ddd\n"
-"        );\n"
-"    }")
-        self.pushButton_2.setIcon(icon1)
-        self.pushButton_2.setObjectName("pushButton_2")
-        self.lineEdit_2 = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit_2.setGeometry(QtCore.QRect(270, 590, 711, 39))
-        self.lineEdit_2.setStyleSheet("QLineEdit {\n"
-" color: #BEBEBE; \n"
-"border: 2px solid #cccccc;\n"
-"border-radius: 10px;\n"
-" }")
-        self.lineEdit_2.setObjectName("lineEdit_2")
-        self.lineEdit = QtWidgets.QLineEdit(self.centralwidget)
-        self.lineEdit.setGeometry(QtCore.QRect(270, 500, 711, 39))
-        self.lineEdit.setStyleSheet("QLineEdit {\n"
-" color: #BEBEBE; \n"
-"border: 2px solid #cccccc;\n"
-"border-radius: 10px;\n"
-" }")
-        self.lineEdit.setInputMask("")
-        self.lineEdit.setObjectName("lineEdit")
-        self.checkBox = QtWidgets.QCheckBox(self.centralwidget)
-        self.checkBox.setGeometry(QtCore.QRect(270, 450, 181, 37))
-        self.checkBox.setStyleSheet("background-image: url(..//resources//transparent.png);\n"
-"font: 81 8pt \"Raleway ExtraBold\";")
-        self.checkBox.setObjectName("checkBox")
-        self.pushButton_3 = QtWidgets.QPushButton(self.centralwidget)
-        self.pushButton_3.setGeometry(QtCore.QRect(570, 690, 191, 81))
-        ######################## Bottun Event ##############################
-        self.pushButton_3.clicked.connect(self.start_program)
-        ######################## Bottun Event ##############################
-        self.pushButton_3.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.pushButton_3.setStyleSheet("QPushButton {\n"
-"    color: #F5F5F5;\n"
-"    border: 2px solid #555;\n"
-"    border-radius: 20px;\n"
-"    border-style: outset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0     #68abfd, stop: 1 #157efb\n"
-"        );\n"
-"    padding: 5px;\n"
-"    }\n"
-"\n"
-"QPushButton:hover {\n"
-"    background: qradialgradient(\n"
-"        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,\n"
-"        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd\n"
-"        );\n"
-"    }\n"
-"\n"
-"QPushButton:pressed {\n"
-"    border-style: inset;\n"
-"    background: qradialgradient(\n"
-"        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,\n"
-"        radius: 1.35, stop: 0 #fff, stop: 1 #ddd\n"
-"        );\n"
-"    }")
-        self.pushButton_3.setObjectName("pushButton_3")
-        self.label = QtWidgets.QLabel(self.centralwidget)
-        self.label.setGeometry(QtCore.QRect(230, 20, 1001, 411))
-        self.label.setStyleSheet("background-image: url(..//resources//white_goldenCCB_logo.png);")
-        self.label.setText("")
-        self.label.setObjectName("label")
-        MainWindow.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 1418, 47))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-        self.retranslateUi(MainWindow)
-        #self.pushButton1.pressed.connect(self.lineEdit.paste)
-        #self.pushButton_2.pressed.connect(self.lineEdit_2.paste)
-        QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.setWindowIcon(icon)
+        folder_icon = QtGui.QIcon()
+        folder_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_icon-101-folder-search_314678.ico"),
+                              QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        self.browse_data_btn.setIcon(folder_icon)
+        self.browse_post_dest_btn.setIcon(folder_icon)
+        self.logo_label.setStyleSheet("background-image: url(..//resources//white_goldenCCB_logo.png);")
+        team_icon = QtGui.QIcon()
+        team_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_ramen_3377055.ico"), QtGui.QIcon.Normal,
+                            QtGui.QIcon.Off)
+        self.actionThe_Team.setIcon(team_icon)
+        features_icon = QtGui.QIcon()
+        features_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_star_1054969.ico"), QtGui.QIcon.Normal,
+                                QtGui.QIcon.Off)
+        self.actionFeatures.setIcon(features_icon)
+        Reset_icon = QtGui.QIcon()
+        Reset_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_close_1282956.ico"), QtGui.QIcon.Normal,
+                             QtGui.QIcon.Off)
+        self.actionReset_System.setIcon(Reset_icon)
+        load_icon = QtGui.QIcon()
+        load_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_9_330409.ico"), QtGui.QIcon.Normal,
+                            QtGui.QIcon.Off)
+        self.actionLoad_dicationary_from_file.setIcon(load_icon)
+        current_dic_icon = QtGui.QIcon()
+        current_dic_icon.addPixmap(QtGui.QPixmap("..//resources/iconfinder_note_1296370.ico"), QtGui.QIcon.Normal,
+                                   QtGui.QIcon.Off)
+        self.actionShow_current_dictionary.setIcon(current_dic_icon)
+
+        # Init ProgressBar
+        self.progressBar.setVisible(False)
+        self.time_label.setVisible(False)
+
+        # Set Functionality
+        self.browse_data_btn.clicked.connect(self.browse_one)
+        self.browse_post_dest_btn.clicked.connect(self.browse_two)
+        self.start_btn.clicked.connect(self.start_program)
+        self.actionShow_current_dictionary.triggered.connect(self.show_dictionary)
+        self.actionLoad_dicationary_from_file.triggered.connect(self.load_dictionary)
+        self.actionReset_System.triggered.connect(self.reset_system)
+        self.actionFeatures.triggered.connect(self.show_features)
+        self.actionThe_Team.triggered.connect(self.show_team)
 
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.pushButton1.setText(_translate("MainWindow", "browse"))
-        self.pushButton_2.setText(_translate("MainWindow", "browse"))
-        self.lineEdit_2.setPlaceholderText(_translate("MainWindow", "Enter Posting Destination Path"))
-        self.lineEdit.setPlaceholderText(_translate("MainWindow", "Enter Corpus and StopWords Path"))
-        self.lineEdit.setClearButtonEnabled(True)
-        self.lineEdit_2.setClearButtonEnabled(True)
-        self.checkBox.setText(_translate("MainWindow", "Stemmer"))
-        self.pushButton_3.setText(_translate("MainWindow", "Start"))
-
-
-
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
+    window = Gu('..//resources//Golden_First_UI.ui')
+    window.setup_ui()
+    window.show()
     sys.exit(app.exec_())
-

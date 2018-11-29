@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1418</width>
+    <height>987</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="resources/resource.qrc">
+    <normaloff>:/windowIcon/goldenccb_icon_E7q_icon.ico</normaloff>:/windowIcon/goldenccb_icon_E7q_icon.ico</iconset>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-image: url(:/back1/intro-bg.jpg);</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QPushButton" name="browse_data_btn">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>490</y>
+      <width>151</width>
+      <height>57</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+    </property>
+    <property name="text">
+     <string>browse</string>
+    </property>
+    <property name="icon">
+     <iconset resource="resources/resource.qrc">
+      <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="browse_post_dest_btn">
+    <property name="geometry">
+     <rect>
+      <x>1030</x>
+      <y>580</y>
+      <width>151</width>
+      <height>57</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+    </property>
+    <property name="text">
+     <string>browse</string>
+    </property>
+    <property name="icon">
+     <iconset resource="resources/resource.qrc">
+      <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_posting_dest_path">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>590</y>
+      <width>711</width>
+      <height>39</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="placeholderText">
+     <string>Enter StopWords Path</string>
+    </property>
+    <property name="clearButtonEnabled">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLineEdit" name="lineEdit_data_path">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>500</y>
+      <width>711</width>
+      <height>39</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QLineEdit {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }</string>
+    </property>
+    <property name="inputMask">
+     <string/>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+    <property name="placeholderText">
+     <string>Enter Corpus Path</string>
+    </property>
+    <property name="clearButtonEnabled">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="stemmer_checkBox">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>450</y>
+      <width>181</width>
+      <height>37</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-image: url(:/trasparent/transparent.png);
+font: 81 8pt &quot;Raleway ExtraBold&quot;;</string>
+    </property>
+    <property name="text">
+     <string>Stemmer</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="start_btn">
+    <property name="geometry">
+     <rect>
+      <x>620</x>
+      <y>780</y>
+      <width>191</width>
+      <height>81</height>
+     </rect>
+    </property>
+    <property name="cursor">
+     <cursorShape>PointingHandCursor</cursorShape>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QPushButton {
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+    </property>
+    <property name="text">
+     <string>Start</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="logo_label">
+    <property name="geometry">
+     <rect>
+      <x>230</x>
+      <y>20</y>
+      <width>1001</width>
+      <height>411</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-image: url(:/logo/white_goldenCCB_logo.png);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QProgressBar" name="progressBar">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>890</y>
+      <width>511</width>
+      <height>35</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QProgressBar {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }
+QProgressBar::chunk {
+ background: qlineargradient(x1: 0,
+                                y1: 0.5,
+                                x2: 0.5,
+                                y2: 0.5,
+                                stop: 0 #cde3fe,
+                                stop: 1  #157efb);
+    margin-right: 2px;
+border-radius: 10px;
+}
+
+</string>
+    </property>
+    <property name="value">
+     <number>56</number>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+    </property>
+    <property name="textDirection">
+     <enum>QProgressBar::TopToBottom</enum>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="lang_comboBox">
+    <property name="geometry">
+     <rect>
+      <x>300</x>
+      <y>670</y>
+      <width>171</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="toolTip">
+     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">QComboBox {
+
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+
+
+}
+
+
+QComboBox::drop-down {
+border: 2px solid #cccccc;
+border-radius: 10px;
+background-image: url(:/back1/icon_in_the_input_box_drop_down_arrow_511486.png);
+}
+
+</string>
+    </property>
+    <property name="editable">
+     <bool>false</bool>
+    </property>
+    <property name="currentText">
+     <string>English</string>
+    </property>
+    <property name="iconSize">
+     <size>
+      <width>40</width>
+      <height>40</height>
+     </size>
+    </property>
+    <item>
+     <property name="text">
+      <string>English</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Hebrew</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>German</string>
+     </property>
+    </item>
+   </widget>
+   <widget class="QLabel" name="time_label">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>890</y>
+      <width>151</width>
+      <height>33</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-image: url(:/trasparent/transparent.png);
+color: rgb(72, 72, 72);</string>
+    </property>
+    <property name="text">
+     <string>ETA: 03:42</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1418</width>
+     <height>47</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionShow_current_dictionary"/>
+    <addaction name="actionLoad_dicationary_from_file"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_System"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionFeatures"/>
+    <addaction name="actionThe_Team"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <action name="actionShow_current_dictionary">
+   <property name="icon">
+    <iconset resource="resources/resource.qrc">
+     <normaloff>:/show_dic/iconfinder_note_1296370.ico</normaloff>:/show_dic/iconfinder_note_1296370.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Show current dictionary</string>
+   </property>
+  </action>
+  <action name="actionLoad_dicationary_from_file">
+   <property name="icon">
+    <iconset resource="resources/resource.qrc">
+     <normaloff>:/load_dic/iconfinder_9_330409.ico</normaloff>:/load_dic/iconfinder_9_330409.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Load dicationary from file</string>
+   </property>
+  </action>
+  <action name="actionReset_System">
+   <property name="icon">
+    <iconset resource="resources/resource.qrc">
+     <normaloff>:/reset_ico/iconfinder_close_1282956.ico</normaloff>:/reset_ico/iconfinder_close_1282956.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Reset System</string>
+   </property>
+  </action>
+  <action name="actionFeatures">
+   <property name="icon">
+    <iconset resource="resources/resource.qrc">
+     <normaloff>:/features_icon/iconfinder_star_1054969.ico</normaloff>:/features_icon/iconfinder_star_1054969.ico</iconset>
+   </property>
+   <property name="text">
+    <string>Features</string>
+   </property>
+  </action>
+  <action name="actionThe_Team">
+   <property name="icon">
+    <iconset resource="resources/resource.qrc">
+     <normaloff>:/team_icon/iconfinder_ramen_3377055.ico</normaloff>:/team_icon/iconfinder_ramen_3377055.ico</iconset>
+   </property>
+   <property name="text">
+    <string>The Team</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="resources/resource.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>browse_data_btn</sender>
+   <signal>pressed()</signal>
+   <receiver>lineEdit_data_path</receiver>
+   <slot>paste()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1075</x>
+     <y>565</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>625</x>
+     <y>566</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>browse_post_dest_btn</sender>
+   <signal>pressed()</signal>
+   <receiver>lineEdit_posting_dest_path</receiver>
+   <slot>paste()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>1075</x>
+     <y>655</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>625</x>
+     <y>656</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

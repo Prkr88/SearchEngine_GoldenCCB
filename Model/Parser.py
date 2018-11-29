@@ -318,15 +318,20 @@ class Parser:
             if term != '':
                 self.term_case_filter(term)
 
-    # convert all numbers according to rules
-
     # prevent index increment if double delete
     two_deleted = 0
 
     def convert_numbers_in_list(self, index):
+        list_t = self.list_tokens
+        tmp_term = list_t[index]
+        term_size = len(tmp_term)
+        while tmp_term[term_size-1] in self.hash_punc:
+            tmp_term = tmp_term[:-1]
+            term_size -=1
+        list_t[index] = tmp_term
         # first loop correct number forms
         operation_done = 0
-        term = self.list_tokens[index]
+        term = list_t[index]
         dot_pos = term.find('.')
         if dot_pos == len(term) - 1:
             term = term.replace('.', '')
@@ -337,7 +342,7 @@ class Parser:
                         float(term)
                         self.list_tokens[index] = self.numbers_rules(term)
                     except ValueError:
-                        # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                        #print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
                         return 'SyntaxError{}'
             else:
                 self.edit_list_by_key_word_dates(index)
@@ -685,7 +690,7 @@ class Parser:
             self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
             self.str_txt = self.str_txt.split("</TEXT>")
             self.str_txt = self.str_txt[0]
-        except AttributeError:
+        except (IndexError, AttributeError) as e:
             pass
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')

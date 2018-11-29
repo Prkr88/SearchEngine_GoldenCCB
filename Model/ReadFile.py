@@ -9,7 +9,7 @@ import sys
 import json
 import timeit
 from io import StringIO
-from multiprocessing import Pool ,Lock, Manager
+import multiprocessing
 from Model.API import API
 
 '''
@@ -18,46 +18,31 @@ str_doc = """ <DOC><DOCNO> FBIS3-1 </DOCNO><HT>  "cr00000011094001" </HT><HEADER
 p = Parser(str_doc)
 '''
 
+f_counter = None
 
 class ReadFile:
-    f_counter = 0
     complete_list = []
-    #mutex_vocab = Lock()
-    #p_manager = Manager()
-   # mutex_vocab = p_manager.Lock()
-   # mutex_file_counter = Lock()
     vocabulary = {}
     hash_terms_collection = {}
-    mutex = Lock()
-    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
+    # indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
-    # def init_lock(l):
-    #     global lock
-    #     lock = l
 
-    def __init__(self , data_path,stopword_path):
-        print("***** " +data_path+ " *****")
-        print("***** " +stopword_path+ " *****")
-        #p = Pool(processes=8)
-       # l = Lock()
-        #p = Pool(processes=4, initializer=self.init_lock, initargs=(l,))
+    def init_global_counter(self, f_c):
+        global f_counter
+        f_counter = f_c
+
+    def __init__(self, data_path, stopword_path):
+        print("***** " + data_path + " *****")
+        print("***** " + stopword_path + " *****")
+        f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
-        for file_path in files_list:
-            self.parse_file(file_path)
-        #p.map(self.set_file_list, files_list)
-        #async_result = p.map_async(self.set_file_list, files_list)
-        #p.close()
-        #p.join()
-        # p = Pool(processes=4)
-        # async_result = p.map_async(self.get_files, self.files_list)
-        # p.close()
-        # p.join()
-        first_file = self.files_list[0]
-        self.get_files(first_file)
-        print("Complete")
+        pool = multiprocessing.Pool(processes=4, initializer=self.init_global_counter, initargs=(f_counter,))
+        i = pool.map_async(self.parse_file, files_list, chunksize=1)
+        i.wait()
+        print(i.get())
         end = time.time()
         print('total time (s)= ' + str(end - start))
         print(self.complete_list)
@@ -65,43 +50,47 @@ class ReadFile:
 
     def set_file_list(self):
         files_list = []
-        for root, dirs, files in os.walk('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+        for root, dirs, files in os.walk(
+                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         return files_list
 
     def parse_file(self, file_path):
-        print(file_path)
-        # lock.acquire()
-        # self.f_counter += 1
-        # lock.ralease()
-        # self.mutex_file_counter.acquire()
-        # try:
-        self.f_counter += 1
-        # finally:
-        #     self.mutex_file_counter.release()
-        #self.complete_list.append(file_path)
+        global f_counter
+        with f_counter.get_lock():
+            #print(file_path)
+            f_counter.value += 1
+            #print(f_counter.value)
         sum = 0
         summary = 0
         f_start = time.time()
         p = Parser()
         self.get_doc_from_file(file_path, p)
         file_terms = p.hash_terms.copy()
-        del p
+        p = None
         self.merge_file_terms(file_terms)
         file_terms = {}
-        if self.f_counter % 10 == 0:
+        if f_counter.value % 40 == 0:
             print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
             print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
-
-            print("10 done")
+            with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
+                file.write(str(self.hash_terms_collection))
+            self.hash_terms_collection = {}
+            self.vocabulary = {}
+            file_terms = {}
+            print("40 done")
+            gc.collect()
+            print("Memory Cleaned")
         f_end = time.time()
         sum += f_end - f_start
         summary = summary + (f_end - f_start)
-        #print("time for file #" + str(self.f_counter) + " :" + str(f_end - f_start))
-        #print("avarage per file: " + str(summary/300))
-        print(self.f_counter)
+        p_c = float(f_counter.value)
+        print(str(int(p_c * 100 / 1815)))
+
+
+
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
@@ -114,12 +103,6 @@ class ReadFile:
             del data
             for doc in data_list:
                 doc_counter2 += 1
-                # if doc_counter == 10:
-                #     doc_counter = 0
-                #     del parser_object
-                #     gc.collect()
-                #     print("memoey cleared after " + str(doc_counter2) + " documents ")
-                #     parser_object = Parser()
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
@@ -132,23 +115,14 @@ class ReadFile:
         for key, value in file_terms.items():
             vocab = self.vocabulary
             hash_col = self.hash_terms_collection
-            #self.mutex_vocab.acquire()
-            #try:
-            if key not in self.vocabulary:
-                vocab[key] = 0
-                hash_col[key] = value
-            else:
-                hash_col[key]['tf'] = hash_col[key]['tf'] + file_terms[key]['tf']
-                hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
-                for d_id in file_terms[key]['docs']:
-                    hash_col[key]['docs'][d_id] = 'pos n/a'
-
-            #finally:
-                #self.mutex_vocab.release()
-
-                # self.mutex_file_counter.()
-                # try:
-                #     self.f_counter += 1
-                #     counter = self.f_counter
-                # finally:
-                #     self.mutex_file_counter.release()
+            global f_counter
+            with f_counter.get_lock():
+                if key not in self.vocabulary:
+                    vocab[key] = 0
+                    hash_col[key] = value
+                else:
+                    hash_col[key]['tf'] = hash_col[key]['tf'] + file_terms[key]['tf']
+                    hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
+                    for d_id in file_terms[key]['docs']:
+                        hash_col[key]['docs'][d_id] = 'pos n/a'
+        #print("merged")
