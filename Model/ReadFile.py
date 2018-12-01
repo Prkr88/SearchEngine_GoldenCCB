@@ -88,7 +88,6 @@ class ReadFile:
         global f_counter
         f_counter = f_c
 
-
     def __init__(self, data_path, stopword_path, stemmer,controller):
         print("***** " + data_path + " *****")
         print("***** " + stopword_path + " *****")
@@ -149,17 +148,20 @@ class ReadFile:
             self.hash_cities = pickle.load(input)
 
     def start_evaluating(self):
+        global f_counter
         f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
         manager = Manager()
         hash_c = manager.dict()
         voc = manager.dict()
-        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
-        i = pool.map_async(self.parse_file, files_list ,chunksize=1)
-        i.wait()
-        print(i.get())
-        self.indexer.sort_file_list()
+        for file in files_list:
+            self.parse_file(file)
+        #pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
+       # i = pool.map_async(self.parse_file, files_list, chunksize=1)
+        #i.wait()
+        #print(i.get())
+        #self.indexer.sort_file_list()
         end = time.time()
         print('total time (s)= ' + str(end - start))
         print(self.complete_list)
@@ -186,8 +188,6 @@ class ReadFile:
         if len(self.hash_stopwords) == 0:
             self.init_helpers()
         global f_counter
-        # global hash_c
-        # global voc
         p = None
         file_terms = {}
         p_name = "#NUM_" + str(f_counter.value)
@@ -204,9 +204,7 @@ class ReadFile:
         f_start = time.time()
         p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc ,self.stemmer)
         self.get_doc_from_file(file_path, p)
-        file_terms = p.hash_terms.copy()
-        print(p_name +' size :' +str(len(file_terms)))
-        del p
+        #print(p_name +' size :' +str(len(file_terms)))
         #self.merge_file_terms(file_terms)
         #file_terms = {}
         #with f_counter.get_lock():
@@ -214,26 +212,12 @@ class ReadFile:
             #h = hash_c.copy()
             #self.indexer.write_temp_posts(self.hash_terms_collection)
         with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
-            pickle.dump(file_terms, output, pickle.HIGHEST_PROTOCOL)
-        del file_terms
+            pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         #self.indexer.write_temp_posts(p.hash_terms)
        # self.indexer.sort_file_list()
         #     pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
-
         file_terms = {}
-        #p=None
-        # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
-        # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
-        # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
-        #     file.write(str(self.hash_terms_collection))
-        #print("40 done")
-        hash_c = {}
-        h = {}
         self.vocabulary = {}
-        file_terms = {}
-        #gc.collect()
-        #print("Memory Cleaned")
-
         f_end = time.time()
         time_to_file = f_end - f_start
         if f_counter.value % 20 == 0:
@@ -241,7 +225,7 @@ class ReadFile:
             p_c = int(p_c * 100 / 1815)
             if p_c != self.percent:
                 self.percent = p_c
-                self.print_prog(p_c )
+                self.print_prog(p_c)
 
     def print_prog(self, p_c):
         print('\n'*100)
