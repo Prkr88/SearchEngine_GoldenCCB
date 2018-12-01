@@ -125,7 +125,7 @@ class ReadFile:
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(
-                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+                'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
@@ -139,7 +139,6 @@ class ReadFile:
             # print(f_counter.value)
         sum = 0
         summary = 0
-        time_ten_files = 0
         f_start = time.time()
         p = Parser(self.abs_stopword_path,self.abs_keyword_path_months,self.abs_keyword_path_prices)
         self.get_doc_from_file(file_path, p)
@@ -173,8 +172,7 @@ class ReadFile:
         #self.clear()
         print('Progess:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
 
-    def clear(self):
-        os.system('cls')
+
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
@@ -192,10 +190,14 @@ class ReadFile:
                     doc = "<DOC>" + doc
                     # sem.acquire()
                     parser_object.start_parse(doc)
+                    # test_hash = {}
+                    # self.indexer.write_temp_posts(test_hash)
                     # self.voc2str(hash_terms)
                     # sem.release()
                     # self.indexer.write_temp_posts(hash_terms)
                     # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
+                    # self.indexer.write_temp_posts(hash_terms)
+                    #self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
 
                 else:
                     skip_one = 1
