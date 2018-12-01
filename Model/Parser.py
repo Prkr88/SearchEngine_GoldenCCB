@@ -1,11 +1,11 @@
 import copy
 import os
+import time
 from Model.API import API
 from Model.Stemmer import Stemmer
 
 
 class Parser:
-
     # initializes strings
 
     str_doc = ""
@@ -36,21 +36,12 @@ class Parser:
 
     # constructor #
 
-    def __init__(self):
-        project_dir = os.path.dirname(os.path.dirname(__file__))
-        str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
-        str_path_keywords_months = 'resources\\keywords_months.txt'  # sets key word dictionary
-        str_path_keywords_prices = 'resources\\keywords_prices.txt'  # sets key word dictionary
-        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
-        # self.set_test_file(str_path_test)
-        abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
-        abs_keyword_path_months = os.path.join(project_dir, str_path_keywords_months)
-        abs_keyword_path_prices = os.path.join(project_dir, str_path_keywords_prices)
-        self.set_stopwords(abs_stopword_path)  # sets stop word dictionary
-        self.set_keywords_months(abs_keyword_path_months)  # sets key word dictionary
-        self.set_keywords_prices(abs_keyword_path_prices)  # sets key word dictionary
-        self.set_puncwords()  # sets punctuation vocabulary
-        self.stemming_mode = False
+    def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, stemmer):
+        self.hash_stopwords = hash_stopwords
+        self.hash_keywords_months = hash_keywords_months
+        self.hash_keywords_prices = hash_keywords_prices
+        self.hash_punc = hash_punc
+        self.stemming_mode = stemmer
         if self.stemming_mode:
             self.stemmer = Stemmer()
 
@@ -59,7 +50,7 @@ class Parser:
     def set_city(self):
         try:
             city_name = self.str_doc.split("<F P=104>")[1]
-            city_name = city_name.split("</F>")[0]            
+            city_name = city_name.split("</F>")[0]
             city_name = city_name.strip()
             l_city = city_name.split(' ')
             if len(l_city) > 1:
@@ -98,22 +89,7 @@ class Parser:
         except KeyError:
             a = 0
 
-
-    # function imports API info #
-
-    def create_api(self):
-        obj_api = API(self.hash_cities)
-        obj_api.get_api_info()
-
     # function creates stopword list #
-
-    def set_stopwords(self, file_path):
-        with open(file_path, 'r') as file:
-            data = file.read().replace('\n', ' ')
-        list_stopwords = data.split()
-        for word in list_stopwords:
-            self.hash_stopwords[word] = ""
-        del list_stopwords
 
     # function test #
 
@@ -122,29 +98,6 @@ class Parser:
             self.str_txt = file.read().replace('\n', ' ')
 
     # function creates keyword list #
-
-    def set_keywords_months(self, file_path):
-        with open(file_path, 'r') as file:
-            data = file.read().replace('\n', ' ')
-        list_keywords_months = data.split()
-        for word in list_keywords_months:
-            self.hash_keywords_months[word] = ""
-        del list_keywords_months
-
-    def set_keywords_prices(self, file_path):
-        with open(file_path, 'r') as file:
-            data = file.read().replace('\n', ' ')
-        list_keywords_prices = data.split()
-        for word in list_keywords_prices:
-            self.hash_keywords_prices[word] = ""
-        del list_keywords_prices
-
-    def set_puncwords(self):
-        list_punc = {',', '"', '.', '?', '-', '_', '.', '*', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '|', '~',
-                     '^', '?', "\"", '\"', '&', '"!"', '!', "=", '+', "#", '\n', "\"", '\"', "/", "\\"}
-        for word in list_punc:
-            self.hash_punc[word] = ""
-        del list_punc
 
     # function prints tokens list #
 
@@ -266,7 +219,8 @@ class Parser:
                         this_header = this_term['hash_docs'][self.str_doc_id]['h']
                         this_term.update({'tf_c': this_term['tf_c'] + 1})
                         # this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header+is_header, 'pos': "n/a"}})
-                        this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
+                        this_term['hash_docs'].update(
+                            {self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
                         if this_tf == 2:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
@@ -347,9 +301,9 @@ class Parser:
         list_t = self.list_tokens
         tmp_term = list_t[index]
         term_size = len(tmp_term)
-        while tmp_term[term_size-1] in self.hash_punc:
+        while tmp_term[term_size - 1] in self.hash_punc:
             tmp_term = tmp_term[:-1]
-            term_size -=1
+            term_size -= 1
         list_t[index] = tmp_term
         # first loop correct number forms
         operation_done = 0
@@ -364,7 +318,7 @@ class Parser:
                         float(term)
                         self.list_tokens[index] = self.numbers_rules(term)
                     except ValueError:
-                        #print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                        # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
                         return 'SyntaxError{}'
             else:
                 self.edit_list_by_key_word_dates(index)
@@ -377,7 +331,7 @@ class Parser:
                     # index -= 1
                     return ans
                 except ValueError:
-                   # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
+                    # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
                     return 'SyntaxError{}'
         elif '/' in term:
             nums_in_fraction = term.split('/', 1)
@@ -708,11 +662,12 @@ class Parser:
         self.list_tokens = self.str_txt.split()
         # self.convert_numbers_in_list()
         index = 0
-        self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens), 'city_origin': self.str_city_name}})
-        #self.set_city()
+        self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens),
+                                                 'city_origin': self.str_city_name}})
+        # self.set_city()
         self.set_headers()
-        del self.str_doc
-        del self.str_txt
+        # del self.str_doc
+        # del self.str_txt
         for term in self.list_tokens:
             if term != '':
                 if term == '*':
@@ -732,7 +687,7 @@ class Parser:
                                     # print('Term| ' +term+' |inserted.')
                         except IndexError:
                             print('dickTerm: ' + term)
-                        if term != "-" and term!= "--" and term != '':
+                        if term != "-" and term != "--" and term != '':
                             hyphen_term = term
                             if "--" in term:  # term1--term2
                                 list_double = term.split('--')
@@ -757,7 +712,6 @@ class Parser:
                             self.word_in_line_counter += 1
 
                 index += 1
-
 
         # return self.hash_terms
         # print("done")

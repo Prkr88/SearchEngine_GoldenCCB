@@ -11,8 +11,9 @@ import json
 import timeit
 from io import StringIO
 import multiprocessing
-from multiprocessing import Pool ,Lock, Manager ,Array
+from multiprocessing import Pool, Lock, Manager, Array
 from Model.API import API
+import pickle
 
 # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
 # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
@@ -27,20 +28,24 @@ f_counter = None
 
 semaphore = None
 m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
+helper_ref = []
 
 
 def init_sem(sem):
     global semaphore
     semaphore = sem
 
+
 def do_work(payload):
     with semaphore:
         return payload
+
 
 def init_counter(args):
     ''' store the counter for later use '''
     global counter
     counter = args
+
 
 def analyze_data(args):
     ''' increment the global counter, do something with the input '''
@@ -56,17 +61,25 @@ class ReadFile:
     files_list = []
     complete_list = []
     mutex = Lock()
-    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
+    controller = None
+    percent = 0
+    #window = None
+    stemmer = None
+    indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
+    hash_stopwords = {}
+    hash_keywords_months = {}
+    hash_keywords_prices = {}
+    hash_punc = {}
 
     def do_job(id):
         with semaphore:
             sleep(1)
         print("Finished job")
 
-
     vocabulary = {}
     hash_terms_collection = {}
+
     # indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
@@ -76,9 +89,65 @@ class ReadFile:
         global f_counter
         f_counter = f_c
 
-    def __init__(self, data_path, stopword_path):
+    def __init__(self, data_path, stopword_path, stemmer,controller):
         print("***** " + data_path + " *****")
         print("***** " + stopword_path + " *****")
+        print('\n' * 100)
+        print('Progess:[' + ' ' * 100 + '%0' ']')
+        self.controller = controller
+        self.stemmer = stemmer
+
+
+    def set_stopwords(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_stopwords = data.split()
+        for word in list_stopwords:
+            self.hash_stopwords[word] = ""
+        del list_stopwords
+
+    def set_keywords_months(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_keywords_months = data.split()
+        for word in list_keywords_months:
+            self.hash_keywords_months[word] = ""
+        del list_keywords_months
+
+    def set_keywords_prices(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_keywords_prices = data.split()
+        for word in list_keywords_prices:
+            self.hash_keywords_prices[word] = ""
+        del list_keywords_prices
+
+    def set_puncwords(self):
+        list_punc = {',', '"', '.', '?', '-', '_', '.', '*', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<',
+                     '>', '|', '~',
+                     '^', '?', "\"", '\"', '&', '"!"', '!', "=", '+', "#", '\n', "\"", '\"', "/", "\\"}
+        for word in list_punc:
+            self.hash_punc[word] = ""
+        del list_punc
+
+    def init_helpers(self):
+        project_dir = os.path.dirname(os.path.dirname(__file__))
+        str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
+        str_path_keywords_months = 'resources\\keywords_months.txt'  # sets key word dictionary
+        str_path_keywords_prices = 'resources\\keywords_prices.txt'  # sets key word dictionary
+        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
+        # self.set_test_file(str_path_test)
+        self.abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
+        self.abs_keyword_path_months = os.path.join(project_dir, str_path_keywords_months)
+        self.abs_keyword_path_prices = os.path.join(project_dir, str_path_keywords_prices)
+        self.set_stopwords(self.abs_stopword_path)  # sets stop word dictionary
+        self.set_keywords_months(self.abs_keyword_path_months)  # sets key word dictionary
+        self.set_keywords_prices(self.abs_keyword_path_prices)  # sets key word dictionary
+        self.set_puncwords()  # sets punctuation vocabulary
+        with open('resources\\cities_data.pkl', 'rb') as input:
+            self.hash_cities = pickle.load(input)
+
+    def start_evaluating(self):
         f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
@@ -86,6 +155,7 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
         print(i.get())
+        self.indexer.sort_file_list()
         end = time.time()
         print('total time (s)= ' + str(end - start))
         print(self.complete_list)
@@ -98,32 +168,35 @@ class ReadFile:
         # sem = multiprocessing.Semaphore(0)
         # with multiprocessing.Pool(processes=4, initializer=(init_counter, init_sem), initargs=(self.f_counter, sem)) as p:
         # results = p.map(do_work, 4)
+
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(
-                'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
+                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         return files_list
 
     def parse_file(self, file_path):
+        if len(self.hash_stopwords) == 0:
+            self.init_helpers()
         global f_counter
         with f_counter.get_lock():
-            #print(file_path)
+            # print(file_path)
             f_counter.value += 1
-            #print(f_counter.value)
+            # print(f_counter.value)
         sum = 0
         summary = 0
         f_start = time.time()
-        p = Parser()
+        p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc ,self.stemmer)
         self.get_doc_from_file(file_path, p)
         file_terms = p.hash_terms.copy()
         p = None
         self.merge_file_terms(file_terms)
         file_terms = {}
-        if f_counter.value % 180 == 0:
-            # self.indexer.write_temp_posts(self.hash_terms_collection)
+        if f_counter.value % 40 == 0:
+            self.indexer.write_temp_posts(self.hash_terms_collection)
             # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
             # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
             # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
@@ -131,15 +204,22 @@ class ReadFile:
             self.hash_terms_collection = {}
             self.vocabulary = {}
             file_terms = {}
-            print("40 done")
+            #print("40 done")
             gc.collect()
-            print("Memory Cleaned")
+            #print("Memory Cleaned")
         f_end = time.time()
-        sum += f_end - f_start
-        summary = summary + (f_end - f_start)
-        p_c = float(f_counter.value)
-        print(str(int(p_c * 100 / 1815)))
+        time_to_file = f_end - f_start
+        if f_counter.value % 20 == 0:
+            p_c = float(f_counter.value)
+            p_c = int(p_c * 100 / 1815)
+            if p_c != self.percent:
+                self.percent = p_c
+                self.print_prog(p_c )
 
+    def print_prog(self, p_c):
+        print('\n'*100)
+        #self.clear()
+        print('Progess:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
 
 
 
@@ -164,7 +244,9 @@ class ReadFile:
                     # self.voc2str(hash_terms)
                     # sem.release()
                     # self.indexer.write_temp_posts(hash_terms)
-                    self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
+                    # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
+                    # self.indexer.write_temp_posts(hash_terms)
+                    #self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
 
                 else:
                     skip_one = 1
@@ -190,7 +272,7 @@ class ReadFile:
                     hash_col[key] = value
                 else:
                     hash_col[key]['tf_c'] = hash_col[key]['tf_c'] + file_terms[key]['tf_c']
-                    hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
+                    hash_col[key]['df'] = hash_col[key]['df'] + file_terms[key]['df']
                     for d_id in file_terms[key]['hash_docs']:
-                        hash_col[key]['hash_docs'] = file_terms[key]['hash_docs']
-        #print("merged")
+                        hash_col[key]['hash_docs'].update({d_id: file_terms[key]['hash_docs'][d_id]})
+        # print("merged")

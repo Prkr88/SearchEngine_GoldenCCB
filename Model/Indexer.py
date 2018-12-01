@@ -4,8 +4,8 @@ import shutil
 from multiprocessing import Pool, Lock
 from numpy import log2
 
-
 m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
+
 
 # FORMAT:  DAKAR|{'tf_c': 8192, 'df': 8192, 'hash_docs': {'FBIS3-638': {'tf_d': 1, 'h': 0}, 'FBIS3-841': {'tf_d': 1, 'h': 0}, 'FBIS3-880': {'tf_d': 1, 'h': 0}, 'FBIS3-884': {'tf_d': 1, 'h': 0}}}
 # FORMAT:  DAKAR|
@@ -23,6 +23,8 @@ class Indexer:
         self.file_path3 = self.posting_path + 'ijklm.txt'
         self.file_path4 = self.posting_path + 'nopqr.txt'
         self.file_path5 = self.posting_path + 'stuvxwyz.txt'
+        self.file_list = [self.file_path0, self.file_path1, self.file_path2, self.file_path3, self.file_path4,
+                          self.file_path5]
         self.hash_file_terms = {}
         self.counter = 0
         self.hash_junk = {}
@@ -64,10 +66,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ikey[0]
                 if ch.isdigit() or ch == '$':
-                    num.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N/ival['df'])))) + "<" + str(docs_val) + '\n')
+                    num.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                     i += 1
                 elif 97 <= ord(ch) <= 99 or 65 <= ord(ch) <= 67:
                     break
@@ -104,10 +108,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ord(ikey[0])
                 if 97 <= ch <= 99 or 65 <= ch <= 67:
-                    abc.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N/ival['df'])))) + "<" + str(docs_val) + '\n')
+                    abc.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                     i += 1
                 elif 100 <= ch <= 104 or 68 <= ch <= 72:
                     break
@@ -144,10 +150,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ord(ikey[0])
                 if 100 <= ch <= 104 or 68 <= ch <= 72:
-                    defgh.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N/ival['df'])))) + "<" + str(docs_val) + '\n')
+                    defgh.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                     i += 1
                 elif 105 <= ch <= 109 or 73 <= ch <= 77:
                     break
@@ -184,10 +192,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ord(ikey[0])
                 if 105 <= ch <= 109 or 73 <= ch <= 77:
-                    ijklm.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N/ival['df'])))) + "<" + str(docs_val) + '\n')
+                    ijklm.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                     i += 1
                 elif 110 <= ch <= 114 or 78 <= ch <= 82:
                     break
@@ -224,10 +234,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ord(ikey[0])
                 if 110 <= ch <= 114 or 78 <= ch <= 82:
-                    nopqr.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(log2(self.N/ival['df'])) + "<" + str(docs_val) + '\n')
+                    nopqr.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        log2(self.N / ival['df'])) + "<" + str(docs_val) + '\n')
                     i += 1
                 elif 115 <= ch <= 122 or 83 <= ch <= 90:
                     break
@@ -264,10 +276,12 @@ class Indexer:
                             last_gap = curr_gap
                     else:
                         curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(jval['h']) + ">"
+                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                        jval['h']) + ">"
                 ch = ord(ikey[0])
                 if 115 <= ch <= 122 or 83 <= ch <= 90:
-                    stuvxwyz.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N/ival['df'])))) + "<" + str(docs_val) + '\n')
+                    stuvxwyz.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                     i += 1
                 else:
                     self.hash_junk[ikey] = ""
@@ -295,16 +309,18 @@ class Indexer:
             self.merger(term)
         self.write_temp_posts(self.hash_file_terms)
 
-    def sort_file_list(self, file_name):
-        with open(file_name, 'r', encoding='utf-8') as file:
-            list_terms = [line.strip() for line in file]
-            file.close()
-        for term in list_terms:
-            term = term.split('|')
-            self.merger(term)
-        with open(file_name, 'w', encoding='utf-8') as file:
-            file.close()
-        self.write_temp_posts(self.hash_file_terms)
+    def sort_file_list(self):
+        file_list = self.file_list
+        for file in file_list:
+            with open(file, 'r', encoding='utf-8') as file:
+                list_terms = [line.strip() for line in file]
+                file.close()
+            for term in list_terms:
+                term = term.split('|')
+                self.merger(term)
+            with open(file, 'w', encoding='utf-8') as file:
+                file.close()
+            self.write_temp_posts(self.hash_file_terms)
 
     # FORMAT:  DAKAR|{'tf_c': 8192, 'df': 8192, 'hash_docs': {'FBIS3-638': {'tf_d': 1, 'h': 0}, 'FBIS3-841': {'tf_d': 1, 'h': 0}, 'FBIS3-880': {'tf_d': 1, 'h': 0}, 'FBIS3-884': {'tf_d': 1, 'h': 0}}}
 
@@ -394,7 +410,7 @@ class Indexer:
                         nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
                         self.hash_file_terms[other_term] = nested_hash
                         return
-                
+
     def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
         try:
             return 64 < ord(term[0]) < 91
@@ -411,4 +427,3 @@ class Indexer:
         if self.posting_path is not None:
             if os.path.exists(self.posting_path):
                 shutil.rmtree(self.posting_path)
-
