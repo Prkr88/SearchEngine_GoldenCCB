@@ -28,6 +28,7 @@ f_counter = None
 
 semaphore = None
 m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
+helper_ref = []
 
 
 def init_sem(sem):
@@ -66,6 +67,10 @@ class ReadFile:
     stemmer = None
     indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
+    hash_stopwords = {}
+    hash_keywords_months = {}
+    hash_keywords_prices = {}
+    hash_punc = {}
 
     def do_job(id):
         with semaphore:
@@ -87,8 +92,45 @@ class ReadFile:
     def __init__(self, data_path, stopword_path, stemmer,controller):
         print("***** " + data_path + " *****")
         print("***** " + stopword_path + " *****")
+        print('\n' * 100)
+        print('Progess:[' + ' ' * 100 + '%0' ']')
         self.controller = controller
         self.stemmer = stemmer
+
+
+    def set_stopwords(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_stopwords = data.split()
+        for word in list_stopwords:
+            self.hash_stopwords[word] = ""
+        del list_stopwords
+
+    def set_keywords_months(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_keywords_months = data.split()
+        for word in list_keywords_months:
+            self.hash_keywords_months[word] = ""
+        del list_keywords_months
+
+    def set_keywords_prices(self, file_path):
+        with open(file_path, 'r') as file:
+            data = file.read().replace('\n', ' ')
+        list_keywords_prices = data.split()
+        for word in list_keywords_prices:
+            self.hash_keywords_prices[word] = ""
+        del list_keywords_prices
+
+    def set_puncwords(self):
+        list_punc = {',', '"', '.', '?', '-', '_', '.', '*', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<',
+                     '>', '|', '~',
+                     '^', '?', "\"", '\"', '&', '"!"', '!', "=", '+', "#", '\n', "\"", '\"', "/", "\\"}
+        for word in list_punc:
+            self.hash_punc[word] = ""
+        del list_punc
+
+    def init_helpers(self):
         project_dir = os.path.dirname(os.path.dirname(__file__))
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords_months = 'resources\\keywords_months.txt'  # sets key word dictionary
@@ -98,7 +140,11 @@ class ReadFile:
         self.abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
         self.abs_keyword_path_months = os.path.join(project_dir, str_path_keywords_months)
         self.abs_keyword_path_prices = os.path.join(project_dir, str_path_keywords_prices)
-        with open('resources\\cities_data.pkl','rb') as input:
+        self.set_stopwords(self.abs_stopword_path)  # sets stop word dictionary
+        self.set_keywords_months(self.abs_keyword_path_months)  # sets key word dictionary
+        self.set_keywords_prices(self.abs_keyword_path_prices)  # sets key word dictionary
+        self.set_puncwords()  # sets punctuation vocabulary
+        with open('resources\\cities_data.pkl', 'rb') as input:
             self.hash_cities = pickle.load(input)
 
     def start_evaluating(self):
@@ -109,6 +155,7 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
         print(i.get())
+        self.indexer.sort_file_list()
         end = time.time()
         print('total time (s)= ' + str(end - start))
         print(self.complete_list)
@@ -125,13 +172,15 @@ class ReadFile:
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(
-                'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
+                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         return files_list
 
     def parse_file(self, file_path):
+        if len(self.hash_stopwords) == 0:
+            self.init_helpers()
         global f_counter
         with f_counter.get_lock():
             # print(file_path)
@@ -140,14 +189,14 @@ class ReadFile:
         sum = 0
         summary = 0
         f_start = time.time()
-        p = Parser(self.abs_stopword_path,self.abs_keyword_path_months,self.abs_keyword_path_prices)
+        p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc ,self.stemmer)
         self.get_doc_from_file(file_path, p)
         file_terms = p.hash_terms.copy()
         p = None
-        #self.merge_file_terms(file_terms)
+        self.merge_file_terms(file_terms)
         file_terms = {}
-        if f_counter.value % 10 == 0:
-            #self.indexer.write_temp_posts(self.hash_terms_collection)
+        if f_counter.value % 40 == 0:
+            self.indexer.write_temp_posts(self.hash_terms_collection)
             # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
             # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
             # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
@@ -223,7 +272,7 @@ class ReadFile:
                     hash_col[key] = value
                 else:
                     hash_col[key]['tf_c'] = hash_col[key]['tf_c'] + file_terms[key]['tf_c']
-                    hash_col[key]['idf'] = hash_col[key]['idf'] + file_terms[key]['idf']
+                    hash_col[key]['df'] = hash_col[key]['df'] + file_terms[key]['df']
                     for d_id in file_terms[key]['hash_docs']:
-                        hash_col[key]['hash_docs'] = file_terms[key]['hash_docs']
+                        hash_col[key]['hash_docs'].update({d_id: file_terms[key]['hash_docs'][d_id]})
         # print("merged")
