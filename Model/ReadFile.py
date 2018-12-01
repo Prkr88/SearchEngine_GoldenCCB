@@ -28,7 +28,6 @@ f_counter = None
 
 semaphore = None
 m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
-helper_ref = []
 
 
 def init_sem(sem):
@@ -85,9 +84,10 @@ class ReadFile:
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
 
-    def init_global_counter(self, f_c):
+    def init_globals(self, f_c):
         global f_counter
         f_counter = f_c
+
 
     def __init__(self, data_path, stopword_path, stemmer,controller):
         print("***** " + data_path + " *****")
@@ -96,6 +96,7 @@ class ReadFile:
         print('Progess:[' + ' ' * 100 + '%0' ']')
         self.controller = controller
         self.stemmer = stemmer
+
 
 
     def set_stopwords(self, file_path):
@@ -151,8 +152,11 @@ class ReadFile:
         f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
-        pool = multiprocessing.Pool(processes=4, initializer=self.init_global_counter, initargs=(f_counter,))
-        i = pool.map_async(self.parse_file, files_list, chunksize=1)
+        manager = Manager()
+        hash_c = manager.dict()
+        voc = manager.dict()
+        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
+        i = pool.map_async(self.parse_file, files_list ,chunksize=1)
         i.wait()
         print(i.get())
         self.indexer.sort_file_list()
@@ -182,6 +186,15 @@ class ReadFile:
         if len(self.hash_stopwords) == 0:
             self.init_helpers()
         global f_counter
+        # global hash_c
+        # global voc
+        p = None
+        file_terms = {}
+        p_name = "#NUM_" + str(f_counter.value)
+      #  print("process #NUM_" + str(f_counter.value))
+        #file_path = args[0]
+        #hash_c = args[1]
+        #voc = args[2]
         with f_counter.get_lock():
             # print(file_path)
             f_counter.value += 1
@@ -192,21 +205,35 @@ class ReadFile:
         p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc ,self.stemmer)
         self.get_doc_from_file(file_path, p)
         file_terms = p.hash_terms.copy()
-        p = None
-        self.merge_file_terms(file_terms)
+        print(p_name +' size :' +str(len(file_terms)))
+        del p
+        #self.merge_file_terms(file_terms)
+        #file_terms = {}
+        #with f_counter.get_lock():
+        #if f_counter.value % 10 == 0:
+            #h = hash_c.copy()
+            #self.indexer.write_temp_posts(self.hash_terms_collection)
+        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
+            pickle.dump(file_terms, output, pickle.HIGHEST_PROTOCOL)
+        del file_terms
+        #self.indexer.write_temp_posts(p.hash_terms)
+       # self.indexer.sort_file_list()
+        #     pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+
         file_terms = {}
-        if f_counter.value % 40 == 0:
-            self.indexer.write_temp_posts(self.hash_terms_collection)
-            # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
-            # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
-            # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
-            #     file.write(str(self.hash_terms_collection))
-            self.hash_terms_collection = {}
-            self.vocabulary = {}
-            file_terms = {}
-            #print("40 done")
-            gc.collect()
-            #print("Memory Cleaned")
+        #p=None
+        # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
+        # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
+        # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
+        #     file.write(str(self.hash_terms_collection))
+        #print("40 done")
+        hash_c = {}
+        h = {}
+        self.vocabulary = {}
+        file_terms = {}
+        #gc.collect()
+        #print("Memory Cleaned")
+
         f_end = time.time()
         time_to_file = f_end - f_start
         if f_counter.value % 20 == 0:
@@ -262,17 +289,21 @@ class ReadFile:
         del data_list
 
     def merge_file_terms(self, file_terms):
+        global hash_c
+        global voc
+        global f_counter
+        #hash_c.update(file_terms)
         for key, value in file_terms.items():
-            vocab = self.vocabulary
-            hash_col = self.hash_terms_collection
-            global f_counter
-            with f_counter.get_lock():
-                if key not in self.vocabulary:
-                    vocab[key] = 0
-                    hash_col[key] = value
-                else:
-                    hash_col[key]['tf_c'] = hash_col[key]['tf_c'] + file_terms[key]['tf_c']
-                    hash_col[key]['df'] = hash_col[key]['df'] + file_terms[key]['df']
-                    for d_id in file_terms[key]['hash_docs']:
-                        hash_col[key]['hash_docs'].update({d_id: file_terms[key]['hash_docs'][d_id]})
-        # print("merged")
+            vocab = voc
+            hash_col = hash_c
+            #with f_counter.get_lock():
+            if key not in self.vocabulary:
+                vocab[key] = 0
+                hash_col[key] = value
+            else:
+                print("edited")
+                hash_col[key]['tf_c'] = hash_col[key]['tf_c'] + file_terms[key]['tf_c']
+                hash_col[key]['df'] = hash_col[key]['df'] + file_terms[key]['df']
+                for d_id in file_terms[key]['hash_docs']:
+                    hash_col[key]['hash_docs'].update({d_id: file_terms[key]['hash_docs'][d_id]})
+        print("merged")
