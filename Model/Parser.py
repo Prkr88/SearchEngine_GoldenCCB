@@ -89,7 +89,7 @@ class Parser:
                 if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
                     self.is_regular_term(term, 1)
                 del l_header[0]
-        except KeyError:
+        except IndexError:
             a = 0
 
     # function creates stopword list #

@@ -1,10 +1,10 @@
 import os
 import copy
 import shutil
-from multiprocessing import Pool, Lock
+import multiprocessing
 from numpy import log2
-
-m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
+import pickle
+m_arr = None
 
 
 # FORMAT:  DAKAR|{'tf_c': 8192, 'df': 8192, 'hash_docs': {'FBIS3-638': {'tf_d': 1, 'h': 0}, 'FBIS3-841': {'tf_d': 1, 'h': 0}, 'FBIS3-880': {'tf_d': 1, 'h': 0}, 'FBIS3-884': {'tf_d': 1, 'h': 0}}}
@@ -25,7 +25,6 @@ class Indexer:
         self.file_path5 = self.posting_path + 'stuvxwyz.txt'
         self.file_list = [self.file_path0, self.file_path1, self.file_path2, self.file_path3, self.file_path4,
                           self.file_path5]
-        self.hash_file_terms = {}
         self.counter = 0
         self.hash_junk = {}
         self.N = 468000
@@ -37,258 +36,316 @@ class Indexer:
                                                                        'FBIS3-841': {'tf_d': 1, 'h': 0},
                                                                        'FBIS4-200': {'tf_d': 1, 'h': 0},
                                                                        'FBIS4-202': {'tf_d': 1, 'h': 0}}}}
-                                                                       '''
+                                   
+                                                                   '''
 
-    def write_temp_posts(self, hash_terms):
+    def init_globals(self, l1, l2, l3, l4, l5, l6):
+        global lock1
+        global lock2
+        global lock3
+        global lock4
+        global lock5
+        global lock6
+        lock1 = l1
+        lock2 = l2
+        lock3 = l3
+        lock4 = l4
+        lock5 = l5
+        lock6 = l6
+
+    def start_indexing(self):
+        global lock1
+        global lock2
+        global lock3
+        global lock4
+        global lock5
+        global lock6
+        lock1 = multiprocessing.Value('i',0)
+        lock2 = multiprocessing.Value('i',1)
+        lock3 = multiprocessing.Value('i',2)
+        lock4 = multiprocessing.Value('i',3)
+        lock5 = multiprocessing.Value('i',4)
+        lock6 = multiprocessing.Value('i',5)
+        # hash_list = self.set_file_list()
+        # pool = multiprocessing.Pool(processes=12, initializer=self.init_globals, initargs=(lock1,lock2,lock3,lock4,lock5,lock6,))
+        # i = pool.map_async(self.write_temp_posts, hash_list, chunksize=1)
+        # i.wait()
+        pool = multiprocessing.Pool(processes=12, initializer=self.init_globals,
+                                    initargs=(lock1, lock2, lock3, lock4, lock5, lock6,))
+        i = pool.map_async(self.sort_file_list, self.file_list, chunksize=1)
+        i.wait()
+
+
+    def set_file_list(self):
+        files_list = []
+        for root, dirs, files in os.walk(
+                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects'):
+            for file in files:
+                file_path = os.path.join(root, file)
+                files_list.append(file_path)
+        return files_list
+
+    def write_temp_posts(self, hash_path, hash_sorted):
+        if hash_sorted is None:
+            with open(hash_path,'rb') as input:
+                hash_terms = pickle.load(input)
+        else:
+            hash_terms = hash_sorted
+        global lock1
+        global lock2
+        global lock3
+        global lock4
+        global lock5
+        global lock6
         hash_terms = sorted(hash_terms.items(), key=lambda x: x[0].lower())
-        m_arr[0].acquire()
-        with open(self.file_path0, 'a', encoding='utf-8') as num:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+        with lock1.get_lock():
+            with open(self.file_path0, 'a', encoding='utf-8') as num:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ikey[0]
+                    if ch.isdigit() or ch == '$':
+                        num.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                        i += 1
+                    elif 97 <= ord(ch) <= 99 or 65 <= ord(ch) <= 67:
+                        break
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ikey[0]
-                if ch.isdigit() or ch == '$':
-                    num.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                    i += 1
-                elif 97 <= ord(ch) <= 99 or 65 <= ord(ch) <= 67:
-                    break
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            for x in range(0, i):
-                del hash_terms[0]
-            num.close()
-        m_arr[0].release()
-        m_arr[1].acquire()
-        with open(self.file_path1, 'a', encoding='utf-8') as abc:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                for x in range(0, i):
+                    del hash_terms[0]
+                num.close()
+
+        with lock2.get_lock():
+            with open(self.file_path1, 'a', encoding='utf-8') as abc:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ord(ikey[0])
+                    if 97 <= ch <= 99 or 65 <= ch <= 67:
+                        abc.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                        i += 1
+                    elif 100 <= ch <= 104 or 68 <= ch <= 72:
+                        break
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ord(ikey[0])
-                if 97 <= ch <= 99 or 65 <= ch <= 67:
-                    abc.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                    i += 1
-                elif 100 <= ch <= 104 or 68 <= ch <= 72:
-                    break
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            for x in range(0, i):
-                del hash_terms[0]
-            abc.close()
-        m_arr[1].release()
-        m_arr[2].acquire()
-        with open(self.file_path2, 'a', encoding='utf-8') as defgh:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                for x in range(0, i):
+                    del hash_terms[0]
+                abc.close()
+
+        with lock3.get_lock():
+            with open(self.file_path2, 'a', encoding='utf-8') as defgh:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ord(ikey[0])
+                    if 100 <= ch <= 104 or 68 <= ch <= 72:
+                        defgh.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                        i += 1
+                    elif 105 <= ch <= 109 or 73 <= ch <= 77:
+                        break
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ord(ikey[0])
-                if 100 <= ch <= 104 or 68 <= ch <= 72:
-                    defgh.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                    i += 1
-                elif 105 <= ch <= 109 or 73 <= ch <= 77:
-                    break
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            for x in range(0, i):
-                del hash_terms[0]
-            defgh.close()
-        m_arr[2].release()
-        m_arr[3].acquire()
-        with open(self.file_path3, 'a', encoding='utf-8') as ijklm:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                for x in range(0, i):
+                    del hash_terms[0]
+                defgh.close()
+
+        with lock4.get_lock():
+            with open(self.file_path3, 'a', encoding='utf-8') as ijklm:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ord(ikey[0])
+                    if 105 <= ch <= 109 or 73 <= ch <= 77:
+                        ijklm.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                        i += 1
+                    elif 110 <= ch <= 114 or 78 <= ch <= 82:
+                        break
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ord(ikey[0])
-                if 105 <= ch <= 109 or 73 <= ch <= 77:
-                    ijklm.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                    i += 1
-                elif 110 <= ch <= 114 or 78 <= ch <= 82:
-                    break
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            for x in range(0, i):
-                del hash_terms[0]
-            ijklm.close()
-        m_arr[3].release()
-        m_arr[4].acquire()
-        with open(self.file_path4, 'a', encoding='utf-8') as nopqr:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                for x in range(0, i):
+                    del hash_terms[0]
+                ijklm.close()
+
+        with lock5.get_lock():
+            with open(self.file_path4, 'a', encoding='utf-8') as nopqr:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ord(ikey[0])
+                    if 110 <= ch <= 114 or 78 <= ch <= 82:
+                        nopqr.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            log2(self.N / ival['df'])) + "<" + str(docs_val) + '\n')
+                        i += 1
+                    elif 115 <= ch <= 122 or 83 <= ch <= 90:
+                        break
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ord(ikey[0])
-                if 110 <= ch <= 114 or 78 <= ch <= 82:
-                    nopqr.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        log2(self.N / ival['df'])) + "<" + str(docs_val) + '\n')
-                    i += 1
-                elif 115 <= ch <= 122 or 83 <= ch <= 90:
-                    break
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            for x in range(0, i):
-                del hash_terms[0]
-            nopqr.close()
-        m_arr[4].release()
-        m_arr[5].acquire()
-        with open(self.file_path5, 'a', encoding='utf-8') as stuvxwyz:
-            i = 0
-            for ikey, ival in hash_terms:
-                docs_val = ""
-                first_full_id = list(ival['hash_docs'].keys())[0]
-                first_list = first_full_id.split('-')
-                first_doc_id = first_list[0]
-                last_gap = int(first_list[1])
-                for jkey, jval in ival['hash_docs'].items():
-                    curr_list = jkey.split('-')
-                    curr_doc_id = curr_list[0]
-                    curr_gap = int(curr_list[1])
-                    if curr_gap != last_gap:
-                        if curr_doc_id == first_doc_id:
-                            temp = curr_gap
-                            curr_gap = curr_gap - last_gap
-                            last_gap = temp
-                            curr_doc_id = ""
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                for x in range(0, i):
+                    del hash_terms[0]
+                nopqr.close()
+
+        with lock6.get_lock():
+            with open(self.file_path5, 'a', encoding='utf-8') as stuvxwyz:
+                i = 0
+                for ikey, ival in hash_terms:
+                    docs_val = ""
+                    first_full_id = list(ival['hash_docs'].keys())[0]
+                    first_list = first_full_id.split('-')
+                    first_doc_id = first_list[0]
+                    last_gap = int(first_list[1])
+                    for jkey, jval in ival['hash_docs'].items():
+                        curr_list = jkey.split('-')
+                        curr_doc_id = curr_list[0]
+                        curr_gap = int(curr_list[1])
+                        if curr_gap != last_gap:
+                            if curr_doc_id == first_doc_id:
+                                temp = curr_gap
+                                curr_gap = curr_gap - last_gap
+                                last_gap = temp
+                                curr_doc_id = ""
+                            else:
+                                first_doc_id = curr_doc_id
+                                curr_doc_id = curr_doc_id + "-"
+                                last_gap = curr_gap
                         else:
-                            first_doc_id = curr_doc_id
                             curr_doc_id = curr_doc_id + "-"
-                            last_gap = curr_gap
+                        docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
+                            jval['h']) + ">"
+                    ch = ord(ikey[0])
+                    if 115 <= ch <= 122 or 83 <= ch <= 90:
+                        stuvxwyz.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
+                            float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                        i += 1
                     else:
-                        curr_doc_id = curr_doc_id + "-"
-                    docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
-                        jval['h']) + ">"
-                ch = ord(ikey[0])
-                if 115 <= ch <= 122 or 83 <= ch <= 90:
-                    stuvxwyz.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                    i += 1
-                else:
-                    self.hash_junk[ikey] = ""
-                    i += 1
-                    pass
-            stuvxwyz.close()
-        m_arr[5].release()
+                        self.hash_junk[ikey] = ""
+                        i += 1
+                        pass
+                stuvxwyz.close()
+
         hash_terms = {}
 
         # self.counter += 1
@@ -297,32 +354,29 @@ class Indexer:
         # self.sort_file_hash(self.file_path1)
         # self.sort_file_list(self.file_path1)
 
-    '''
-    def sort_file_hash(self):
-        list_files = []
-        hash_terms = {}
-        with open(file, 'a', encoding='utf-8') as file:
-            for line in file:
-                (key, val) = line.split()
-                self.hash_file_terms[int(key)] = val
-            file.close()
-        for term in hash_terms:
-            self.merger(term)
-        self.write_temp_posts(self.hash_file_terms)
-    '''
+    # def sort_file_hash(self, file_name):
+    #     hash_terms = {}
+    #     with open(file_name, 'a', encoding='utf-8') as file:
+    #         for line in file_name:
+    #             (key, val) = line.split()
+    #             self.hash_file_terms[int(key)] = val
+    #         file.close()
+    #     for term in hash_terms:
+    #         self.merger(term)
+    #     self.write_temp_posts(self.hash_file_terms)
 
-    def sort_file_list(self):
-        file_list = self.file_list
-        for file in file_list:
-            with open(file, 'r', encoding='utf-8') as file:
-                list_terms = [line.strip() for line in file]
-                file.close()
-            for term in list_terms:
-                term = term.split('|')
-                self.merger(term)  # merges to self.hash_file_terms
-            with open(file, 'w', encoding='utf-8') as file:
-                file.close()
-            self.write_temp_posts(self.hash_file_terms)
+    def sort_file_list(self ,path):
+        self.hash_file_terms = {}
+        with open(path, 'r', encoding='utf-8') as file:
+            list_terms = [line.strip() for line in file]
+            file.close()
+        for term in list_terms:
+            term = term.split('|')
+            self.merger(term)
+        print(path + "finished")
+        with open(path, 'w', encoding='utf-8') as file:
+            file.close()
+        self.write_temp_posts(None, self.hash_file_terms)
 
     # FORMAT:  DAKAR|{'tf_c': 8192, 'df': 8192, 'hash_docs': {'FBIS3-638': {'tf_d': 1, 'h': 0}, 'FBIS3-841': {'tf_d': 1, 'h': 0}, 'FBIS3-880': {'tf_d': 1, 'h': 0}, 'FBIS3-884': {'tf_d': 1, 'h': 0}}}
 
@@ -412,7 +466,7 @@ class Indexer:
                         nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
                         self.hash_file_terms[other_term] = nested_hash
                         return
-
+    
     def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
         try:
             return 64 < ord(term[0]) < 91
