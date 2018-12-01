@@ -297,17 +297,19 @@ class Indexer:
         # self.sort_file_hash(self.file_path1)
         # self.sort_file_list(self.file_path1)
 
+    '''
     def sort_file_hash(self):
         list_files = []
         hash_terms = {}
-        with open(file_name, 'a', encoding='utf-8') as file:
-            for line in file_name:
+        with open(file, 'a', encoding='utf-8') as file:
+            for line in file:
                 (key, val) = line.split()
                 self.hash_file_terms[int(key)] = val
             file.close()
         for term in hash_terms:
             self.merger(term)
         self.write_temp_posts(self.hash_file_terms)
+    '''
 
     def sort_file_list(self):
         file_list = self.file_list
@@ -317,7 +319,7 @@ class Indexer:
                 file.close()
             for term in list_terms:
                 term = term.split('|')
-                self.merger(term)
+                self.merger(term)  # merges to self.hash_file_terms
             with open(file, 'w', encoding='utf-8') as file:
                 file.close()
             self.write_temp_posts(self.hash_file_terms)
