@@ -37,6 +37,9 @@ class Parser:
     # constructor #
 
     def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, stemmer):
+        self.hash_terms = {}
+        self.hash_docs = {}
+        self.hash_cities = {}
         self.hash_stopwords = hash_stopwords
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
@@ -714,7 +717,7 @@ class Parser:
                 index += 1
 
         # return self.hash_terms
-        # print("done")
+        a = 0
 
         '''  self.convert_numbers_in_list()
                    for term in self.list_tokens_second_pass:
