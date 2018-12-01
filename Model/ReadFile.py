@@ -56,7 +56,7 @@ class ReadFile:
     files_list = []
     complete_list = []
     mutex = Lock()
-    indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
+    indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     semaphore = None
 
     def do_job(id):
@@ -101,7 +101,7 @@ class ReadFile:
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(
-                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
+                'C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
@@ -122,8 +122,8 @@ class ReadFile:
         p = None
         self.merge_file_terms(file_terms)
         file_terms = {}
-        if f_counter.value % 10 == 0:
-            self.indexer.write_temp_posts(self.hash_terms_collection)
+        if f_counter.value % 180 == 0:
+            # self.indexer.write_temp_posts(self.hash_terms_collection)
             # print("hash collection size: " + str(sys.getsizeof(self.hash_terms_collection)))
             # print("vocabulary size: " + str(sys.getsizeof(self.vocabulary)))
             # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\hash_40.txt', 'w') as file:
@@ -159,10 +159,12 @@ class ReadFile:
                     doc = "<DOC>" + doc
                     # sem.acquire()
                     parser_object.start_parse(doc)
+                    # test_hash = {}
+                    # self.indexer.write_temp_posts(test_hash)
                     # self.voc2str(hash_terms)
                     # sem.release()
-                    #self.indexer.write_temp_posts(hash_terms)
-                    # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
+                    # self.indexer.write_temp_posts(hash_terms)
+                    self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
 
                 else:
                     skip_one = 1
