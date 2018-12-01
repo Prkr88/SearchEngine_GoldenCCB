@@ -283,7 +283,8 @@ class Indexer:
         # self.sort_file_hash(self.file_path1)
         # self.sort_file_list(self.file_path1)
 
-    def sort_file_hash(self, file_name):
+    def sort_file_hash(self):
+        list_files = []
         hash_terms = {}
         with open(file_name, 'a', encoding='utf-8') as file:
             for line in file_name:

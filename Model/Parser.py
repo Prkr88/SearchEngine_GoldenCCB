@@ -1,9 +1,5 @@
 import copy
 import os
-import time
-from Model.TermObject import TermObject
-from Model.DocObject import DocObject
-from Model.CityObject import CityObject
 from Model.API import API
 from Model.Stemmer import Stemmer
 
