@@ -3,6 +3,7 @@ import os
 import time
 from Model.API import API
 from Model.Stemmer import Stemmer
+from nltk.stem.snowball import EnglishStemmer
 
 
 class Parser:
@@ -21,7 +22,9 @@ class Parser:
     hash_stopwords = {}
     hash_keywords_months = {}
     hash_keywords_prices = {}
+    hash_punc_middle = {}
     hash_punc = {}
+    hash_stemmer = {}
 
     # initializes lists
 
@@ -36,7 +39,7 @@ class Parser:
 
     # constructor #
 
-    def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, stemmer):
+    def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, stemmer):
         self.hash_terms = {}
         self.hash_docs = {}
         #self.hash_cities = {}
@@ -44,9 +47,13 @@ class Parser:
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
         self.hash_punc = hash_punc
+        self.hash_punc_middle = hash_punc_middle
+        stemmer = True
         self.stemming_mode = stemmer
         if self.stemming_mode:
-            self.stemmer = Stemmer()
+            self.stemmer = EnglishStemmer()
+        else:
+            self.stemmer = None
 
     # function sets the cities #
 
@@ -82,6 +89,18 @@ class Parser:
         try:
             str_header = self.str_doc.split("<TI>")[1]
             str_header = str_header.split("</TI>")[0]
+            str_header = str_header.strip()
+            l_header = str_header.split(' ')
+            while len(l_header) > 0:
+                term = l_header[0]
+                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
+                    self.is_regular_term(term, 1)
+                del l_header[0]
+        except IndexError:
+            a = 0
+        try:
+            str_header = self.str_doc.split("<HEADLINE>")[1]
+            str_header = str_header.split("</HEADLINE>")[0]
             str_header = str_header.strip()
             l_header = str_header.split(' ')
             while len(l_header) > 0:
@@ -143,7 +162,10 @@ class Parser:
     def term_case_filter(self, other_term, is_header):
         this_term = None
         if self.stemming_mode:
-            other_term = self.stemmer.start_stem(other_term)
+            if other_term not in self.hash_stemmer:  # (1) new 'cars' or 'car'
+                other_term = self.stemmer.stem(other_term)  # cars -> car
+                if other_term not in self.hash_stemmer:
+                    self.hash_stemmer[other_term] = ""  # adds stemmed term to hash cache
         if self.is_first_upper(other_term):  # other = PEN
             if not self.is_fully_upper(other_term):
                 other_term = other_term.upper()  # Pen -> PEN
@@ -293,8 +315,9 @@ class Parser:
                 if list_mail[1]:
                     self.term_case_filter(list_mail[1], is_header)
                 del list_mail
-            if term != '' and term != '%' and ')' not in term and ']' not in term and '\"' not in term and "\\" not in term and term not in self.hash_punc:
-                term = term.strip()
+            # if term != '' and term != '%' and ')' not in term and '|' not in term and ']' not in term and '\"' not in term and "\\" not in term and term not in self.hash_punc:
+            if term != '' and term != '%' and ')' not in term and '|' not in term and ']' not in term and '\"' not in term and "\\" not in term and term not in self.hash_punc and self.hash_punc_middle not in term:
+                term = term.strip()  # ' DOLLAR'
                 self.term_case_filter(term, is_header)
 
     # prevent index increment if double delete
