@@ -39,7 +39,7 @@ class Parser:
     def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, stemmer):
         self.hash_terms = {}
         self.hash_docs = {}
-        self.hash_cities = {}
+        #self.hash_cities = {}
         self.hash_stopwords = hash_stopwords
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
@@ -61,9 +61,9 @@ class Parser:
                 str_city_name2 = l_city[1].upper()
                 str_two_words = str_city_name1 + " " + str_city_name2
                 if str_city_name1 not in self.hash_cities:
-                    self.hash_cities[str_city_name1] = ""
+                    self.hash_cities.update({str_city_name1 : ""})
                 if str_two_words not in self.hash_cities:
-                    self.hash_cities[str_two_words] = ""
+                    self.hash_cities.update({str_two_words : ""})
                 del str_city_name1
                 del str_city_name2
             else:
@@ -75,7 +75,7 @@ class Parser:
             del city_name
             del l_city
         except IndexError:
-            a = 0
+            pass
             # print("marker <F P=104> not found")
 
     def set_headers(self):
@@ -667,54 +667,53 @@ class Parser:
         index = 0
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens),
                                                  'city_origin': self.str_city_name}})
-        # self.set_city()
+        self.set_city()
         self.set_headers()
-        # del self.str_doc
-        # del self.str_txt
-        for term in self.list_tokens:
-            if term != '':
-                if term == '*':
-                    self.line_in_doc_counter += 1
-                    self.global_line_counter += 1
-                    self.word_in_line_counter = 0
-                else:
-                    if ',' in term:
-                        term = term.replace(',', '')
-                        self.list_tokens[index] = term
-                    if term and term not in self.hash_punc and term not in self.hash_stopwords:
-                        try:
-                            if term[0].isdigit() or term[0] == '$':
-                                term = self.convert_numbers_in_list(index)
-                                if term == 'SyntaxError{}':
-                                    term = self.list_tokens[index]
-                                    # print('Term| ' +term+' |inserted.')
-                        except IndexError:
-                            print('dickTerm: ' + term)
-                        if term != "-" and term != "--" and term != '':
-                            hyphen_term = term
-                            if "--" in term:  # term1--term2
-                                list_double = term.split('--')
-                                if list_double[0] != "":
-                                    self.is_regular_term(list_double[0], 0)
-                                if list_double[1] != "":
-                                    self.is_regular_term(list_double[1], 0)
-                                del list_double
-                            elif "-" in term:  # term1-term2-term3
-                                word_split = []
-                                while "-" in hyphen_term:
-                                    word_split = hyphen_term.rstrip().split('-', 1)
-                                    term1 = word_split[0]
-                                    if term1 != '':
-                                        self.is_regular_term(term1, 0)
-                                    word_split.remove(term1)
-                                    hyphen_term = word_split[0]
-                                    if hyphen_term != '':
-                                        self.is_regular_term(term, 0)
-                                del word_split
-                            self.is_regular_term(term, 0)
-                            self.word_in_line_counter += 1
 
-                index += 1
+        # for term in self.list_tokens:
+        #     if term != '':
+        #         if term == '*':
+        #             self.line_in_doc_counter += 1
+        #             self.global_line_counter += 1
+        #             self.word_in_line_counter = 0
+        #         else:
+        #             if ',' in term:
+        #                 term = term.replace(',', '')
+        #                 self.list_tokens[index] = term
+        #             if term and term not in self.hash_punc and term not in self.hash_stopwords:
+        #                 try:
+        #                     if term[0].isdigit() or term[0] == '$':
+        #                         term = self.convert_numbers_in_list(index)
+        #                         if term == 'SyntaxError{}':
+        #                             term = self.list_tokens[index]
+        #                             # print('Term| ' +term+' |inserted.')
+        #                 except IndexError:
+        #                     print('dickTerm: ' + term)
+        #                 if term != "-" and term != "--" and term != '':
+        #                     hyphen_term = term
+        #                     if "--" in term:  # term1--term2
+        #                         list_double = term.split('--')
+        #                         if list_double[0] != "":
+        #                             self.is_regular_term(list_double[0], 0)
+        #                         if list_double[1] != "":
+        #                             self.is_regular_term(list_double[1], 0)
+        #                         del list_double
+        #                     elif "-" in term:  # term1-term2-term3
+        #                         word_split = []
+        #                         while "-" in hyphen_term:
+        #                             word_split = hyphen_term.rstrip().split('-', 1)
+        #                             term1 = word_split[0]
+        #                             if term1 != '':
+        #                                 self.is_regular_term(term1, 0)
+        #                             word_split.remove(term1)
+        #                             hyphen_term = word_split[0]
+        #                             if hyphen_term != '':
+        #                                 self.is_regular_term(term, 0)
+        #                         del word_split
+        #                     self.is_regular_term(term, 0)
+        #                     self.word_in_line_counter += 1
+        #
+        #         index += 1
 
         # return self.hash_terms
         # print("done")

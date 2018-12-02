@@ -64,7 +64,7 @@ class ReadFile:
     percent = 0
     #window = None
     stemmer = None
-    indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
+    #indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
     hash_stopwords = {}
     hash_keywords_months = {}
@@ -155,12 +155,9 @@ class ReadFile:
         manager = Manager()
         hash_c = manager.dict()
         voc = manager.dict()
-        for file in files_list:
-            self.parse_file(file)
-        #pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
-       # i = pool.map_async(self.parse_file, files_list, chunksize=1)
-        #i.wait()
-        #print(i.get())
+        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
+        i = pool.map_async(self.parse_file, files_list, chunksize=1)
+        print(i.get())
         #self.indexer.sort_file_list()
         end = time.time()
         print('total time (s)= ' + str(end - start))
@@ -211,8 +208,11 @@ class ReadFile:
         #if f_counter.value % 10 == 0:
             #h = hash_c.copy()
             #self.indexer.write_temp_posts(self.hash_terms_collection)
-        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
-            pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+        # with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
+        #      pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+        if len(p.hash_cities) > 0:
+            with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\hash_cities_objects\\hash_cities'+ p_name+'.pkl' , 'wb') as output:
+                 pickle.dump(p.hash_cities, output, pickle.HIGHEST_PROTOCOL)
         #self.indexer.write_temp_posts(p.hash_terms)
        # self.indexer.sort_file_list()
         #     pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
@@ -258,7 +258,6 @@ class ReadFile:
                     # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
                     # self.indexer.write_temp_posts(hash_terms)
                     #self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
-
                 else:
                     skip_one = 1
 
