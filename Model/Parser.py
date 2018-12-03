@@ -36,6 +36,7 @@ class Parser:
     global_line_counter = 0  # global line counter in file
     line_in_doc_counter = 0  # global line counter in doc
     word_in_line_counter = 0  # global line word counter in lines
+    doc_counter = 0           # counts docs in file
 
     # constructor #
 
@@ -665,6 +666,7 @@ class Parser:
     # function filters all terms #
 
     def start_parse(self, str_doc):
+        self.doc_counter += 1
         # self.hash_terms = {}
         if str_doc:  # sets current document
             self.str_doc = str_doc

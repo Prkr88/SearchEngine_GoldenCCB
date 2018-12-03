@@ -161,7 +161,7 @@ class Statistics:
                     if self.cities_in_docs[key]['hash_docs'][doc_id]['tf_d'] > maxT:
                         maxT = self.cities_in_docs[key]['hash_docs'][doc_id]['tf_d']
                         winner_doc = doc_id
-                print(str(key) +' -> D_ID: ' + str(winner_doc) + ', tf_d: ' + str(maxT))
+                print(str(key) + ' -> D_ID: ' + str(winner_doc) + ', tf_d: ' + str(maxT))
                 maxT = 0
                 winner = ""
 
@@ -188,17 +188,22 @@ class Statistics:
 
     def plot_zipf_law(self):
         ranks = len(self.vocabulary_tfc)
+        values = []
         # convert value of frequency to numpy array
-        frequency = {key:value for key, value in self.vocabulary_tfc.items()[0:100]}
-        s = frequency.values()
+        # frequency = {key: value for key, value in self.vocabulary_tfc.items()[0:1000]}
+        frequencies = self.vocabulary_tfc
+        for key in frequencies:
+            values.append(frequencies[key])
+        s = values
         s = np.array(s)
         # Calculate zipf and plot the data
         a = 2.  # distribution parameter
-        count, bins, ignored = plt.hist(s[s < ranks], ranks, normed=True)
+        count, bins, ignored = plt.hist(s[s < 20], 20, normed=True)
         x = np.arange(1., 50.)
         y = x ** (-a) / special.zetac(a)
         plt.plot(x, y / max(y), linewidth=2, color='r')
         plt.show()
+
 
 if __name__ == '__main__':
     path = 'C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/Engine_Data'
@@ -219,7 +224,7 @@ if __name__ == '__main__':
     stat.cities_hash = stat.load_pickle_file("../resources/cities_data.pkl")
     stat.corpus_cities = stat.load_pickle_file(stat.path + '/Statistics/corpus_cities.pkl')
     stat.cities_in_docs = stat.load_pickle_file(stat.path + '/Statistics/cities_in_docs.pkl')
-    #stat.print_cities_max_tf()
+    # stat.print_cities_max_tf()
     # stat.count_countries()
     # stat.count_numbers()
     # stat.terms_to_file_sorted_by_most_common_to_file()

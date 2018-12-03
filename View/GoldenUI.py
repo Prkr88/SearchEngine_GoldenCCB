@@ -14,6 +14,7 @@ class Gu(QtWidgets.QMainWindow):
         icon = QtGui.QIcon()
         uic.loadUi(path, self)
         self.vocabulary ={}
+        self.controller = None
 
     # Methods
     def browse_one(self):
@@ -28,8 +29,8 @@ class Gu(QtWidgets.QMainWindow):
         if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
                 any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
             stemmer = self.stemmer_checkBox.isChecked()
-            controller = Controller(self.vocabulary)
-            controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
+            self.controller = Controller(self.vocabulary)
+            self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
 
         else:
             error_one = ""
@@ -47,20 +48,21 @@ class Gu(QtWidgets.QMainWindow):
 
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
-        self.ui = Ui_dictionaty_window()
-        self.ui.setupUi(self.window)
+        self.uiD = Ui_dictionaty_window()
+        self.uiD.setupUi(self.window)
         ans = ""
         vocab = self.vocabulary
         if len(self.vocabulary)>0:
             ans = ',\n '.join("{!s}=>{!r}".format(key, val) for (key, val) in vocab.items())
-            self.ui.dictionary_terms.setText(ans)
+            self.uiD.dictionary_terms.setText(ans)
+            self.window.show()
         else:
             msgBox = QtWidgets.QMessageBox()
             msgBox.setIcon(QtWidgets.QMessageBox.Warning)
             msgBox.setWindowTitle("Error")
             msgBox.setText("No dictionary to show")
             msgBox.exec()
-        self.window.show()
+
 
 
     def load_dictionary(self):
@@ -73,20 +75,22 @@ class Gu(QtWidgets.QMainWindow):
 
 
     def reset_system(self):
+        self.controller.reset_system()
         print("Holy shit System has been reset!")
 
     def show_features(self):
         print("Crazy Features")
         self.window = QtWidgets.QScrollArea()
-        self.ui = Ui_Features()
-        self.ui.setupUi(self.window)
+        self.uiF = Ui_Features()
+        self.uiF.setupUi(self.window)
+        self.uiF.label.setStyleSheet("image: url(..//resources//features.PNG);")
         self.window.show()
 
     def show_team(self):
         print("Amazing Team")
         self.window = QtWidgets.QScrollArea()
-        self.ui = Ui_dictionaty_window()
-        self.ui.setupUi(self.window)
+        self.uiT = Ui_dictionaty_window()
+        self.uiT.setupUi(self.window)
         self.window.show()
 
 
