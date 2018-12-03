@@ -35,6 +35,7 @@ class ReadFile:
     percent = 0
     stemmer = None
     semaphore = None
+    number_of_files = 0
     hash_stopwords = {}
     hash_keywords_months = {}
     hash_keywords_prices = {}
@@ -123,6 +124,7 @@ class ReadFile:
         f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
+        self.number_of_files = len(files_list)
         # for file in files_list:
         #     self.parse_file(file)
         pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
@@ -160,14 +162,14 @@ class ReadFile:
         with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:
-            pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(p.hash_cities, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}
         f_end = time.time()
         time_to_file = f_end - f_start
         if f_counter.value % 20 == 0:
             p_c = float(f_counter.value)
-            p_c = int(p_c * 100 / 1815)
+            p_c = int(p_c * 100 / self.number_of_files)
             if p_c != self.percent:
                 self.percent = p_c
                 self.print_prog(p_c)
@@ -192,6 +194,7 @@ class ReadFile:
                     parser_object.start_parse(doc)
                 else:
                     skip_one = 1
+        parser_object.hash_terms['#doc_number'] = parser_object.doc_counter
         del data_list
 
     def merge_file_terms(self, file_terms):

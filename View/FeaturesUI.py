@@ -21,7 +21,7 @@ class Ui_Features(object):
         self.verticalLayout = QtWidgets.QVBoxLayout()
         self.verticalLayout.setObjectName("verticalLayout")
         self.label = QtWidgets.QLabel(self.scrollAreaWidgetContents)
-        self.label.setStyleSheet("image: url(..//resources//fetures.PNG);")
+        self.label.setStyleSheet("image: url(..//resources//features.PNG);")
         self.label.setText("")
         self.label.setObjectName("label")
         self.verticalLayout.addWidget(self.label)
