@@ -99,8 +99,7 @@ class Indexer:
 
     def set_file_list(self):
         files_list = []
-        for root, dirs, files in os.walk(
-                'C:\\Users\\edoli\\Desktop\\SE_PA\\temp_hash_objects'):
+        for root, dirs, files in os.walk(self.posting_path + '\\Engine_Data\\temp_hash_objects'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)

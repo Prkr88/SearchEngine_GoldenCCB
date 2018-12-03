@@ -4,6 +4,8 @@ from View.Dictionary_windowUI import Ui_dictionaty_window
 from View.FeaturesUI import Ui_Features
 from Controller.Controller import Controller
 import time
+import pickle
+import json
 
 
 class Gu(QtWidgets.QMainWindow):
@@ -11,7 +13,7 @@ class Gu(QtWidgets.QMainWindow):
         super(Gu, self).__init__()
         icon = QtGui.QIcon()
         uic.loadUi(path, self)
-
+        self.vocabulary ={}
 
     # Methods
     def browse_one(self):
@@ -23,47 +25,52 @@ class Gu(QtWidgets.QMainWindow):
         self.lineEdit_posting_dest_path.setText(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory"))
 
     def start_program(self):
-        if '\\' or '/' in self.lineEdit_posting_dest_path.text() and '\\' or '/' in self.lineEdit_posting_dest_path.text():
+        if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
+                any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
             stemmer = self.stemmer_checkBox.isChecked()
-            controller = Controller(self)
+            controller = Controller(self.vocabulary)
             controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
 
         else:
             error_one = ""
             error_two = ""
-            if '\\' not in self.lineEdit.text():
-                error_one = "*** Data Path is empty or invalid.\n"
-            if '\\' not in self.lineEdit_2.text():
-                error_two = "*** Posting destination is empty or invalid."
-            error_message = "Error:\n" + error_one + error_two
+            if not any(c in self.lineEdit_data_path.text() for c in ('\\', '/')):
+                error_one = "*** Data Path is empty or invalid.                    \n"
+            if not any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
+                error_two = "*** Posting destination is empty or invalid.               "
+            error_message = "Error:                     \n" + error_one + error_two
             msgBox = QtWidgets.QMessageBox()
             msgBox.setIcon(QtWidgets.QMessageBox.Warning)
             msgBox.setWindowTitle("Input Error")
             msgBox.setText(error_message)
             msgBox.exec()
 
-    def update_time_progress(self,prog,time):
-        time_text = 'ETA: '
-        prog = QtWidgets.QLabel
-        if self.progressBar.isVisible() == False or self.time_label.isVisible() == False:
-            self.progressBar.setVisible(True)
-            self.time_label.setVisible(True)
-        self.progressBar.setValue(prog)
-        self.time_label.setText(time)
-
-
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
         self.ui = Ui_dictionaty_window()
         self.ui.setupUi(self.window)
+        ans = ""
+        vocab = self.vocabulary
+        if len(self.vocabulary)>0:
+            ans = ',\n '.join("{!s}=>{!r}".format(key, val) for (key, val) in vocab.items())
+            self.ui.dictionary_terms.setText(ans)
+        else:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+            msgBox.setWindowTitle("Error")
+            msgBox.setText("No dictionary to show")
+            msgBox.exec()
         self.window.show()
 
+
     def load_dictionary(self):
+        path = QtWidgets.QFileDialog.getOpenFileName(self)[0]
+        print(path)
+        with open(path, 'rb') as vocab:
+            vocabulary_to_load = pickle.load(vocab)
+        self.vocabulary = vocabulary_to_load
         print("Dictionary loaded")
-        self.window = QtWidgets.QScrollArea()
-        self.ui = Ui_dictionaty_window()
-        self.ui.setupUi(self.window)
-        self.window.show()
+
 
     def reset_system(self):
         print("Holy shit System has been reset!")

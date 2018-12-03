@@ -158,7 +158,7 @@ class ReadFile:
         f_start = time.time()
         p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.stemmer)
         self.get_doc_from_file(file_path, p)
-        with open(self.post_path + '\\Engine_Data\\temp_hash_objects\\file_hash_'+ p_name+'.pkl', 'wb') as output:
+        with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}

@@ -30,8 +30,8 @@ class Controller:
         rf = ReadFile(data_path, post_path, stemmer, self)
         rf.start_evaluating()
         self.create_vocabulary()
-        #indx = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
-        #indx.start_indexing()
+        indx = Indexer(post_path)
+        indx.start_indexing()
 
     def create_vocabulary(self):
         counter = 0
