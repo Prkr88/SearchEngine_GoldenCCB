@@ -18,7 +18,7 @@ from numpy import log2
 class Indexer:
 
     def __init__(self, user_path):
-        self.posting_path = user_path + "\\posting_files\\"
+        self.posting_path = user_path + "/Engine_Data/posting_files"
         if not os.path.exists(self.posting_path):
             os.makedirs(self.posting_path)
         self.file_path0 = self.posting_path + 'num.txt'
