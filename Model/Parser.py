@@ -95,7 +95,7 @@ class Parser:
                 if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
                     self.is_regular_term(term, 1)
                 del l_header[0]
-        except IndexError:
+        except Exception:
             a = 0
         try:
             str_header = self.str_doc.split("<HEADLINE>")[1]
@@ -107,7 +107,7 @@ class Parser:
                 if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
                     self.is_regular_term(term, 1)
                 del l_header[0]
-        except IndexError:
+        except Exception:
             a = 0
 
     # function creates stopword list #
@@ -187,7 +187,7 @@ class Parser:
                     this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                     self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
                 if other_term in self.hash_cities:
-                    str_new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
                     try:
                         str_this_pos = self.hash_cities[other_term][self.str_doc_id]
                         self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
@@ -202,7 +202,7 @@ class Parser:
                 this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                 self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
                 if other_term in self.hash_cities:
-                    str_new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
+                    str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
                     try:
                         str_this_pos = self.hash_cities[other_term][self.str_doc_id]
                         self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
@@ -282,34 +282,38 @@ class Parser:
     # function filters regular terms #
 
     def is_regular_term(self, term, is_header):
-        size = len(term) - 1
-        last = term[size]
-        first = term[0]
-        while ((size > 0 and last != '') and (last in self.hash_punc or '\"' in last or "\\\\" in last)):
-            term = term[:-1]
-            size -= 1
-            if size > 0:
+        try:
+            if term!='':
+                size = len(term) - 1
                 last = term[size]
-        while ((size > 0 and first != '') and (first in self.hash_punc or '\"' in first or "\\\\" in first)):
-            term = term[1:]
-            size -= 1
-            if size > 0:
                 first = term[0]
-        if "@" in term:  # '@' our new rule
-            list_mail = term.split('@')
-            if list_mail[0]:
-                self.term_case_filter(list_mail[0], is_header)
-            if list_mail[1]:
-                self.term_case_filter(list_mail[1], is_header)
-            del list_mail
-        skip = False
-        for key in self.hash_punc_middle:
-            if key in term:
-                skip = True
-                break
-        if not skip:
-            self.term_case_filter(term, is_header)
-
+                while (term!= '' and (size > 0 and last != '') and (last in self.hash_punc or '\"' in last or "\\\\" in last)):
+                    term = term[:-1]
+                    size -= 1
+                    if size > 0:
+                        last = term[size]
+                while (term!= '' and (size > 0 and first != '') and (first in self.hash_punc or '\"' in first or "\\\\" in first)):
+                    term = term[1:]
+                    size -= 1
+                    if size > 0:
+                        first = term[0]
+                if term != '' and "@" in term:  # '@' our new rule
+                    list_mail = term.split('@')
+                    if list_mail[0]!='':
+                        self.term_case_filter(list_mail[0], is_header)
+                    if list_mail[1]!='':
+                        self.term_case_filter(list_mail[1], is_header)
+                    del list_mail
+                skip = False
+                if term!='':
+                    for key in self.hash_punc_middle:
+                        if key in term:
+                            skip = True
+                            break
+                if not skip and term != '':
+                    self.term_case_filter(term, is_header)
+        except Exception:
+            print("MotherFucking Term : " + term)
 
     # prevent index increment if double delete
     two_deleted = 0
@@ -679,8 +683,7 @@ class Parser:
         self.str_txt = self.str_txt.replace('\n', ' * ')
         self.list_tokens = self.str_txt.split()
         index = 0
-        self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens),
-                                                 'city_origin': self.str_city_name}})
+        self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
         self.set_city()
         self.set_headers()
 

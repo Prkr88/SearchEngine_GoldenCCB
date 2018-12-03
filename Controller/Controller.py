@@ -27,6 +27,8 @@ class Controller:
             os.makedirs(self.post_path +'/Engine_Data/temp_hash_objects')
         if not os.path.exists(self.post_path +'/Engine_Data/Vocabulary'):
             os.makedirs(self.post_path +'/Engine_Data/Vocabulary')
+        if not os.path.exists(self.post_path +'/Engine_Data/Cities_hash_objects'):
+            os.makedirs(self.post_path +'/Engine_Data/Cities_hash_objects')
         rf = ReadFile(data_path, post_path, stemmer, self)
         rf.start_evaluating()
         self.create_vocabulary()
@@ -65,4 +67,4 @@ class Controller:
 
     def print_prog(self, p_c):
         print('\n'*100)
-        print('Creating Vocabulary:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
+        print('Creating Vocabulary:\n[' + '*'*int(p_c/2) + ' '*int((100-p_c)/2) +str(p_c) + '%' ']')

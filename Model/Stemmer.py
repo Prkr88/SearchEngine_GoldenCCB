@@ -22,7 +22,7 @@ class Stemmer:
                 self.s_corp[stemmed_term] = 1
             return stemmed_term
 
-    def save_stemmed_vocabulary(self):
-        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Stemmed_Vocabulary.pkl', 'wb') as output:
+    def save_stemmed_vocabulary(self,path):
+        with open(path +'/Vocabulary/Stemmed_Vocabulary.pkl', 'wb') as output:
             pickle.dump(self.s_corp, output, pickle.HIGHEST_PROTOCOL)
 
