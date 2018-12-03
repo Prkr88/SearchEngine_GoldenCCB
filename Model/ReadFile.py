@@ -133,7 +133,6 @@ class ReadFile:
         print(self.complete_list)
         print(*self.complete_list, sep="\n")
 
-
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(self.data_path):
@@ -141,9 +140,9 @@ class ReadFile:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         files_list_tmp = []
-        # for i in range(100):
-        #     files_list_tmp.append(files_list[i])
-        # files_list = files_list_tmp
+        for i in range(100):
+             files_list_tmp.append(files_list[i])
+        files_list = files_list_tmp
         return files_list
 
     def parse_file(self, file_path):

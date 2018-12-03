@@ -42,7 +42,7 @@ class Parser:
     def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, stemmer):
         self.hash_terms = {}
         self.hash_docs = {}
-        #self.hash_cities = {}
+        self.hash_cities = {}
         self.hash_stopwords = hash_stopwords
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
@@ -82,33 +82,66 @@ class Parser:
             del l_city
         except Exception as e:
             a = 0
-            # print("marker <F P=104> not found")
 
     def set_headers(self):
+        str_header = ""
+        skip1 = False
+        skip2 = False
+        l_header = []
         try:
             str_header = self.str_doc.split("<TI>")[1]
             str_header = str_header.split("</TI>")[0]
             str_header = str_header.strip()
             l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
         except Exception:
-            a = 0
+            skip1 = True
         try:
             str_header = self.str_doc.split("<HEADLINE>")[1]
             str_header = str_header.split("</HEADLINE>")[0]
             str_header = str_header.strip()
             l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
         except Exception:
-            a = 0
+            skip2 = True
+        if (not skip1 or not skip2) and str_header != "":
+            try:
+                while len(l_header) > 0:
+                    skip = False
+                    term = l_header[0]
+                    if term != "":
+                        if not term[0].isdigit():
+                            hyphen_term = term
+                            if "--" in term:  # term1--term2
+                                list_double = term.split('--')
+                                if list_double[0] != "" and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
+                                    self.is_regular_term(list_double[0], 1)
+                                else:
+                                    skip = True
+                                if list_double[1] != "" and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
+                                    self.is_regular_term(list_double[1], 1)
+                                else:
+                                    skip = True
+                                del list_double
+                            elif "-" in term and not skip:  # term1-term2-term3
+                                word_split = []
+                                while "-" in hyphen_term:
+                                    word_split = hyphen_term.rstrip().split('-', 1)
+                                    term1 = word_split[0]
+                                    if term1 != "" and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
+                                        self.is_regular_term(term1, 1)
+                                    else:
+                                        skip = True
+                                    word_split.remove(term1)
+                                    hyphen_term = word_split[0]
+                                    if hyphen_term != "" and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
+                                        self.is_regular_term(term, 1)
+                                    else:
+                                        skip = True
+                                del word_split
+                            if term != "" and not skip:
+                                self.is_regular_term(term, 1)
+            except Exception:
+                skip = True
+
 
     # function creates stopword list #
 
@@ -665,7 +698,6 @@ class Parser:
     # function filters all terms #
 
     def start_parse(self, str_doc):
-        # self.hash_terms = {}
         if str_doc:  # sets current document
             self.str_doc = str_doc
         try:
@@ -678,15 +710,13 @@ class Parser:
             self.str_txt = self.str_txt[0]
         except (IndexError, AttributeError) as e:
             a = 0
-
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')
         self.list_tokens = self.str_txt.split()
         index = 0
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
-        self.set_city()
-        self.set_headers()
-
+        # self.set_city()
+        # self.set_headers()
         for term in self.list_tokens:
             if term != '':
                 if term == '*':
