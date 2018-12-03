@@ -40,19 +40,20 @@ class Parser:
     # constructor #
 
     def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, stemmer):
+        a = 0
         self.hash_terms = {}
         self.hash_docs = {}
-        #self.hash_cities = {}
-        self.hash_stopwords = hash_stopwords
-        self.hash_keywords_months = hash_keywords_months
-        self.hash_keywords_prices = hash_keywords_prices
-        self.hash_punc = hash_punc
-        self.hash_punc_middle = hash_punc_middle
-        self.stemming_mode = stemmer
-        if self.stemming_mode:
-            self.stemmer = EnglishStemmer()
-        else:
-            self.stemmer = None
+        self.hash_cities = {}
+        # self.hash_stopwords = hash_stopwords
+        # self.hash_keywords_months = hash_keywords_months
+        # self.hash_keywords_prices = hash_keywords_prices
+        # self.hash_punc = hash_punc
+        # self.hash_punc_middle = hash_punc_middle
+        # self.stemming_mode = stemmer
+        # if self.stemming_mode:
+        #     self.stemmer = EnglishStemmer()
+        # else:
+        #     self.stemmer = None
 
     # function sets the cities #
 
@@ -62,6 +63,9 @@ class Parser:
             city_name = city_name.split("</F>")[0]
             city_name = city_name.strip()
             l_city = city_name.split(' ')
+            str_city_name1 = ""
+            str_city_name2 = ""
+            str_two_words = ""
             if len(l_city) > 1:
                 str_city_name1 = l_city[0].upper()
                 str_city_name2 = l_city[1].upper()
@@ -70,45 +74,77 @@ class Parser:
                     self.hash_cities.update({str_city_name1: {self.str_doc_id: "(FP=104)"}})
                 if str_two_words not in self.hash_cities:
                     self.hash_cities.update({str_two_words: {self.str_doc_id: "(FP=104)"}})
-                del str_city_name1
-                del str_city_name2
             else:
                 str_city_name1 = l_city[0].lower()
                 if str_city_name1 not in self.hash_cities:
-                    self.hash_cities[str_city_name1] = ""
+                    self.hash_cities.update({str_city_name1: {self.str_doc_id: "(FP=104)"}})
                 del str_city_name1
             self.str_city_name = str_city_name1
+            del str_city_name1
+            del str_city_name2
             del city_name
             del l_city
-        except Exception as e:
+        except Exception:
             a = 0
-            # print("marker <F P=104> not found")
 
     def set_headers(self):
+        str_header = ""
         try:
             str_header = self.str_doc.split("<TI>")[1]
             str_header = str_header.split("</TI>")[0]
-            str_header = str_header.strip()
-            l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
-        except IndexError:
+        except Exception:
             a = 0
         try:
             str_header = self.str_doc.split("<HEADLINE>")[1]
             str_header = str_header.split("</HEADLINE>")[0]
-            str_header = str_header.strip()
-            l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
-        except IndexError:
+        except Exception:
             a = 0
+        str_header = str_header.strip()
+        l_header = str_header.split(' ')
+        while len(l_header) > 0:
+            term = l_header[0]
+            if term != "":
+                if not term[0].isdigit():
+                    if term.lower() not in self.hash_stopwords:
+                        if term != "" and term not in self.hash_punc:
+                            hyphen_term = term
+                            skip = False
+                            if "--" in term:  # term1--term2
+                                try:
+                                    list_double = term.split('--')
+                                    if list_double[0] != "" and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
+                                        self.is_regular_term(list_double[0], 1)
+                                    else:
+                                        skip = True
+                                    if list_double[1] != "" and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
+                                        self.is_regular_term(list_double[1], 1)
+                                    else:
+                                        skip = True
+                                    del list_double
+                                except Exception as e:
+                                    a = 0
+                            elif "-" in term:  # term1-term2-term3
+                                word_split = []
+                                try:
+                                    while "-" in hyphen_term:
+                                        word_split = hyphen_term.rstrip().split('-', 1)
+                                        term1 = word_split[0]
+                                        if term1 != "" and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
+                                            self.is_regular_term(term1, 1)
+                                        else:
+                                            skip = True
+                                        word_split.remove(term1)
+                                        hyphen_term = word_split[0]
+                                        if hyphen_term != "" and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
+                                            self.is_regular_term(term, 1)
+                                        else:
+                                            skip = True
+                                    del word_split
+                                except Exception as e:
+                                    a = 0
+                            if not skip and term != "":
+                                self.is_regular_term(term, 1)
+            del l_header[0]
 
     # function creates stopword list #
 
@@ -180,19 +216,19 @@ class Parser:
                     if this_tf == 2:
                         this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                         self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
                     this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                     this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                     this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
                     this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                     self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                if other_term in self.hash_cities:
-                    str_new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
-                    try:
-                        str_this_pos = self.hash_cities[other_term][self.str_doc_id]
-                        self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
-                    except KeyError:
-                        self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
+                # if other_term in self.hash_cities:
+                    # str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
+                    # try:
+                    #     str_this_pos = self.hash_cities[other_term][self.str_doc_id]
+                    #     self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
+                    # except KeyError:
+                    #     self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
                 if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
                     self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
                 return  # end of update (1+2)
@@ -201,13 +237,13 @@ class Parser:
                 self.hash_terms[other_term] = nested_hash
                 this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                 self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                if other_term in self.hash_cities:
-                    str_new_pos = ['(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')']
-                    try:
-                        str_this_pos = self.hash_cities[other_term][self.str_doc_id]
-                        self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
-                    except KeyError:
-                        self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
+                # if other_term in self.hash_cities:
+                #     str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
+                #     try:
+                #         str_this_pos = self.hash_cities[other_term][self.str_doc_id]
+                #         self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
+                #     except KeyError:
+                #         self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
                 return  # end of adding a new term
         else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
             if other_term in self.hash_terms:  # (3) other=pen and dict=pen -> update
@@ -220,7 +256,7 @@ class Parser:
                     if this_tf == 2:
                         this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                         self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
                     this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                     this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                     this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
@@ -243,7 +279,7 @@ class Parser:
                         if this_tf == 2:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                    except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                    except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
                         this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                         this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                         this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
@@ -661,88 +697,90 @@ class Parser:
     # function filters all terms #
 
     def start_parse(self, str_doc):
-        # self.hash_terms = {}
-        if str_doc:  # sets current document
-            self.str_doc = str_doc
-        try:
-            self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
-        except AttributeError:
-            a = 0
-        try:
-            self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
-            self.str_txt = self.str_txt.split("</TEXT>")
-            self.str_txt = self.str_txt[0]
-        except (IndexError, AttributeError) as e:
-            a = 0
+        a = 0
+        # if str_doc:  # sets current document
+        #     self.str_doc = str_doc
+        # try:
+        #     self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
+        # except AttributeError:
+        #     a = 0
+        # try:
+        #     self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
+        #     self.str_txt = self.str_txt.split("</TEXT>")
+        #     self.str_txt = self.str_txt[0]
+        # except (IndexError, AttributeError) as e:
+        #     a = 0
+        # self.str_city_name = ""
+        # self.str_txt = self.str_txt.replace('*', '')
+        # self.str_txt = self.str_txt.replace('\n', ' * ')
+        # self.list_tokens = self.str_txt.split()
+        # index = 0
+        # self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
+        # self.set_city()
+        # self.set_headers()
+        # self.hash_docs[self.str_doc_id]['city_origin'] = self.str_city_name
+        # for term in self.list_tokens:
+        #     if term != '':
+        #         if term == '*':
+        #             self.line_in_doc_counter += 1
+        #             self.global_line_counter += 1
+        #             self.word_in_line_counter = 0
+        #         else:
+        #             if ',' in term:
+        #                 term = term.replace(',', '')
+        #                 self.list_tokens[index] = term
+        #             skip = False
+        #             if term.lower() in self.hash_stopwords:
+        #                 skip = True
+        #             if term in self.hash_punc:
+        #                 skip = True
+        #             if not skip:
+        #                 try:
+        #                     if term[0].isdigit() or term[0] == '$':
+        #                         term = self.convert_numbers_in_list(index)
+        #                         if term == 'SyntaxError{}':
+        #                             term = self.list_tokens[index]
+        #                             # print('Term| ' +term+' |inserted.')
+        #                 except IndexError:
+        #                     print('dickTerm: ' + term)
+        #                 hyphen_term = term
+        #                 if "--" in term:  # term1--term2
+        #                     try:
+        #                         list_double = term.split('--')
+        #                         if list_double[0] != "" and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
+        #                             self.is_regular_term(list_double[0], 0)
+        #                         else:
+        #                             skip = True
+        #                         if list_double[1] != "" and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
+        #                             self.is_regular_term(list_double[1], 0)
+        #                         else:
+        #                             skip = True
+        #                         del list_double
+        #                     except Exception:
+        #                         a = 0
+        #                 elif "-" in term and not skip:  # term1-term2-term3
+        #                     word_split = []
+        #                     try:
+        #                         while "-" in hyphen_term:
+        #                             word_split = hyphen_term.rstrip().split('-', 1)
+        #                             term1 = word_split[0]
+        #                             if term1 != "" and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
+        #                                 self.is_regular_term(term1, 0)
+        #                             else:
+        #                                 skip = True
+        #                             word_split.remove(term1)
+        #                             hyphen_term = word_split[0]
+        #                             if hyphen_term != "" and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
+        #                                 self.is_regular_term(term, 0)
+        #                             else:
+        #                                 skip = True
+        #                         del word_split
+        #                     except Exception:
+        #                         a = 0
+        #                 if not skip and term != "":
+        #                     self.is_regular_term(term, 0)
+        #                     self.word_in_line_counter += 1
+        #         index += 1
+        # a = 0
 
-        self.str_txt = self.str_txt.replace('*', '')
-        self.str_txt = self.str_txt.replace('\n', ' * ')
-        self.list_tokens = self.str_txt.split()
-        index = 0
-        self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens),
-                                                 'city_origin': self.str_city_name}})
-        self.set_city()
-        self.set_headers()
 
-        for term in self.list_tokens:
-            if term != '':
-                if term == '*':
-                    self.line_in_doc_counter += 1
-                    self.global_line_counter += 1
-                    self.word_in_line_counter = 0
-                else:
-                    if ',' in term:
-                        term = term.replace(',', '')
-                        self.list_tokens[index] = term
-                    skip = False
-                    if term.lower() in self.hash_stopwords:
-                        skip = True
-                    if term in self.hash_punc:
-                        skip = True
-                    if not skip:
-                        try:
-                            if term[0].isdigit() or term[0] == '$':
-                                term = self.convert_numbers_in_list(index)
-                                if term == 'SyntaxError{}':
-                                    term = self.list_tokens[index]
-                                    # print('Term| ' +term+' |inserted.')
-                        except IndexError:
-                            print('dickTerm: ' + term)
-                        hyphen_term = term
-                        if "--" in term:  # term1--term2
-                            try:
-                                list_double = term.split('--')
-                                if list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[0], 0)
-                                else:
-                                    skip = True
-                                if list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[1], 0)
-                                else:
-                                    skip = True
-                                del list_double
-                            except (IndexError,KeyError) as e:
-                                a = 0
-                        elif "-" in term and not skip:  # term1-term2-term3
-                            word_split = []
-                            try:
-                                while "-" in hyphen_term:
-                                    word_split = hyphen_term.rstrip().split('-', 1)
-                                    term1 = word_split[0]
-                                    if term1 not in self.hash_punc and term1 not in self.hash_stopwords:
-                                        self.is_regular_term(term1, 0)
-                                    else:
-                                        skip = True
-                                    word_split.remove(term1)
-                                    hyphen_term = word_split[0]
-                                    if hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
-                                        self.is_regular_term(term, 0)
-                                    else:
-                                        skip = True
-                                del word_split
-                            except (IndexError,KeyError) as e:
-                                a = 0
-                        if not skip:
-                            self.is_regular_term(term, 0)
-                            self.word_in_line_counter += 1
-                index += 1

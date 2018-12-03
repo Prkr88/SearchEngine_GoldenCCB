@@ -58,7 +58,7 @@ class ReadFile:
         self.data_path = data_path
         self.post_path = post_path
         print('\n' * 100)
-        print('Progess:[' + ' ' * 100 + '%0' ']')
+        print('Progess:[' + ' ' * 50 + '%0' ']')
         self.controller = controller
         self.stemmer = stemmer
 
@@ -141,9 +141,9 @@ class ReadFile:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         files_list_tmp = []
-        for i in range(100):
-            files_list_tmp.append(files_list[i])
-        files_list = files_list_tmp
+        # for i in range(100):
+        #     files_list_tmp.append(files_list[i])
+        # files_list = files_list_tmp
         return files_list
 
     def parse_file(self, file_path):
@@ -160,6 +160,8 @@ class ReadFile:
         self.get_doc_from_file(file_path, p)
         with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+        with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:
+            pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}
         f_end = time.time()
@@ -173,7 +175,7 @@ class ReadFile:
 
     def print_prog(self, p_c):
         print('\n'*100)
-        print('Parssing:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
+        print('Parssing:\n[' + '*'*int(p_c/2) + ' '*int((100-p_c)/2) +str(p_c) + '%' ']')
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
