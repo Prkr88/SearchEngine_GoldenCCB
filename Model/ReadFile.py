@@ -66,7 +66,6 @@ class ReadFile:
     percent = 0
     #window = None
     stemmer = None
-    #indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
     hash_stopwords = {}
     hash_keywords_months = {}
@@ -86,6 +85,7 @@ class ReadFile:
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+    # with open('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
 
     def init_globals(self, f_c):
         global f_counter
@@ -124,15 +124,15 @@ class ReadFile:
         del list_keywords_prices
 
     def set_puncwords(self):
-        list_punc = {',', '"', '.', '?', '-', '_', '.', '*', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<',
-                     '>', '|', '~',
-                     '^', '?', "\"", '\"', '&', '"!"', '!', "=", '+', "#", '\n', "\"", '\"', "/", "\\"}
+        list_punc = {' ', '', "\"", '\"', "/", "\\", '\\\\', ',', '"', '|' '?', '-', '--', '_', '.', '*', '"', '`', ':',
+                     ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '~', '%', '^', '?', '&', '!', "=", '+', "#",
+                    '\n', '<P>', '</P>', '<F>', '</F>', '/F', 'MR'}
         for word in list_punc:
             self.hash_punc[word] = ""
         del list_punc
 
     def set_middlewords(self):
-        list_punc = {'|', '.', '..', '...', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\"}
+        list_punc = {'.', '/','|', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', "}", ' '}
         for word in list_punc:
             self.hash_punc_middle[word] = ""
         del list_punc
@@ -151,6 +151,7 @@ class ReadFile:
         self.set_keywords_months(self.abs_keyword_path_months)  # sets key word dictionary
         self.set_keywords_prices(self.abs_keyword_path_prices)  # sets key word dictionary
         self.set_puncwords()  # sets punctuation vocabulary
+        self.set_middlewords()
         with open('resources\\cities_data.pkl', 'rb') as input:
             self.hash_cities = pickle.load(input)
 
@@ -162,9 +163,9 @@ class ReadFile:
         manager = Manager()
         hash_c = manager.dict()
         voc = manager.dict()
-        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
-        i = pool.map_async(self.parse_file, files_list, chunksize=1)
-        print(i.get())
+        # pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
+        # i = pool.map_async(self.parse_file, files_list, chunksize=1)
+        # print(i.get())
         #self.indexer.sort_file_list()
         end = time.time()
         print('total time (s)= ' + str(end - start))
@@ -174,15 +175,14 @@ class ReadFile:
         # p = Pool(initializer=init_counter, initargs=(counter,))
         # i = p.map_async(analyze_data, self.set_file_list(), chunksize=1)
         # i.wait()
-
         # sem = multiprocessing.Semaphore(0)
         # with multiprocessing.Pool(processes=4, initializer=(init_counter, init_sem), initargs=(self.f_counter, sem)) as p:
         # results = p.map(do_work, 4)
+        self.parse_file('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396014\\FB396014')
 
     def set_file_list(self):
         files_list = []
-        for root, dirs, files in os.walk(
-                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus'):
+        for root, dirs, files in os.walk('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
@@ -195,7 +195,7 @@ class ReadFile:
         p = None
         file_terms = {}
         p_name = "#NUM_" + str(f_counter.value)
-      #  print("process #NUM_" + str(f_counter.value))
+        #print("process #NUM_" + str(f_counter.value))
         #file_path = args[0]
         #hash_c = args[1]
         #voc = args[2]
@@ -215,7 +215,7 @@ class ReadFile:
         #if f_counter.value % 10 == 0:
             #h = hash_c.copy()
             #self.indexer.write_temp_posts(self.hash_terms_collection)
-        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
+        with open('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         #self.indexer.write_temp_posts(p.hash_terms)
        # self.indexer.sort_file_list()
@@ -235,8 +235,6 @@ class ReadFile:
         print('\n'*100)
         #self.clear()
         print('Progess:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
-
-
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
