@@ -7,6 +7,7 @@ import timeit
 class Statistics:
     def __init__(self):
         self.vocabulary = {}
+        self.vocabulary_tfc = {}
         self.stemmed_vocabulary = {}
         self.cities_hash = {}
         self.corpus_cities = {}
@@ -63,6 +64,12 @@ class Statistics:
         with open(path, 'rb') as vocab:
             to_load = pickle.load(vocab)
         self.cities_hash = to_load
+
+    def load_vocabulary_tfc(self):
+        path = "C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\vocabulary_tfc.pkl"
+        with open(path, 'rb') as vocab:
+            vocabulary_to_load = pickle.load(vocab)
+        self.vocabulary_tfc = vocabulary_to_load
 
     def stem_vocabulary(self):
         stemmer = Stemmer()
@@ -150,6 +157,31 @@ class Statistics:
             file_hash_terms = {}
         print(len(countries))
 
+    def most_common(self):
+        file_list = self.set_file_list(
+            'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects')
+        for file in file_list:
+            with open(file, 'rb') as hash_file:
+                file_hash_terms = pickle.load(hash_file)
+            for key in file_hash_terms:
+                if key not in self.vocabulary_tfc:
+                    self.vocabulary_tfc[key] = file_hash_terms[key]['tf_c']
+                else:
+                    self.vocabulary_tfc[key] = self.vocabulary_tfc[key] + file_hash_terms[key]['tf_c']
+            hash_file.close()
+            file_hash_terms = {}
+        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Vocabulary_tfc.pkl',
+                  'wb') as output:
+            pickle.dump(self.vocabulary_tfc, output, pickle.HIGHEST_PROTOCOL)
+
+    def print_most_common(self):
+        self.load_vocabulary_tfc()
+        sorted_vocab_tfc = sorted(self.vocabulary_tfc.items(), key=lambda x: x[1])
+        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\sorted_vocab_tfc.txt', 'w') as f:
+            for item in sorted_vocab_tfc:
+                f.write(str(item) + '\n')
+
+
 if __name__ == '__main__':
     stat = Statistics()
     # stat.create_vocabulary()
@@ -158,11 +190,12 @@ if __name__ == '__main__':
     # stat.load_stemmed_vocabulary()
     #stat.count_numbers()
     #stat.create_corpus_cities()
-    stat.load_cities()
+    #stat.load_cities()
     #stat.clean_corpus_cities()
     #stat.load_corpus_cities()
-    #stat.find_maxtf_city()
+    stat.find_maxtf_city()
     #stat.load_cities_in_docs()
     #stat.count_countries()
-    stat.count_countries()
+    #stat.count_countries()
+    stat.print_most_common()
     print("done")

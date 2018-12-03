@@ -11,7 +11,6 @@ import json
 import timeit
 from io import StringIO
 import multiprocessing
-from multiprocessing import Pool, Lock, Manager, Array
 from Model.API import API
 import pickle
 
@@ -28,60 +27,23 @@ p = Parser(str_doc)
 
 f_counter = None
 
-semaphore = None
-m_arr = [Lock(), Lock(), Lock(), Lock(), Lock(), Lock(), Lock()]
-
-
-def init_sem(sem):
-    global semaphore
-    semaphore = sem
-
-
-def do_work(payload):
-    with semaphore:
-        return payload
-
-
-def init_counter(args):
-    ''' store the counter for later use '''
-    global counter
-    counter = args
-
-
-def analyze_data(args):
-    ''' increment the global counter, do something with the input '''
-    global counter
-    # += operation is not atomic, so we need to get a lock:
-    with counter.get_lock():
-        counter.value += 1
-    return args * 10
-
-
 class ReadFile:
     f_counter = 0
     files_list = []
     complete_list = []
-    mutex = Lock()
     controller = None
     percent = 0
-    #window = None
     stemmer = None
-    #indexer = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
     semaphore = None
     hash_stopwords = {}
     hash_keywords_months = {}
     hash_keywords_prices = {}
     hash_punc = {}
     hash_punc_middle = {}
-
-    def do_job(id):
-        with semaphore:
-            sleep(1)
-        print("Finished job")
-
     vocabulary = {}
     hash_terms_collection = {}
-
+    data_path = ""
+    post_path = ""
     # indexer = Indexer('C:/Users/edoli/Desktop/SE_PA')
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
@@ -91,9 +53,9 @@ class ReadFile:
         global f_counter
         f_counter = f_c
 
-    def __init__(self, data_path, stopword_path, stemmer,controller):
-        print("***** " + data_path + " *****")
-        print("***** " + stopword_path + " *****")
+    def __init__(self, data_path, post_path, stemmer,controller):
+        self.data_path = data_path
+        self.post_path = post_path
         print('\n' * 100)
         print('Progess:[' + ' ' * 100 + '%0' ']')
         self.controller = controller
@@ -151,6 +113,7 @@ class ReadFile:
         self.set_keywords_months(self.abs_keyword_path_months)  # sets key word dictionary
         self.set_keywords_prices(self.abs_keyword_path_prices)  # sets key word dictionary
         self.set_puncwords()  # sets punctuation vocabulary
+        self.set_middlewords()
         with open('resources\\cities_data.pkl', 'rb') as input:
             self.hash_cities = pickle.load(input)
 
@@ -159,33 +122,27 @@ class ReadFile:
         f_counter = multiprocessing.Value('i', 0)
         start = time.time()
         files_list = self.set_file_list()
-        manager = Manager()
-        hash_c = manager.dict()
-        voc = manager.dict()
-        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
+        # for file in files_list:
+        #     self.parse_file(file)
+        pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
-        print(i.get())
-        #self.indexer.sort_file_list()
+        i.wait()
         end = time.time()
         print('total time (s)= ' + str(end - start))
         print(self.complete_list)
         print(*self.complete_list, sep="\n")
-        # mutex_arr = Array('i', m_arr)
-        # p = Pool(initializer=init_counter, initargs=(counter,))
-        # i = p.map_async(analyze_data, self.set_file_list(), chunksize=1)
-        # i.wait()
 
-        # sem = multiprocessing.Semaphore(0)
-        # with multiprocessing.Pool(processes=4, initializer=(init_counter, init_sem), initargs=(self.f_counter, sem)) as p:
-        # results = p.map(do_work, 4)
 
     def set_file_list(self):
         files_list = []
-        for root, dirs, files in os.walk(
-                'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus'):
+        for root, dirs, files in os.walk(self.data_path):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
+        files_list_tmp = []
+        for i in range(100):
+            files_list_tmp.append(files_list[i])
+        files_list = files_list_tmp
         return files_list
 
     def parse_file(self, file_path):
@@ -195,31 +152,13 @@ class ReadFile:
         p = None
         file_terms = {}
         p_name = "#NUM_" + str(f_counter.value)
-      #  print("process #NUM_" + str(f_counter.value))
-        #file_path = args[0]
-        #hash_c = args[1]
-        #voc = args[2]
         with f_counter.get_lock():
-            # print(file_path)
-            f_counter.value += 1
-            # print(f_counter.value)
-        sum = 0
-        summary = 0
+           f_counter.value += 1
         f_start = time.time()
         p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.stemmer)
         self.get_doc_from_file(file_path, p)
-        #print(p_name +' size :' +str(len(file_terms)))
-        #self.merge_file_terms(file_terms)
-        #file_terms = {}
-        #with f_counter.get_lock():
-        #if f_counter.value % 10 == 0:
-            #h = hash_c.copy()
-            #self.indexer.write_temp_posts(self.hash_terms_collection)
-        with open('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
+        with open(self.post_path + '\\Engine_Data\\temp_hash_objects\\file_hash_'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
-        #self.indexer.write_temp_posts(p.hash_terms)
-       # self.indexer.sort_file_list()
-        #     pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}
         f_end = time.time()
@@ -233,15 +172,11 @@ class ReadFile:
 
     def print_prog(self, p_c):
         print('\n'*100)
-        #self.clear()
-        print('Progess:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
-
-
+        print('Parssing:[' + '*'*p_c + ' '*(100-p_c) +str(p_c) + '%' ']')
 
     def get_doc_from_file(self, file_path, parser_object):
         skip_one = 0
         with open(file_path, 'r') as file:
-            # data = file.read().replace('\n', '')
             doc_counter = 0
             doc_counter2 = 0
             data = file.read()
@@ -252,27 +187,9 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    # sem.acquire()
                     parser_object.start_parse(doc)
-                    # test_hash = {}
-                    # self.indexer.write_temp_posts(test_hash)
-                    # self.voc2str(hash_terms)
-                    # sem.release()
-                    # self.indexer.write_temp_posts(hash_terms)
-                    # self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
-                    # self.indexer.write_temp_posts(hash_terms)
-                    #self.indexer.sort_file_list('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_files\\abc.txt')
                 else:
                     skip_one = 1
-
-        """
-        if parser_object.hash_cities.__sizeof__() > 0:
-            hash_cities = copy.deepcopy(parser_object.hash_cities)
-            obj_api = API(hash_cities)
-            obj_api.get_api_info()
-        """
-
-        # print(doc_counter2)
         del data_list
 
     def merge_file_terms(self, file_terms):
