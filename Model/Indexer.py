@@ -18,32 +18,22 @@ from numpy import log2
 class Indexer:
 
     def __init__(self, user_path):
-        self.temp_path = user_path + "\\temp_files\\"
         self.posting_path = user_path + "\\posting_files\\"
         if not os.path.exists(self.posting_path):
             os.makedirs(self.posting_path)
-        if not os.path.exists(self.temp_path):
-            os.makedirs(self.temp_path)
-        self.temp_path0 = self.temp_path + 'num.txt'
-        self.temp_path1 = self.temp_path + 'ab.txt'
-        self.temp_path2 = self.temp_path + 'cd.txt'
-        self.temp_path3 = self.temp_path + 'ef.txt'
-        self.temp_path4 = self.temp_path + 'gh.txt'
-        self.temp_path5 = self.temp_path + 'ijk.txt'
-        self.temp_path6 = self.temp_path + 'lmn.txt'
-        self.temp_path7 = self.temp_path + 'opq.txt'
-        self.temp_path8 = self.temp_path + 'rs.txt'
-        self.temp_path9 = self.temp_path + 'tuv.txt'
-        self.temp_path10 = self.temp_path + 'wxyz.txt'
-        self.temp_list = [self.temp_path10, self.temp_path9, self.temp_path8, self.temp_path7, self.temp_path6,
-                          self.temp_path5,self.temp_path4, self.temp_path3, self.temp_path2, self.temp_path1, self.temp_path0]
         self.file_path0 = self.posting_path + 'num.txt'
-        self.file_path1 = self.posting_path + 'abc.txt'
-        self.file_path2 = self.posting_path + 'defgh.txt'
-        self.file_path3 = self.posting_path + 'ijklm.txt'
-        self.file_path4 = self.posting_path + 'nopqr.txt'
-        self.file_path5 = self.posting_path + 'stuvxwyz.txt'
-        self.file_list = [self.file_path5, self.file_path4, self.file_path3, self.file_path2, self.file_path1,self.file_path0]
+        self.file_path1 = self.posting_path + 'ab.txt'
+        self.file_path2 = self.posting_path + 'cd.txt'
+        self.file_path3 = self.posting_path + 'ef.txt'
+        self.file_path4 = self.posting_path + 'gh.txt'
+        self.file_path5 = self.posting_path + 'ijk.txt'
+        self.file_path6 = self.posting_path + 'lmn.txt'
+        self.file_path7 = self.posting_path + 'opq.txt'
+        self.file_path8 = self.posting_path + 'rs.txt'
+        self.file_path9 = self.posting_path + 'tuv.txt'
+        self.file_path10 = self.posting_path + 'wxyz.txt'
+        self.file_list = [self.file_path10, self.file_path9, self.file_path8, self.file_path7, self.file_path6,
+                          self.file_path5,self.file_path4, self.file_path3, self.file_path2, self.file_path1, self.file_path0]
         self.counter = 0
         self.hash_junk = {}
         self.N = 468000
@@ -104,7 +94,7 @@ class Indexer:
 
         ### pool2: loads, merges and sorts the posting files ###
         pool2 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10))
-        i2 = pool2.map_async(self.merger, self.temp_list, chunksize=1)
+        i2 = pool2.map_async(self.merger, self.file_list, chunksize=1)
         i2.wait()
 
     def set_file_list(self):
@@ -132,7 +122,7 @@ class Indexer:
             hash_terms = pickle.load(input)
         hash_terms = sorted(hash_terms.items(), key=lambda x: x[0].lower())
         with lock0.get_lock():
-            with open(self.temp_path0, 'a', encoding='utf-8') as num:
+            with open(self.file_path0, 'a', encoding='utf-8') as num:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -159,7 +149,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ikey[0]
                     if ch.isdigit() or ch == '$':
@@ -176,7 +166,7 @@ class Indexer:
                     del hash_terms[0]
                 num.close()
         with lock1.get_lock():
-            with open(self.temp_path1, 'a', encoding='utf-8') as ab:
+            with open(self.file_path1, 'a', encoding='utf-8') as ab:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -203,7 +193,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 97 <= ch <= 98 or 65 <= ch <= 66:
@@ -220,7 +210,7 @@ class Indexer:
                     del hash_terms[0]
                 ab.close()
         with lock2.get_lock():
-            with open(self.temp_path2, 'a', encoding='utf-8') as cd:
+            with open(self.file_path2, 'a', encoding='utf-8') as cd:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -247,7 +237,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 99 <= ch <= 100 or 67 <= ch <= 68:
@@ -264,7 +254,7 @@ class Indexer:
                     del hash_terms[0]
                 cd.close()
         with lock3.get_lock():
-            with open(self.temp_path3, 'a', encoding='utf-8') as ef:
+            with open(self.file_path3, 'a', encoding='utf-8') as ef:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -291,7 +281,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 101 <= ch <= 102 or 69 <= ch <= 70:
@@ -308,7 +298,7 @@ class Indexer:
                     del hash_terms[0]
                 ef.close()
         with lock4.get_lock():
-            with open(self.temp_path4, 'a', encoding='utf-8') as gh:
+            with open(self.file_path4, 'a', encoding='utf-8') as gh:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -335,7 +325,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 103 <= ch <= 104 or 71 <= ch <= 72:
@@ -352,7 +342,7 @@ class Indexer:
                     del hash_terms[0]
                 gh.close()
         with lock5.get_lock():
-            with open(self.temp_path5, 'a', encoding='utf-8') as ijk:
+            with open(self.file_path5, 'a', encoding='utf-8') as ijk:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -379,7 +369,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 105 <= ch <= 107 or 73 <= ch <= 75:
@@ -396,7 +386,7 @@ class Indexer:
                     del hash_terms[0]
                 ijk.close()
         with lock6.get_lock():
-            with open(self.temp_path6, 'a', encoding='utf-8') as lmn:
+            with open(self.file_path6, 'a', encoding='utf-8') as lmn:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -423,7 +413,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 108 <= ch <= 110 or 76 <= ch <= 78:
@@ -440,7 +430,7 @@ class Indexer:
                     del hash_terms[0]
                 lmn.close()
         with lock7.get_lock():
-            with open(self.temp_path7, 'a', encoding='utf-8') as opq:
+            with open(self.file_path7, 'a', encoding='utf-8') as opq:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -467,7 +457,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 111 <= ch <= 113 or 79 <= ch <= 81:
@@ -484,7 +474,7 @@ class Indexer:
                     del hash_terms[0]
                 opq.close()
         with lock8.get_lock():
-            with open(self.temp_path8, 'a', encoding='utf-8') as rs:
+            with open(self.file_path8, 'a', encoding='utf-8') as rs:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -511,7 +501,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 114 <= ch <= 115 or 82 <= ch <= 83:
@@ -528,7 +518,7 @@ class Indexer:
                     del hash_terms[0]
                 rs.close()
         with lock9.get_lock():
-            with open(self.temp_path9, 'a', encoding='utf-8') as tuv:
+            with open(self.file_path9, 'a', encoding='utf-8') as tuv:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -555,7 +545,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 116 <= ch <= 118 or 84 <= ch <= 86:
@@ -572,7 +562,7 @@ class Indexer:
                     del hash_terms[0]
                 tuv.close()
         with lock10.get_lock():
-            with open(self.temp_path10, 'a', encoding='utf-8') as wxyz:
+            with open(self.file_path10, 'a', encoding='utf-8') as wxyz:
                 i = 0
                 for ikey, ival in hash_terms:
                     try:
@@ -599,7 +589,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError) as e:
+                    except (ValueError, IndexError):
                         i += 1
                     ch = ord(ikey[0])
                     if 119 <= ch <= 122 or 87 <= ch <= 90:
@@ -622,6 +612,7 @@ class Indexer:
             list_term = term.split('|')
             this_term = None
             other_term = list_term[0]
+            skip = False
             if other_term != '':
                 try:
                     hash_temp_doc = {}
@@ -662,53 +653,54 @@ class Indexer:
                             last_gap = int(last_info[1])
                         del value_term[0]
                     del list_term
-                except (ValueError, IndexError) as e:
-                    self.hash_junk[other_term] = "SuperDickTermException"
-                    pass
-                if self.is_first_upper(other_term):  # other = PEN
-                    if other_term in hash_file_terms:  # (1) other=PEN and dict=PEN -> update
-                        this_term = hash_file_terms[other_term]
-                    else:  # (2) other=PEN and dict=pen -> update
-                        temp_term_lower = other_term.lower()  # temp=pen
-                        if temp_term_lower in hash_file_terms:  # (2) other=PEN and dict=pen -> update
-                            this_term = hash_file_terms[temp_term_lower]
-                    if this_term is not None:
-                        try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
-                            this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
-                            this_term['hash_docs'].update(hash_temp_doc)
-                        except KeyError:
-                            i = 0
-                        pass  # end of update (1+2)
-                    else:  # (5) if its a new term (other=PEN and dict='none')
-                        nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
-                        hash_file_terms[other_term] = nested_hash
-                        pass  # end of adding a new term
-                else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
-                    if other_term in hash_file_terms:  # (3) other=pen and dict=pen -> update
-                        this_term = hash_file_terms[other_term]
-                        try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
-                            this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
-                            this_term['hash_docs'].update(hash_temp_doc)
-                        except KeyError:
-                            i = 0
-                        pass  # end of update (3)
-                    else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
-                        temp_term_upper = other_term.upper()  # temp = PEN
-                        if temp_term_upper in hash_file_terms:
-                            old_term = hash_file_terms[temp_term_upper]  # this_term = PEN
-                            this_term = copy.deepcopy(old_term)  # creates new lower case term 'pen'
+                except (ValueError, IndexError):
+                    self.hash_junk[other_term] = "DickTermException"
+                    skip = True
+                if not skip:
+                    if self.is_first_upper(other_term):  # other = PEN
+                        if other_term in hash_file_terms:  # (1) other=PEN and dict=PEN -> update
+                            this_term = hash_file_terms[other_term]
+                        else:  # (2) other=PEN and dict=pen -> update
+                            temp_term_lower = other_term.lower()  # temp=pen
+                            if temp_term_lower in hash_file_terms:  # (2) other=PEN and dict=pen -> update
+                                this_term = hash_file_terms[temp_term_lower]
+                        if this_term is not None:
                             try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
                                 this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
                                 this_term['hash_docs'].update(hash_temp_doc)
                             except KeyError:
                                 i = 0
-                            hash_file_terms[other_term] = this_term  # adds 'pen'
-                            del hash_file_terms[temp_term_upper]  # deletes old upper case term 'PEN'
-                            pass  # end of update (4)
-                        else:  # (5) if its a new term (other=pen and dict='none')
+                            pass  # end of update (1+2)
+                        else:  # (5) if its a new term (other=PEN and dict='none')
                             nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
                             hash_file_terms[other_term] = nested_hash
-                            pass
+                            pass  # end of adding a new term
+                    else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
+                        if other_term in hash_file_terms:  # (3) other=pen and dict=pen -> update
+                            this_term = hash_file_terms[other_term]
+                            try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
+                                this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
+                                this_term['hash_docs'].update(hash_temp_doc)
+                            except KeyError:
+                                i = 0
+                            pass  # end of update (3)
+                        else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
+                            temp_term_upper = other_term.upper()  # temp = PEN
+                            if temp_term_upper in hash_file_terms:
+                                old_term = hash_file_terms[temp_term_upper]  # this_term = PEN
+                                this_term = copy.deepcopy(old_term)  # creates new lower case term 'pen'
+                                try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
+                                    this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
+                                    this_term['hash_docs'].update(hash_temp_doc)
+                                except KeyError:
+                                    i = 0
+                                hash_file_terms[other_term] = this_term  # adds 'pen'
+                                del hash_file_terms[temp_term_upper]  # deletes old upper case term 'PEN'
+                                pass  # end of update (4)
+                            else:  # (5) if its a new term (other=pen and dict='none')
+                                nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
+                                hash_file_terms[other_term] = nested_hash
+                                pass
         with open(path, 'w', encoding='utf-8') as file:
             file.close()
         with open(path, 'a', encoding='utf-8') as file:
@@ -740,7 +732,7 @@ class Indexer:
                             curr_doc_id = curr_doc_id + "-"
                         docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                             jval['h']) + ">"
-                except (ValueError, IndexError) as e:
+                except (ValueError, IndexError):
                     self.hash_junk[ikey] = ""
                     skip = True
                 if not skip:

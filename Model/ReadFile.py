@@ -48,6 +48,7 @@ class ReadFile:
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus'):
     # ('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\corpus\\corpus'):
     # ('C:\\Users\\edoli\\Desktop\\SE_PA\\corpus\\corpus\\FB396001'):
+    # with open('C:\\Users\\edoli\\Desktop\\SE_PA\\temp_hash_objects\\file_hash_'+ p_name+'.pkl' , 'wb') as output:
 
     def init_globals(self, f_c):
         global f_counter
@@ -86,15 +87,15 @@ class ReadFile:
         del list_keywords_prices
 
     def set_puncwords(self):
-        list_punc = {',', '"', '.', '?', '-', '_', '.', '*', '"', '`', ':', ';', "'", '[', ']', '(', ')', '{', "}", '<',
-                     '>', '|', '~',
-                     '^', '?', "\"", '\"', '&', '"!"', '!', "=", '+', "#", '\n', "\"", '\"', "/", "\\"}
+        list_punc = {' ', '', "\"", '\"', "/", "\\", '\\\\', ',', '"', '|' '?', '-', '--', '_', '.', '*', '"', '`', ':',
+                     ';', "'", '[', ']', '(', ')', '{', "}", '<', '>', '~', '%', '^', '?', '&', '!', "=", '+', "#",
+                    '\n', '<P>', '</P>', '<F>', '</F>', '/F', 'MR'}
         for word in list_punc:
             self.hash_punc[word] = ""
         del list_punc
 
     def set_middlewords(self):
-        list_punc = {'|', '.', '..', '...', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\"}
+        list_punc = {'.', '/','|', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', "}", ' '}
         for word in list_punc:
             self.hash_punc_middle[word] = ""
         del list_punc

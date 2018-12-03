@@ -6,6 +6,11 @@ from Model.Indexer import Indexer
 import pickle
 import os
 
+
+# indx = Indexer('C:\\Users\\edoli\\Desktop\\SE_PA')
+# indx = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
+
+
 class Controller:
 
     data_path = ""
