@@ -26,25 +26,26 @@ class Gu(QtWidgets.QMainWindow):
         self.lineEdit_posting_dest_path.setText(QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory"))
 
     def start_program(self):
-        if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
-                any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
-            stemmer = self.stemmer_checkBox.isChecked()
-            self.controller = Controller(self.vocabulary)
-            self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
-
-        else:
-            error_one = ""
-            error_two = ""
-            if not any(c in self.lineEdit_data_path.text() for c in ('\\', '/')):
-                error_one = "*** Data Path is empty or invalid.                    \n"
-            if not any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
-                error_two = "*** Posting destination is empty or invalid.               "
-            error_message = "Error:                     \n" + error_one + error_two
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
-            msgBox.setWindowTitle("Input Error")
-            msgBox.setText(error_message)
-            msgBox.exec()
+       # if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
+               # any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
+        stemmer = self.stemmer_checkBox.isChecked()
+        self.controller = Controller(self.vocabulary)
+        self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
+        self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
+        self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
+        # else:
+        #     error_one = ""
+        #     error_two = ""
+        #     if not any(c in self.lineEdit_data_path.text() for c in ('\\', '/')):
+        #         error_one = "*** Data Path is empty or invalid.                    \n"
+        #     if not any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
+        #         error_two = "*** Posting destination is empty or invalid.               "
+        #     error_message = "Error:                     \n" + error_one + error_two
+        #     msgBox = QtWidgets.QMessageBox()
+        #     msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+        #     msgBox.setWindowTitle("Input Error")
+        #     msgBox.setText(error_message)
+        #     msgBox.exec()
 
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
@@ -75,8 +76,20 @@ class Gu(QtWidgets.QMainWindow):
 
 
     def reset_system(self):
-        self.controller.reset_system()
-        print("Holy shit System has been reset!")
+        op =self.controller.reset_system()
+        if op != None:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setWindowTitle("Reset")
+            msgBox.setText("System has been rested Successfuly.")
+            msgBox.exec()
+            print("Holy shit System has been reset!")
+        else:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setWindowTitle("Reset")
+            msgBox.setText("Nothing to Delete.")
+            msgBox.exec()
 
     def show_features(self):
         print("Crazy Features")
