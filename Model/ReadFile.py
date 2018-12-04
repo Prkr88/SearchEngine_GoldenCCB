@@ -126,7 +126,7 @@ class ReadFile:
         self.number_of_files = len(files_list)
         # for file in files_list:
         #     self.parse_file(file)
-        pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
+        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
@@ -136,10 +136,10 @@ class ReadFile:
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
-        files_list_tmp = []
-        for i in range(100):
-             files_list_tmp.append(files_list[i])
-        files_list = files_list_tmp
+        # files_list_tmp = []
+        # for i in range(100):
+        #      files_list_tmp.append(files_list[i])
+        # files_list = files_list_tmp
         return files_list
 
     def parse_file(self, file_path):

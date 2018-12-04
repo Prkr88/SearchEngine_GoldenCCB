@@ -27,14 +27,15 @@ class Gu(QtWidgets.QMainWindow):
 
     # self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
     # self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
-
+    # self.lineEdit_data_path.setText("C:/Users/edoli/Desktop/SE_PA/corpus")
+    # self.lineEdit_posting_dest_path.setText("C:/Users/edoli/Desktop/SE_PA/")
     def start_program(self):
        # if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
                # any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
         stemmer = self.stemmer_checkBox.isChecked()
         self.controller = Controller(self.vocabulary)
-        self.lineEdit_data_path.setText("C:/Users/edoli/Desktop/SE_PA/corpus")
-        self.lineEdit_posting_dest_path.setText("C:/Users/edoli/Desktop/SE_PA/")
+        self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
+        self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
         self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
         summary_message = '#Num of Docs Indexed: ' + '\n\t'+str(self.controller.doc_counter) + '\n#Num of Unique Terms: ' +\
                           '\n\t'+str(self.controller.unique_terms) + '\nTotal Time: ' + '\n\t'+str(int(self.controller.total_time))
