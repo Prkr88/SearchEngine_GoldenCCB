@@ -710,10 +710,11 @@ class Parser:
             a = 0
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')
-        self.list_tokens = self.str_txt.split()
+        # self.list_tokens = self.str_txt.split()
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
         self.set_city()
         self.set_headers()
+        self.list_tokens = ["æm","ã","ã-bonds"]
         index = 0
         for term in self.list_tokens:
             if term != '':
@@ -773,7 +774,7 @@ class Parser:
                                 del word_split
                             except Exception:
                                 a = 0
-                        if term != '' and not skip:
+                        if term != '' and not skip and (48 <= ord(term[0]) <= 57 or 65 <= ord(term[0]) <= 90 or 97 <= ord(term[0]) <= 122):
                             self.is_regular_term(term)
                             self.word_in_line_counter += 1
                 index += 1

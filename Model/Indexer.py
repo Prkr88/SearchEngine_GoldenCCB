@@ -36,7 +36,6 @@ class Indexer:
         self.file_list = [self.file_path10, self.file_path9, self.file_path8, self.file_path7, self.file_path6,
                           self.file_path5,self.file_path4, self.file_path3, self.file_path2, self.file_path1, self.file_path0]
         self.counter = 0
-        self.hash_junk = {}
         self.N = 468000
         self.number_of_files = 0
 
@@ -133,6 +132,7 @@ class Indexer:
             file_counter.value += 1
         with open(hash_path,'rb') as input:
             hash_terms = pickle.load(input)
+        hash_junk = {}
         hash_terms = sorted(hash_terms.items(), key=lambda x: x[0].lower())
         with lock0.get_lock():
             with open(self.file_path0, 'a', encoding='utf-8') as num:
@@ -163,7 +163,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ikey[0]
                     if ch.isdigit() or ch == '$':
                         num.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -172,7 +174,7 @@ class Indexer:
                     elif 97 <= ord(ch) <= 98 or 65 <= ord(ch) <= 66:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -207,7 +209,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 97 <= ch <= 98 or 65 <= ch <= 66:
                         ab.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -216,7 +220,7 @@ class Indexer:
                     elif 99 <= ch <= 100 or 67 <= ch <= 68:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -251,7 +255,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 99 <= ch <= 100 or 67 <= ch <= 68:
                         cd.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -260,7 +266,7 @@ class Indexer:
                     elif 101 <= ch <= 102 or 69 <= ch <= 70:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -295,7 +301,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 101 <= ch <= 102 or 69 <= ch <= 70:
                         ef.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -304,7 +312,7 @@ class Indexer:
                     elif 103 <= ch <= 104 or 71 <= ch <= 72:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -339,7 +347,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 103 <= ch <= 104 or 71 <= ch <= 72:
                         gh.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -348,7 +358,7 @@ class Indexer:
                     elif 105 <= ch <= 107 or 73 <= ch <= 75:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -383,7 +393,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 105 <= ch <= 107 or 73 <= ch <= 75:
                         ijk.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -392,7 +404,7 @@ class Indexer:
                     elif 108 <= ch <= 110 or 76 <= ch <= 78:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -427,7 +439,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 108 <= ch <= 110 or 76 <= ch <= 78:
                         lmn.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -436,7 +450,7 @@ class Indexer:
                     elif 111 <= ch <= 113 or 79 <= ch <= 81:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -471,7 +485,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 111 <= ch <= 113 or 79 <= ch <= 81:
                         opq.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -480,7 +496,7 @@ class Indexer:
                     elif 114 <= ch <= 115 or 82 <= ch <= 83:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -515,7 +531,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 114 <= ch <= 115 or 82 <= ch <= 83:
                         rs.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -524,7 +542,7 @@ class Indexer:
                     elif 116 <= ch <= 118 or 84 <= ch <= 86:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -559,7 +577,9 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 116 <= ch <= 118 or 84 <= ch <= 86:
                         tuv.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
@@ -568,7 +588,7 @@ class Indexer:
                     elif 119 <= ch <= 122 or 87 <= ch <= 90:
                         break
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 for x in range(0, i):
@@ -603,24 +623,34 @@ class Indexer:
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
                     except Exception:
+                        hash_junk[str(ikey)] = ""
                         i += 1
+                        pass
                     ch = ord(ikey[0])
                     if 119 <= ch <= 122 or 87 <= ch <= 90:
                         wxyz.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
                             float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                         i += 1
                     else:
-                        self.hash_junk[ikey] = ""
+                        hash_junk[str(ikey)] = ""
                         i += 1
                         pass
                 wxyz.close()
         hash_terms = {}
+        junk_path = self.posting_path + '/junk.txt'
+        hash_junk = sorted(hash_junk.items(), key=lambda x: x[0].lower())
+        with open(junk_path, 'a', encoding='utf-8') as file:
+            for ikey, ival in hash_junk:
+                file.write(str(ikey) + '\n')
+            file.close()
+        hash_junk = []
 
     def merger(self, path):
         with open(path, 'r', encoding='utf-8') as file:
             list_terms = [line.strip() for line in file]
             file.close()
         hash_file_terms = {}
+        hash_junk = {}
         for term in list_terms:
             list_term = term.split('|')
             this_term = None
@@ -667,7 +697,7 @@ class Indexer:
                         del value_term[0]
                     del list_term
                 except Exception:
-                    self.hash_junk[other_term] = "DickTermException"
+                    hash_junk[other_term] = "DickTermException"
                     skip = True
                 if not skip:
                     if self.is_first_upper(other_term):  # other = PEN
@@ -681,7 +711,7 @@ class Indexer:
                             try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
                                 this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
                                 this_term['hash_docs'].update(hash_temp_doc)
-                            except KeyError:
+                            except Exception:
                                 i = 0
                             pass  # end of update (1+2)
                         else:  # (5) if its a new term (other=PEN and dict='none')
@@ -694,7 +724,7 @@ class Indexer:
                             try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
                                 this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
                                 this_term['hash_docs'].update(hash_temp_doc)
-                            except KeyError:
+                            except Exception:
                                 i = 0
                             pass  # end of update (3)
                         else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
@@ -705,7 +735,7 @@ class Indexer:
                                 try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
                                     this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
                                     this_term['hash_docs'].update(hash_temp_doc)
-                                except KeyError:
+                                except Exception:
                                     i = 0
                                 hash_file_terms[other_term] = this_term  # adds 'pen'
                                 del hash_file_terms[temp_term_upper]  # deletes old upper case term 'PEN'
@@ -746,13 +776,22 @@ class Indexer:
                         docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                             jval['h']) + ">"
                 except Exception:
-                    self.hash_junk[ikey] = ""
+                    hash_junk[ikey] = ""
                     skip = True
                 if not skip:
                     file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
                     float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
             file.close()
         hash_file_terms = {}
+
+        junk_path = path + "-junk.txt"
+        with open(junk_path, 'a', encoding='utf-8') as file:
+            hash_junk = sorted(hash_junk.items(), key=lambda x: x[0].lower())
+            for ikey, ival in hash_junk:
+                file.write(str(ikey))
+            file.close()
+        hash_junk = []
+
         with file_counter.get_lock():
             file_counter.value += 1
             p_c = float(file_counter.value)
