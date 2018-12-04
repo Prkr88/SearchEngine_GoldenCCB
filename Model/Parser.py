@@ -710,11 +710,10 @@ class Parser:
             a = 0
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')
-        # self.list_tokens = self.str_txt.split()
+        self.list_tokens = self.str_txt.split()
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
         self.set_city()
         self.set_headers()
-        self.list_tokens = ["æm","ã","ã-bonds"]
         index = 0
         for term in self.list_tokens:
             if term != '':
@@ -739,7 +738,8 @@ class Parser:
                                     term = self.list_tokens[index]
                                     # print('Term| ' +term+' |inserted.')
                         except Exception:
-                            print('dickTerm: ' + term)
+                            a = 0
+                            #print('dickTerm: ' + term)
                         hyphen_term = term
                         if "--" in term:  # term1--term2
                             try:

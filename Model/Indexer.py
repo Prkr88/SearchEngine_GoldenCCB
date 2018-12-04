@@ -17,11 +17,9 @@ from numpy import log2
 
 class Indexer:
 
-    def __init__(self, user_path):
+    def __init__(self, user_path, N_docs):
         self.posting_path = user_path + "/Engine_Data/posting_files"
         self.engine_data_path = user_path + "/Engine_Data"
-        if not os.path.exists(self.posting_path):
-            os.makedirs(self.posting_path)
         self.file_path0 = self.posting_path + '/num.txt'
         self.file_path1 = self.posting_path + '/ab.txt'
         self.file_path2 = self.posting_path + '/cd.txt'
@@ -36,7 +34,8 @@ class Indexer:
         self.file_list = [self.file_path10, self.file_path9, self.file_path8, self.file_path7, self.file_path6,
                           self.file_path5,self.file_path4, self.file_path3, self.file_path2, self.file_path1, self.file_path0]
         self.counter = 0
-        self.N = 468000
+        self.hash_junk = {}
+        self.N = N_docs
         self.number_of_files = 0
 
     def init_globals(self, l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, f_c):
