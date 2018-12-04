@@ -59,7 +59,7 @@ class ReadFile:
         self.data_path = data_path
         self.post_path = post_path
         print('\n' * 100)
-        print('Progess:[' + ' ' * 50 + '%0' ']')
+        print('Parssing:\n[' + ' ' * 50 + '%0' ']')
         self.controller = controller
         self.stemmer = stemmer
 
@@ -122,7 +122,6 @@ class ReadFile:
     def start_evaluating(self):
         global f_counter
         f_counter = multiprocessing.Value('i', 0)
-        start = time.time()
         files_list = self.set_file_list()
         self.number_of_files = len(files_list)
         # for file in files_list:
@@ -130,10 +129,6 @@ class ReadFile:
         pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
-        end = time.time()
-        print('total time (s)= ' + str(end - start))
-        print(self.complete_list)
-        print(*self.complete_list, sep="\n")
 
 
     def set_file_list(self):

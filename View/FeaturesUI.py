@@ -8,6 +8,7 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 
+
 class Ui_Features(object):
     def setupUi(self, ScrollArea):
         ScrollArea.setObjectName("Ui_Features")
@@ -33,7 +34,4 @@ class Ui_Features(object):
 
     def retranslateUi(self, ScrollArea):
         _translate = QtCore.QCoreApplication.translate
-        ScrollArea.setWindowTitle(_translate("ScrollArea", "Fetures"))
-
-
-
+        ScrollArea.setWindowTitle(_translate("ScrollArea", "Features"))

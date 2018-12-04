@@ -22,24 +22,25 @@ class Indexer:
         self.engine_data_path = user_path + "/Engine_Data"
         if not os.path.exists(self.posting_path):
             os.makedirs(self.posting_path)
-        self.file_path0 = self.posting_path + 'num.txt'
-        self.file_path1 = self.posting_path + 'ab.txt'
-        self.file_path2 = self.posting_path + 'cd.txt'
-        self.file_path3 = self.posting_path + 'ef.txt'
-        self.file_path4 = self.posting_path + 'gh.txt'
-        self.file_path5 = self.posting_path + 'ijk.txt'
-        self.file_path6 = self.posting_path + 'lmn.txt'
-        self.file_path7 = self.posting_path + 'opq.txt'
-        self.file_path8 = self.posting_path + 'rs.txt'
-        self.file_path9 = self.posting_path + 'tuv.txt'
-        self.file_path10 = self.posting_path + 'wxyz.txt'
+        self.file_path0 = self.posting_path + '/num.txt'
+        self.file_path1 = self.posting_path + '/ab.txt'
+        self.file_path2 = self.posting_path + '/cd.txt'
+        self.file_path3 = self.posting_path + '/ef.txt'
+        self.file_path4 = self.posting_path + '/gh.txt'
+        self.file_path5 = self.posting_path + '/ijk.txt'
+        self.file_path6 = self.posting_path + '/lmn.txt'
+        self.file_path7 = self.posting_path + '/opq.txt'
+        self.file_path8 = self.posting_path + '/rs.txt'
+        self.file_path9 = self.posting_path + '/tuv.txt'
+        self.file_path10 = self.posting_path + '/wxyz.txt'
         self.file_list = [self.file_path10, self.file_path9, self.file_path8, self.file_path7, self.file_path6,
                           self.file_path5,self.file_path4, self.file_path3, self.file_path2, self.file_path1, self.file_path0]
         self.counter = 0
         self.hash_junk = {}
         self.N = 468000
+        self.number_of_files = 0
 
-    def init_globals(self, l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10):
+    def init_globals(self, l0, l1, l2, l3, l4, l5, l6, l7, l8, l9, l10, f_c):
         global lock0
         global lock1
         global lock2
@@ -51,6 +52,7 @@ class Indexer:
         global lock8
         global lock9
         global lock10
+        global file_counter
         lock0 = l0
         lock1 = l1
         lock2 = l2
@@ -62,6 +64,7 @@ class Indexer:
         lock8 = l8
         lock9 = l9
         lock10 = l10
+        file_counter = f_c
 
     def start_indexing(self):
         global lock0
@@ -75,6 +78,7 @@ class Indexer:
         global lock8
         global lock9
         global lock10
+        global file_counter
         lock0 = multiprocessing.Value('i',0)
         lock1 = multiprocessing.Value('i',1)
         lock2 = multiprocessing.Value('i',2)
@@ -86,21 +90,23 @@ class Indexer:
         lock8 = multiprocessing.Value('i',8)
         lock9 = multiprocessing.Value('i',9)
         lock10 = multiprocessing.Value('i',10)
+        file_counter = multiprocessing.Value('i',0)
         hash_list = self.set_file_list()
-
+        self.number_of_files = len (hash_list)
         ### pool1: loads hash files.pkl to memory, and writes them to 11 temp post.txt files on disk ###
-        pool1 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10))
+        pool1 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10 ,file_counter))
         i1 = pool1.map_async(self.write_temp_posts, hash_list, chunksize=1)
         i1.wait()
 
         ### pool2: loads, merges and sorts the posting files ###
-        pool2 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10))
+        file_counter.value = 0
+        pool2 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10,file_counter))
         i2 = pool2.map_async(self.merger, self.file_list, chunksize=1)
         i2.wait()
 
     def set_file_list(self):
         files_list = []
-        for root, dirs, files in os.walk(self.engine_data_path + '\\temp_hash_objects'):
+        for root, dirs, files in os.walk(self.engine_data_path + '/temp_hash_objects'):
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
@@ -118,6 +124,13 @@ class Indexer:
         global lock8
         global lock9
         global lock10
+        global file_counter
+        if file_counter.value % 20 == 0:
+            p_c = float(file_counter.value)
+            p_c = int(p_c * 100 / self.number_of_files)
+            self.print_prog(p_c, "Indexing:\n")
+        with file_counter.get_lock():
+            file_counter.value += 1
         with open(hash_path,'rb') as input:
             hash_terms = pickle.load(input)
         hash_terms = sorted(hash_terms.items(), key=lambda x: x[0].lower())
@@ -149,7 +162,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ikey[0]
                     if ch.isdigit() or ch == '$':
@@ -193,7 +206,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 97 <= ch <= 98 or 65 <= ch <= 66:
@@ -237,7 +250,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 99 <= ch <= 100 or 67 <= ch <= 68:
@@ -281,7 +294,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 101 <= ch <= 102 or 69 <= ch <= 70:
@@ -325,7 +338,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 103 <= ch <= 104 or 71 <= ch <= 72:
@@ -369,7 +382,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 105 <= ch <= 107 or 73 <= ch <= 75:
@@ -413,7 +426,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 108 <= ch <= 110 or 76 <= ch <= 78:
@@ -457,7 +470,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 111 <= ch <= 113 or 79 <= ch <= 81:
@@ -501,7 +514,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 114 <= ch <= 115 or 82 <= ch <= 83:
@@ -545,7 +558,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 116 <= ch <= 118 or 84 <= ch <= 86:
@@ -589,7 +602,7 @@ class Indexer:
                                 curr_doc_id = curr_doc_id + "-"
                             docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                                 jval['h']) + ">"
-                    except (ValueError, IndexError):
+                    except Exception:
                         i += 1
                     ch = ord(ikey[0])
                     if 119 <= ch <= 122 or 87 <= ch <= 90:
@@ -653,7 +666,7 @@ class Indexer:
                             last_gap = int(last_info[1])
                         del value_term[0]
                     del list_term
-                except (ValueError, IndexError):
+                except Exception:
                     self.hash_junk[other_term] = "DickTermException"
                     skip = True
                 if not skip:
@@ -732,7 +745,7 @@ class Indexer:
                             curr_doc_id = curr_doc_id + "-"
                         docs_val = docs_val + str(curr_doc_id) + str(curr_gap) + ":" + str(jval['tf_d']) + "," + str(
                             jval['h']) + ">"
-                except (ValueError, IndexError):
+                except Exception:
                     self.hash_junk[ikey] = ""
                     skip = True
                 if not skip:
@@ -740,6 +753,11 @@ class Indexer:
                     float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
             file.close()
         hash_file_terms = {}
+        with file_counter.get_lock():
+            file_counter.value += 1
+            p_c = float(file_counter.value)
+            p_c = int(p_c * 100 / 11)
+            self.print_prog(p_c, "Sorting Index:\n")
 
     def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
         try:
@@ -757,3 +775,8 @@ class Indexer:
         if self.posting_path is not None:
             if os.path.exists(self.engine_data_path):
                 shutil.rmtree(self.engine_data_path)
+
+    def print_prog(self, p_c ,op):
+        print('\n'*100)
+        print(op + '[' + '*'*int(p_c/2) + ' '*int((100-p_c)/2) +str(p_c) + '%' ']')
+
