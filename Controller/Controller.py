@@ -35,7 +35,7 @@ class Controller:
         rf = ReadFile(data_path, post_path, stemmer, self)
         rf.start_evaluating()
         self.create_vocabulary()
-        self.indx.start_indexing()
+        #self.indx.start_indexing()
 
     def create_vocabulary(self):
         counter = 0
@@ -78,5 +78,7 @@ class Controller:
     def reset_system(self):
         if self.indx !=  None:
             self.indx.reset_posting_files()
+            self.indx = None
+            return 1
         else:
             return None
