@@ -130,7 +130,6 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-
     def set_file_list(self):
         files_list = []
         for root, dirs, files in os.walk(self.data_path):
@@ -139,7 +138,7 @@ class ReadFile:
                 files_list.append(file_path)
         files_list_tmp = []
         for i in range(100):
-            files_list_tmp.append(files_list[i])
+             files_list_tmp.append(files_list[i])
         files_list = files_list_tmp
         return files_list
 
@@ -187,7 +186,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc)
+                    parser_object.start_pase(doc)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter

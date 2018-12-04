@@ -43,12 +43,13 @@ class Parser:
     def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, stemmer):
         self.hash_terms = {}
         self.hash_docs = {}
-        #self.hash_cities = {}
+        # self.hash_cities = {}
         self.hash_stopwords = hash_stopwords
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
         self.hash_punc = hash_punc
         self.hash_punc_middle = hash_punc_middle
+        self.hash_headers = {}
         self.stemming_mode = stemmer
         if self.stemming_mode:
             self.stemmer = EnglishStemmer()
@@ -81,33 +82,34 @@ class Parser:
             self.str_city_name = str_city_name1
             del city_name
             del l_city
-        except Exception as e:
+        except Exception:
             a = 0
-            # print("marker <F P=104> not found")
 
     def set_headers(self):
+        str_header = ''
+        l_header = None
+        self.hash_headers = {}
+        skip1 = False
+        skip2 = False
         try:
             str_header = self.str_doc.split("<TI>")[1]
             str_header = str_header.split("</TI>")[0]
             str_header = str_header.strip()
             l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
         except Exception:
-            a = 0
+            skip1 = True
         try:
             str_header = self.str_doc.split("<HEADLINE>")[1]
             str_header = str_header.split("</HEADLINE>")[0]
             str_header = str_header.strip()
             l_header = str_header.split(' ')
-            while len(l_header) > 0:
-                term = l_header[0]
-                if term not in self.hash_punc and term.lower() not in self.hash_stopwords:
-                    self.is_regular_term(term, 1)
-                del l_header[0]
+        except Exception:
+            skip2 = True
+        try:
+            if (not skip1 or not skip2) and str_header != '' and l_header is not None:
+                for value in l_header:
+                    self.hash_headers[value] = ""
+                self.list_tokens.extend(l_header)
         except Exception:
             a = 0
 
@@ -147,7 +149,7 @@ class Parser:
     def is_first_upper(self, term):  # NOTE: to check terms like fRog or just Frog?
         try:
             return 64 < ord(term[0]) < 91
-        except IndexError:
+        except Exception:
             pass
 
     def is_fully_upper(self, term):
@@ -156,111 +158,138 @@ class Parser:
         else:
             return 64 < ord(term[0]) < 91
 
-    def term_case_filter(self, other_term, is_header):
-        this_term = None
-        if self.stemming_mode:
-            if other_term not in self.hash_stemmer:  # (1) new 'cars' or 'car'
-                other_term = self.stemmer.stem(other_term)  # cars -> car
-                if other_term not in self.hash_stemmer:
-                    self.hash_stemmer[other_term] = ""  # adds stemmed term to hash cache
-        if self.is_first_upper(other_term):  # other = PEN
-            if not self.is_fully_upper(other_term):
-                other_term = other_term.upper()  # Pen -> PEN
-            if other_term in self.hash_terms:  # (1) other=PEN and dict=PEN -> update
-                this_term = self.hash_terms[other_term]
-            else:  # (2) other=PEN and dict=pen -> update
-                temp_term_lower = other_term.lower()  # temp=pen
-                if temp_term_lower in self.hash_terms:  # (2) other=PEN and dict=pen -> update
-                    this_term = self.hash_terms[temp_term_lower]
-            if this_term is not None:
-                try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
-                    this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
-                    this_header = this_term['hash_docs'][self.str_doc_id]['h']
-                    this_term.update({'tf_c': this_term['tf_c'] + 1})
-                    this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
-                    if this_tf == 2:
-                        this_unique = self.hash_docs[self.str_doc_id]['unique_count']
-                        self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
-                    this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
-                    this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
-                    this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
-                    this_unique = self.hash_docs[self.str_doc_id]['unique_count']
-                    self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                if other_term in self.hash_cities:
-                    str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
-                    try:
-                        str_this_pos = self.hash_cities[other_term][self.str_doc_id]
-                        self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
-                    except KeyError:
-                        self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
-                if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
-                    self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
-                return  # end of update (1+2)
-            else:  # (5) if its a new term (other=PEN and dict='none')
-                nested_hash = ({'tf_c': 1, 'df': 1, 'hash_docs': {self.str_doc_id: {'tf_d': 1, 'h': is_header}}})
-                self.hash_terms[other_term] = nested_hash
-                this_unique = self.hash_docs[self.str_doc_id]['unique_count']
-                self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                if other_term in self.hash_cities:
-                    str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
-                    try:
-                        str_this_pos = self.hash_cities[other_term][self.str_doc_id]
-                        self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
-                    except KeyError:
-                        self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
-                return  # end of adding a new term
-        else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
-            if other_term in self.hash_terms:  # (3) other=pen and dict=pen -> update
-                this_term = self.hash_terms[other_term]
-                try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
-                    this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
-                    this_header = this_term['hash_docs'][self.str_doc_id]['h']
-                    this_term.update({'tf_c': this_term['tf_c'] + 1})
-                    this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
-                    if this_tf == 2:
-                        this_unique = self.hash_docs[self.str_doc_id]['unique_count']
-                        self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
-                    this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
-                    this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
-                    this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
-                    this_unique = self.hash_docs[self.str_doc_id]['unique_count']
-                    self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
-                    self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
-                return  # end of update (3)
-            else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
-                temp_term_upper = other_term.upper()  # temp = PEN
-                if temp_term_upper in self.hash_terms:
-                    old_term = self.hash_terms[temp_term_upper]  # this_term = PEN
-                    this_term = copy.deepcopy(old_term)  # creates new lower case term 'pen'
+    def term_case_filter(self, other_term):
+        try:
+            this_term = None
+            if self.stemming_mode:
+                if other_term not in self.hash_stemmer:  # (1) new 'cars' or 'car'
+                    other_term = self.stemmer.stem(other_term)  # cars -> car
+                    if other_term not in self.hash_stemmer:
+                        self.hash_stemmer[other_term] = ""  # adds stemmed term to hash cache
+            if self.is_first_upper(other_term):  # other = PEN
+                if not self.is_fully_upper(other_term):
+                    other_term = other_term.upper()  # Pen -> PEN
+                if other_term in self.hash_terms:  # (1) other=PEN and dict=PEN -> update
+                    this_term = self.hash_terms[other_term]
+                else:  # (2) other=PEN and dict=pen -> update
+                    temp_term_lower = other_term.lower()  # temp=pen
+                    if temp_term_lower in self.hash_terms:  # (2) other=PEN and dict=pen -> update
+                        this_term = self.hash_terms[temp_term_lower]
+                if this_term is not None:
+                    if other_term in self.hash_terms:
+                        is_header = 1
+                    else:
+                        is_header = 0
                     try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
                         this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
                         this_header = this_term['hash_docs'][self.str_doc_id]['h']
                         this_term.update({'tf_c': this_term['tf_c'] + 1})
-                        this_term['hash_docs'].update(
-                            {self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
+
+                        this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
                         if this_tf == 2:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                    except KeyError:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                    except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
                         this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                         this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                         this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
                         this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                         self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
+                    if other_term in self.hash_cities:
+                        str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
+                        try:
+                            str_this_pos = self.hash_cities[other_term][self.str_doc_id]
+                            self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
+                        except Exception:
+                            self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
                     if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
                         self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
-                    self.hash_terms[other_term] = this_term  # adds 'pen'
-                    del self.hash_terms[temp_term_upper]  # deletes old upper case term 'PEN'
-                    return  # end of update (4)
-                else:  # (5) if its a new term (other=pen and dict='none')
+                    return  # end of update (1+2)
+                else:  # (5) if its a new term (other=PEN and dict='none')
+                    if other_term in self.hash_terms:
+                        is_header = 1
+                    else:
+                        is_header = 0
                     nested_hash = ({'tf_c': 1, 'df': 1, 'hash_docs': {self.str_doc_id: {'tf_d': 1, 'h': is_header}}})
                     self.hash_terms[other_term] = nested_hash
                     this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                     self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
-                    return
+                    if other_term in self.hash_cities:
+                        str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
+                        try:
+                            str_this_pos = self.hash_cities[other_term][self.str_doc_id]
+                            self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
+                        except Exception:
+                            self.hash_cities[other_term].update({self.str_doc_id: str_new_pos})
+                    return  # end of adding a new term
+            else:  # if the current term is lower case 'pen' (if it's an upper case we don't mind)
+                if other_term in self.hash_terms:  # (3) other=pen and dict=pen -> update
+                    this_term = self.hash_terms[other_term]
+                    try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
+                        this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
+                        this_header = this_term['hash_docs'][self.str_doc_id]['h']
+                        this_term.update({'tf_c': this_term['tf_c'] + 1})
+                        if other_term in self.hash_terms:
+                            is_header = 1
+                        else:
+                            is_header = 0
+                        this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
+                        if this_tf == 2:
+                            this_unique = self.hash_docs[self.str_doc_id]['unique_count']
+                            self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
+                    except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                        this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
+                        this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
+                        if other_term in self.hash_terms:
+                            is_header = 1
+                        else:
+                            is_header = 0
+                        this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
+                        this_unique = self.hash_docs[self.str_doc_id]['unique_count']
+                        self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
+                    if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
+                        self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
+                    return  # end of update (3)
+                else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
+                    temp_term_upper = other_term.upper()  # temp = PEN
+                    if temp_term_upper in self.hash_terms:
+                        old_term = self.hash_terms[temp_term_upper]  # this_term = PEN
+                        this_term = copy.deepcopy(old_term)  # creates new lower case term 'pen'
+                        if other_term in self.hash_terms:
+                            is_header = 1
+                        else:
+                            is_header = 0
+                        try:  # if was already seen in curr doc -> we update tf_c, tf_d and pos
+                            this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
+                            this_header = this_term['hash_docs'][self.str_doc_id]['h']
+                            this_term.update({'tf_c': this_term['tf_c'] + 1})
+                            this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
+                            if this_tf == 2:
+                                this_unique = self.hash_docs[self.str_doc_id]['unique_count']
+                                self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
+                        except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                            this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
+                            this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
+                            this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
+                            this_unique = self.hash_docs[self.str_doc_id]['unique_count']
+                            self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
+                        if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
+                            self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
+                        self.hash_terms[other_term] = this_term  # adds 'pen'
+                        del self.hash_terms[temp_term_upper]  # deletes old upper case term 'PEN'
+                        return  # end of update (4)
+                    else:  # (5) if its a new term (other=pen and dict='none')
+                        if other_term in self.hash_terms:
+                            is_header = 1
+                        else:
+                            is_header = 0
+                        nested_hash = ({'tf_c': 1, 'df': 1, 'hash_docs': {self.str_doc_id: {'tf_d': 1, 'h': is_header}}})
+                        self.hash_terms[other_term] = nested_hash
+                        this_unique = self.hash_docs[self.str_doc_id]['unique_count']
+                        self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
+                        return
+        except Exception:
+            print("MotherFucking Term : " + other_term)
 
     def make_upper_case(self, term):
         i = 0
@@ -282,37 +311,37 @@ class Parser:
 
     # function filters regular terms #
 
-    def is_regular_term(self, term, is_header):
+    def is_regular_term(self, term):
         try:
-            if term!='':
+            if term != '':
                 size = len(term) - 1
                 last = term[size]
                 first = term[0]
-                while (term!= '' and (size > 0 and last != '') and (last in self.hash_punc or '\"' in last or "\\\\" in last)):
+                while (term != '' and (size > 0 and last != '') and (last in self.hash_punc or '\"' in last or "\\\\" in last)):
                     term = term[:-1]
                     size -= 1
                     if size > 0:
                         last = term[size]
-                while (term!= '' and (size > 0 and first != '') and (first in self.hash_punc or '\"' in first or "\\\\" in first)):
+                while (term != '' and (size > 0 and first != '') and (first in self.hash_punc or '\"' in first or "\\\\" in first)):
                     term = term[1:]
                     size -= 1
                     if size > 0:
                         first = term[0]
                 if term != '' and "@" in term:  # '@' our new rule
                     list_mail = term.split('@')
-                    if list_mail[0]!='':
-                        self.term_case_filter(list_mail[0], is_header)
-                    if list_mail[1]!='':
-                        self.term_case_filter(list_mail[1], is_header)
+                    if list_mail[0] != '':
+                        self.term_case_filter(list_mail[0])
+                    if list_mail[1] != '':
+                        self.term_case_filter(list_mail[1])
                     del list_mail
                 skip = False
-                if term!='':
+                if term != '':
                     for key in self.hash_punc_middle:
                         if key in term:
                             skip = True
                             break
                 if not skip and term != '':
-                    self.term_case_filter(term, is_header)
+                    self.term_case_filter(term)
         except Exception:
             print("MotherFucking Term : " + term)
 
@@ -384,7 +413,7 @@ class Parser:
                     has_numbers = any(char.isdigit() for char in term)
                     if has_numbers == True:
                         contain_special = True
-            except IndexError:
+            except Exception:
                 print("index out of bound in: @ is_number")
         ans = all_numbers or contain_special
         return ans
@@ -665,9 +694,8 @@ class Parser:
 
     # function filters all terms #
 
-    def start_parse(self, str_doc):
+    def start_pase(self, str_doc):
         self.doc_counter += 1
-        # self.hash_terms = {}
         if str_doc:  # sets current document
             self.str_doc = str_doc
         try:
@@ -678,17 +706,15 @@ class Parser:
             self.str_txt = self.str_doc.split("<TEXT>")[1].strip()
             self.str_txt = self.str_txt.split("</TEXT>")
             self.str_txt = self.str_txt[0]
-        except (IndexError, AttributeError) as e:
+        except Exception:
             a = 0
-
         self.str_txt = self.str_txt.replace('*', '')
         self.str_txt = self.str_txt.replace('\n', ' * ')
         self.list_tokens = self.str_txt.split()
-        index = 0
         self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0, 'doc_size': len(self.list_tokens)}})
         self.set_city()
-        #self.set_headers()
-
+        self.set_headers()
+        index = 0
         for term in self.list_tokens:
             if term != '':
                 if term == '*':
@@ -711,22 +737,22 @@ class Parser:
                                 if term == 'SyntaxError{}':
                                     term = self.list_tokens[index]
                                     # print('Term| ' +term+' |inserted.')
-                        except IndexError:
+                        except Exception:
                             print('dickTerm: ' + term)
                         hyphen_term = term
                         if "--" in term:  # term1--term2
                             try:
                                 list_double = term.split('--')
-                                if list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[0], 0)
+                                if list_double[0] != '' and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
+                                    self.is_regular_term(list_double[0])
                                 else:
                                     skip = True
-                                if list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[1], 0)
+                                if list_double[1] != '' and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
+                                    self.is_regular_term(list_double[1])
                                 else:
                                     skip = True
                                 del list_double
-                            except (IndexError,KeyError) as e:
+                            except Exception:
                                 a = 0
                         elif "-" in term and not skip:  # term1-term2-term3
                             word_split = []
@@ -734,20 +760,20 @@ class Parser:
                                 while "-" in hyphen_term:
                                     word_split = hyphen_term.rstrip().split('-', 1)
                                     term1 = word_split[0]
-                                    if term1 not in self.hash_punc and term1 not in self.hash_stopwords:
-                                        self.is_regular_term(term1, 0)
+                                    if term1 != '' and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
+                                        self.is_regular_term(term1)
                                     else:
                                         skip = True
                                     word_split.remove(term1)
                                     hyphen_term = word_split[0]
-                                    if hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
-                                        self.is_regular_term(term, 0)
+                                    if hyphen_term != '' and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
+                                        self.is_regular_term(term)
                                     else:
                                         skip = True
                                 del word_split
-                            except (IndexError,KeyError) as e:
+                            except Exception:
                                 a = 0
-                        if not skip:
-                            self.is_regular_term(term, 0)
+                        if term != '' and not skip:
+                            self.is_regular_term(term)
                             self.word_in_line_counter += 1
                 index += 1
