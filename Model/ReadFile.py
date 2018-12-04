@@ -191,7 +191,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc)
+                    parser_object.start_pase(doc)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter
