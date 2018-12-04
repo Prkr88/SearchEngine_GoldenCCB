@@ -20,8 +20,6 @@ class Indexer:
     def __init__(self, user_path, N_docs):
         self.posting_path = user_path + "/Engine_Data/posting_files"
         self.engine_data_path = user_path + "/Engine_Data"
-        if not os.path.exists(self.posting_path):
-            os.makedirs(self.posting_path)
         self.file_path0 = self.posting_path + '/num.txt'
         self.file_path1 = self.posting_path + '/ab.txt'
         self.file_path2 = self.posting_path + '/cd.txt'

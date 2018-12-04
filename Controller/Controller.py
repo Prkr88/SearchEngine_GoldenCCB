@@ -38,6 +38,8 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Vocabulary')
         if not os.path.exists(self.post_path + '/Engine_Data/Cities_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Cities_hash_objects')
+        if not os.path.exists(self.post_path + '/Engine_Data/posting_files'):
+            os.makedirs(self.post_path + '/Engine_Data/posting_files')
         rf = ReadFile(data_path, post_path, stemmer, self)
         rf.start_evaluating()
         self.create_vocabulary()
@@ -175,7 +177,10 @@ class Controller:
                 vocab[index] = (key, tf)
                 self.vocabulary[key] = ['!', str(posting_line_counter)]
                 posting_line_counter += 1
-        index += 1
+            index += 1
+            if posting_line_counter% 1000 == 0:
+                print('\n'*100)
+                print("Sorting Vocabulary, in line:" + str(posting_line_counter))
         self.vocabulary_display_mode = vocab
         with open(self.post_path + '\\Engine_Data\\Vocabulary\\Vocabulary_with_pointers.pkl', 'wb') as output:
             pickle.dump(self.vocabulary, output, pickle.HIGHEST_PROTOCOL)
