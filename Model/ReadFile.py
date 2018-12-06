@@ -32,6 +32,7 @@ class ReadFile:
     hash_keywords_prices = {}
     hash_punc = {}
     hash_punc_middle = {}
+    final_solution = {}
     hash_alphabet = {}
     vocabulary = {}
     hash_terms_collection = {}
@@ -58,6 +59,7 @@ class ReadFile:
         print('Parssing:\n[' + ' ' * 50 + '%0' ']')
         self.controller = controller
         self.stemmer = stemmer
+        self.set_final_solution()
 
     # function sets stopwords #
 
@@ -99,6 +101,14 @@ class ReadFile:
             self.hash_punc[word] = ""
         del list_punc
 
+    def set_final_solution(self):
+       self.final_solution = {'a': "", 'A': "", 'b': "", 'B': "", 'c': "", 'C': "", 'd': "", 'D': "",
+            'e': "", 'E': "", 'f': "", 'F': "", 'g': "", 'G': "", 'h': "", 'H': "",
+            'i': "", 'I': "", 'j': "", 'J': "", 'k': "", 'K': "", 'l': "", 'L': "", 'm': "", 'M': "", 'n': "", 'N': "",
+            'o': "", 'O': "", 'p': "", 'P': "", 'q': "", 'Q': "", 'r': "", 'R': "", 's': "", 'S': "",
+            't': "", 'T': "", 'u': "", 'U': "", 'v': "", 'V': "", 'w': "", 'W': "", 'x': "", 'X': "",
+            'y': "", 'Y': "", 'z': "", 'Z': "" , 'MR': "", 'mr': "" , '': ""}
+
     # function sets alphabetical keywords #
 
     def set_alphabet(self):
@@ -112,7 +122,7 @@ class ReadFile:
     # function sets punctuation keywords #
 
     def set_middlewords(self):
-        list_punc = {'.', '/','|', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', "}", ' '}
+        list_punc = {'.', '/','|', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', "}" }
         for word in list_punc:
             self.hash_punc_middle[word] = ""
         del list_punc
@@ -179,6 +189,14 @@ class ReadFile:
         f_start = time.time()
         p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer)
         self.get_doc_from_file(file_path, p)
+        for c in self.final_solution:
+            if c in p.hash_terms:
+                del p.hash_terms[c]
+        for term in self.hash_stopwords:
+            if term in p.hash_terms:
+                del p.hash_terms[term]
+        if '' in p.hash_terms:
+            del p.hash_terms['']
         with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:

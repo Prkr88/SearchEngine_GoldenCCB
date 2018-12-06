@@ -84,99 +84,100 @@ class Controller:
         vocab = self.vocabulary
         vocab = sorted(vocab.items(), key=lambda x: x[0].lower())
         for key, value in vocab:
-            ch = key[0]
-            ch_int = ord(key[0])
-            tf = self.vocabulary[key]
-            if ch.isdigit() or ch == '$':  # numbers
-                current_file = 'num'
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['num', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'num'
-            elif 97 <= ch_int <= 98 or 65 <= ch_int <= 66:  # ab
-                current_file = 'ab'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['ab', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'ab'
-            elif 99 <= ch_int <= 100 or 67 <= ch_int <= 68:  # cd
-                current_file = 'cd'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['cd', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'cd'
-            elif 101 <= ch_int <= 102 or 69 <= ch_int <= 70:  # ef
-                current_file = 'ef'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['ef', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'ef'
-            elif 103 <= ch_int <= 104 or 71 <= ch_int <= 72:  # gh
-                current_file = 'gh'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['gh', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'gh'
-            elif 105 <= ch_int <= 107 or 73 <= ch_int <= 75:  # ijk
-                current_file = 'ijk'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['ijk', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'ijk'
-            elif 108 <= ch_int <= 110 or 76 <= ch_int <= 78:  # lmn
-                current_file = 'lmn'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['lmn', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'lmn'
-            elif 111 <= ch_int <= 113 or 79 <= ch_int <= 81:  # opq
-                current_file = 'opq'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['opq', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'opq'
-            elif 114 <= ch_int <= 115 or 82 <= ch_int <= 83:  # rs
-                current_file = 'rs'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['rs', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'rs'
-            elif 116 <= ch_int <= 118 or 84 <= ch_int <= 86:  # tuv
-                current_file = 'tuv'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['tuv', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'tuv'
-            elif 119 <= ch_int <= 122 or 87 <= ch_int <= 90:  # wxy
-                current_file = 'wxy'
-                if current_file != prev_file:
-                    posting_line_counter = 0
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['wxy', str(posting_line_counter)]
-                posting_line_counter += 1
-                prev_file = 'wxy'
-            else:
-                vocab[index] = (key, tf)
-                self.vocabulary[key] = ['!', str(posting_line_counter)]
-                posting_line_counter += 1
+            if key != '':
+                ch = key[0]
+                ch_int = ord(key[0])
+                tf = self.vocabulary[key]
+                if ch.isdigit() or ch == '$':  # numbers
+                    current_file = 'num'
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['num', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'num'
+                elif 97 <= ch_int <= 98 or 65 <= ch_int <= 66:  # ab
+                    current_file = 'ab'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['ab', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'ab'
+                elif 99 <= ch_int <= 100 or 67 <= ch_int <= 68:  # cd
+                    current_file = 'cd'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['cd', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'cd'
+                elif 101 <= ch_int <= 102 or 69 <= ch_int <= 70:  # ef
+                    current_file = 'ef'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['ef', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'ef'
+                elif 103 <= ch_int <= 104 or 71 <= ch_int <= 72:  # gh
+                    current_file = 'gh'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['gh', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'gh'
+                elif 105 <= ch_int <= 107 or 73 <= ch_int <= 75:  # ijk
+                    current_file = 'ijk'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['ijk', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'ijk'
+                elif 108 <= ch_int <= 110 or 76 <= ch_int <= 78:  # lmn
+                    current_file = 'lmn'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['lmn', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'lmn'
+                elif 111 <= ch_int <= 113 or 79 <= ch_int <= 81:  # opq
+                    current_file = 'opq'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['opq', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'opq'
+                elif 114 <= ch_int <= 115 or 82 <= ch_int <= 83:  # rs
+                    current_file = 'rs'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['rs', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'rs'
+                elif 116 <= ch_int <= 118 or 84 <= ch_int <= 86:  # tuv
+                    current_file = 'tuv'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['tuv', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'tuv'
+                elif 119 <= ch_int <= 122 or 87 <= ch_int <= 90:  # wxy
+                    current_file = 'wxy'
+                    if current_file != prev_file:
+                        posting_line_counter = 0
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['wxy', str(posting_line_counter)]
+                    posting_line_counter += 1
+                    prev_file = 'wxy'
+                else:
+                    vocab[index] = (key, tf)
+                    self.vocabulary[key] = ['!', str(posting_line_counter)]
+                    posting_line_counter += 1
             index += 1
             if posting_line_counter% 1000 == 0:
                 print('\n'*100)

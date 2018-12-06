@@ -197,7 +197,7 @@ class Statistics:
                     ans = ans +(str(item)) +'\n'
                 if counter == 10:
                     ans = ans + "\nMost common Terms: \n"
-                if counter>len(sorted_vocab_tfc)-11:
+                if counter>len(sorted_vocab_tfc)-30:
                     ans = ans + (str(item)) +'\n'
                 counter += 1
                 #f.write(str(item) + '\n')
@@ -237,16 +237,16 @@ class Statistics:
 if __name__ == '__main__':
     path = 'C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/Engine_Data'
     stat = Statistics(path)
-    # stat.create_vocabulary()
-    # print("Vocabulary Created")
-    # stat.create_vocabulary_tfc()
-    # print("Vocabulary_tfc Created")
-    # stat.stem_vocabulary()
-    # print("Stemmed_Vocabulary Created")
-    # stat.create_corpus_cities()
-    # print("Cities Corpus file Created")
-    # stat.create_cities_with_tfc()
-    # print("Cities in docs file Created")
+    stat.create_vocabulary()
+    print("Vocabulary Created")
+    stat.create_vocabulary_tfc()
+    print("Vocabulary_tfc Created")
+    stat.stem_vocabulary()
+    print("Stemmed_Vocabulary Created")
+    stat.create_corpus_cities()
+    print("Cities Corpus file Created")
+    stat.create_cities_with_tfc()
+    print("Cities in docs file Created")
     stat.vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary.pkl')
     stat.stemmed_vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Stemmed_Vocabulary.pkl')
     stat.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary_tfc.pkl')
