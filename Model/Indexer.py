@@ -205,9 +205,12 @@ class Indexer:
                                     if ch == "'" or (posting_index == 0 and ch == '$'):
                                         ikey = ikey[1:]
                                         ch = ikey[0]
+                                    if ival['df'] == 0:
+                                        print("0 df:" + str(ikey) + str(ival))
                                     if condition_list[posting_index][LOWERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][LOWERCASE][UPPERBOUND] or condition_list[posting_index][UPPERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][UPPERCASE][UPPERBOUND]:
                                         try:
-                                            curr_file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                                            if ival['df'] != 0:
+                                                curr_file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
                                         except Exception:
                                             hash_collector[str(ikey)] = "WriteToFileException"
                                         collection_index += 1

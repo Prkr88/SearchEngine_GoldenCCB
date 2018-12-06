@@ -102,12 +102,12 @@ class ReadFile:
     # function sets alphabetical keywords #
 
     def set_alphabet(self):
-            self.hash_alphabet = {{'a': "", 'A': "", 'b': "", 'B': "", 'c': "", 'C': "", 'd': "", 'D': "",
+            self.hash_alphabet = {'a': "", 'A': "", 'b': "", 'B': "", 'c': "", 'C': "", 'd': "", 'D': "",
             'e': "", 'E': "", 'f': "", 'F': "", 'g': "", 'G': "", 'h': "", 'H': "",
             'i': "", 'I': "", 'j': "", 'J': "", 'k': "", 'K': "", 'l': "", 'L': "", 'm': "", 'M': "", 'n': "", 'N': "",
             'o': "", 'O': "", 'p': "", 'P': "", 'q': "", 'Q': "", 'r': "", 'R': "", 's': "", 'S': "",
             't': "", 'T': "", 'u': "", 'U': "", 'v': "", 'V': "", 'w': "", 'W': "", 'x': "", 'X': "",
-            'y': "", 'Y': "", 'z': "", 'Z': ""}}
+            'y': "", 'Y': "", 'z': "", 'Z': ""}
 
     # function sets punctuation keywords #
 
@@ -160,7 +160,7 @@ class ReadFile:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         files_list_tmp = []
-        for i in range(200):
+        for i in range(100):
              files_list_tmp.append(files_list[i])
         files_list = files_list_tmp
         return files_list

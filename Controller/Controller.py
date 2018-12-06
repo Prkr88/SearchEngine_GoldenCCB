@@ -65,7 +65,7 @@ class Controller:
                     self.print_prog(p_c)
                 file_hash_terms = pickle.load(hash_file)
                 self.doc_counter = self.doc_counter + file_hash_terms['#doc_number']
-                file_hash_terms.pop('#doc_number', None)
+                del file_hash_terms['#doc_number']
             for key in file_hash_terms:
                 if key not in self.vocabulary:
                     self.vocabulary[key] = file_hash_terms[key]['tf_c']
