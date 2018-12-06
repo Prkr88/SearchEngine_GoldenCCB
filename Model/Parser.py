@@ -149,6 +149,7 @@ class Parser:
     # main function receives a token term and inserts it appropriately to the set of hash terms #
 
     def term_case_filter(self, other_term):
+
         try:
             if other_term != '' and other_term.lower()  in self.hash_stopwords or other_term in self.hash_alphabet:
                 a = 0
