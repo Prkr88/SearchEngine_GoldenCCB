@@ -363,7 +363,7 @@ class Parser:
         if dot_pos == len(term) - 1:
             term = term.replace('.', '')
         if '/' not in term and '-' not in term:
-            if '$' not in term and 'bn' not in term and 'm' not in term:
+            if '$' not in term and 'bn' not in term and 'm' not in term and not self.is_year(index):
                 try:
                     float(term)
                     self.list_tokens[index] = self.numbers_rules(term)
@@ -380,6 +380,7 @@ class Parser:
                     # if self.two_deleted == 1:
                     # self.two_deleted = 0
                     # index -= 1
+                   # print(str(ans))
                     return ans
                 except ValueError:
                     # print("the argument : | " + self.list_tokens[index] + " | could not be parsed")
@@ -395,6 +396,7 @@ class Parser:
                 if self.is_number(self.list_tokens[index - 1]):
                     to_add = self.is_fraction(index)
                     self.list_tokens[index] = to_add
+        #print(str(self.list_tokens[index]))
         return self.list_tokens[index]
 
     def is_number(self, term):
@@ -716,6 +718,7 @@ class Parser:
         self.set_headers()
         index = 0
         for term in self.list_tokens:
+            num_inserted = 0
             if term != '':
                 if term == '*':
                     self.line_in_doc_counter += 1
@@ -728,53 +731,57 @@ class Parser:
                     skip = False
                     if term.lower() in self.hash_stopwords:
                         skip = True
-                    if term in self.hash_punc:
-                        skip = True
+                    #if term in self.hash_punc:
+                       # skip = True
                     if not skip:
                         try:
-                            if term[0].isdigit() or term[0] == '$':
+                            if term  != '' and term[0].isdigit() or term[0] == '$':
                                 term = self.convert_numbers_in_list(index)
                                 if term == 'SyntaxError{}':
                                     term = self.list_tokens[index]
+                                else:
+                                    self.term_case_filter(term)
+                                    num_inserted = 1
                                     # print('Term| ' +term+' |inserted.')
                         except Exception:
                             a = 0
                             #print('dickTerm: ' + term)
-                        hyphen_term = term
-                        if "--" in term:  # term1--term2
-                            try:
-                                list_double = term.split('--')
-                                if list_double[0] != '' and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[0])
-                                else:
-                                    skip = True
-                                if list_double[1] != '' and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
-                                    self.is_regular_term(list_double[1])
-                                else:
-                                    skip = True
-                                del list_double
-                            except Exception:
-                                a = 0
-                        elif "-" in term and not skip:  # term1-term2-term3
-                            word_split = []
-                            try:
-                                while "-" in hyphen_term:
-                                    word_split = hyphen_term.rstrip().split('-', 1)
-                                    term1 = word_split[0]
-                                    if term1 != '' and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
-                                        self.is_regular_term(term1)
+                        if num_inserted == 0:
+                            hyphen_term = term
+                            if "--" in term:  # term1--term2
+                                try:
+                                    list_double = term.split('--')
+                                    if list_double[0] != '' and list_double[0] not in self.hash_punc and list_double[0] not in self.hash_stopwords:
+                                        self.is_regular_term(list_double[0])
                                     else:
                                         skip = True
-                                    word_split.remove(term1)
-                                    hyphen_term = word_split[0]
-                                    if hyphen_term != '' and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
-                                        self.is_regular_term(term)
+                                    if list_double[1] != '' and list_double[1] not in self.hash_punc and list_double[1] not in self.hash_stopwords:
+                                        self.is_regular_term(list_double[1])
                                     else:
                                         skip = True
-                                del word_split
-                            except Exception:
-                                a = 0
-                        if term != '' and not skip and (48 <= ord(term[0]) <= 57 or 65 <= ord(term[0]) <= 90 or 97 <= ord(term[0]) <= 122):
-                            self.is_regular_term(term)
-                            self.word_in_line_counter += 1
-                index += 1
+                                    del list_double
+                                except Exception:
+                                    a = 0
+                            elif "-" in term and not skip:  # term1-term2-term3
+                                word_split = []
+                                try:
+                                    while "-" in hyphen_term:
+                                        word_split = hyphen_term.rstrip().split('-', 1)
+                                        term1 = word_split[0]
+                                        if term1 != '' and term1 not in self.hash_punc and term1 not in self.hash_stopwords:
+                                            self.is_regular_term(term1)
+                                        else:
+                                            skip = True
+                                        word_split.remove(term1)
+                                        hyphen_term = word_split[0]
+                                        if hyphen_term != '' and hyphen_term not in self.hash_punc and hyphen_term not in self.hash_stopwords:
+                                            self.is_regular_term(term)
+                                        else:
+                                            skip = True
+                                    del word_split
+                                except Exception:
+                                    a = 0
+                            if term != '' and not skip and (48 <= ord(term[0]) <= 57 or 65 <= ord(term[0]) <= 90 or 97 <= ord(term[0]) <= 122):
+                                self.is_regular_term(term)
+                                self.word_in_line_counter += 1
+            index += 1

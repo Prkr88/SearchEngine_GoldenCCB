@@ -23,6 +23,6 @@ class Stemmer:
             return stemmed_term
 
     def save_stemmed_vocabulary(self,path):
-        with open(path +'/Vocabulary/Stemmed_Vocabulary.pkl', 'wb') as output:
+        with open(path +'/Statistics/Stemmed_Vocabulary.pkl', 'wb') as output:
             pickle.dump(self.s_corp, output, pickle.HIGHEST_PROTOCOL)
 

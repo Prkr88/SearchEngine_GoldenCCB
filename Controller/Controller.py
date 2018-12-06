@@ -40,8 +40,8 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Cities_hash_objects')
         if not os.path.exists(self.post_path + '/Engine_Data/posting_files'):
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
-        rf = ReadFile(data_path, post_path, stemmer, self)
-        rf.start_evaluating()
+        #rf = ReadFile(data_path, post_path, stemmer, self)
+        #rf.start_evaluating()
         self.create_vocabulary()
         self.update_vocabulary_pointers()
         self.create_city_index()
@@ -64,7 +64,7 @@ class Controller:
                     self.print_prog(p_c)
                 file_hash_terms = pickle.load(hash_file)
                 self.doc_counter = self.doc_counter + file_hash_terms['#doc_number']
-                file_hash_terms.pop('#doc_number', None)
+                del file_hash_terms['#doc_number']
             for key in file_hash_terms:
                 if key not in self.vocabulary:
                     self.vocabulary[key] = file_hash_terms[key]['tf_c']

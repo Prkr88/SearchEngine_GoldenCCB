@@ -6,6 +6,7 @@ from Controller.Controller import Controller
 import time
 import pickle
 import json
+import gc
 
 
 class Gu(QtWidgets.QMainWindow):
@@ -14,6 +15,7 @@ class Gu(QtWidgets.QMainWindow):
         icon = QtGui.QIcon()
         uic.loadUi(path, self)
         self.vocabulary = {}
+        self.controller = None
         self.vocabulary_display_mode = None
         self.controller = None
 
@@ -32,36 +34,35 @@ class Gu(QtWidgets.QMainWindow):
     # self.lineEdit_posting_dest_path.setText("C:/Users/edoli/Desktop/SE_PA/")
 
     def start_program(self):
-        # if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
-        # any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
-        stemmer = self.stemmer_checkBox.isChecked()
-        self.controller = Controller(self.vocabulary)
-        self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
-        self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
-        self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
-        summary_message = '#Num of Docs Indexed: ' + '\n\t' + str(
-            self.controller.doc_counter) + '\n#Num of Unique Terms: ' + \
-                          '\n\t' + str(self.controller.unique_terms) + '\nTotal Time: ' + '\n\t' + str(
-            int(self.controller.total_time) +' seconds')
-        self.vocabulary_display_mode = self.controller.vocabulary_display_mode
-        msgBox = QtWidgets.QMessageBox()
-        msgBox.setIcon(QtWidgets.QMessageBox.Information)
-        msgBox.setWindowTitle("Summary")
-        msgBox.setText(summary_message)
-        msgBox.exec()
-        # else:
-        #     error_one = ""
-        #     error_two = ""
-        #     if not any(c in self.lineEdit_data_path.text() for c in ('\\', '/')):
-        #         error_one = "*** Data Path is empty or invalid.                    \n"
-        #     if not any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
-        #         error_two = "*** Posting destination is empty or invalid.               "
-        #     error_message = "Error:                     \n" + error_one + error_two
-        #     msgBox = QtWidgets.QMessageBox()
-        #     msgBox.setIcon(QtWidgets.QMessageBox.Warning)
-        #     msgBox.setWindowTitle("Input Error")
-        #     msgBox.setText(error_message)
-        #     msgBox.exec()
+        if any(c in self.lineEdit_data_path.text() for c in('\\' , '/')) and \
+        any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
+            stemmer = self.stemmer_checkBox.isChecked()
+            self.controller = Controller(self.vocabulary)
+            self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
+            self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
+            self.controller.start(self.lineEdit_data_path.text(), self.lineEdit_posting_dest_path.text(), stemmer)
+            summary_message = '#Num of Docs Indexed: ' + '\n\t' + str(self.controller.doc_counter) +\
+                              '\n#Num of Unique Terms: ' +'\n\t' + str(self.controller.unique_terms) +\
+                              '\nTotal Time: ' + '\n\t' + str(int(self.controller.total_time)) +' seconds'
+            self.vocabulary_display_mode = self.controller.vocabulary_display_mode
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setWindowTitle("Summary")
+            msgBox.setText(summary_message)
+            msgBox.exec()
+        else:
+            error_one = ""
+            error_two = ""
+            if not any(c in self.lineEdit_data_path.text() for c in ('\\', '/')):
+                error_one = "*** Data Path is empty or invalid.                    \n"
+            if not any(c in self.lineEdit_posting_dest_path.text() for c in('\\' , '/')):
+                error_two = "*** Posting destination is empty or invalid.               "
+            error_message = "Error:                     \n" + error_one + error_two
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+            msgBox.setWindowTitle("Input Error")
+            msgBox.setText(error_message)
+            msgBox.exec()
 
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
@@ -89,20 +90,26 @@ class Gu(QtWidgets.QMainWindow):
         print("Dictionary loaded")
 
     def reset_system(self):
-        op = self.controller.reset_system()
-        if op != None:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QtWidgets.QMessageBox.Information)
-            msgBox.setWindowTitle("Reset")
-            msgBox.setText("System has been rested Successfuly.")
-            msgBox.exec()
-            print("Holy shit System has been reset!")
-        else:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QtWidgets.QMessageBox.Information)
-            msgBox.setWindowTitle("Reset")
-            msgBox.setText("Nothing to Delete.")
-            msgBox.exec()
+        quit_msg = "Are you sure you want to Reset the System?"
+        reply = QtWidgets.QMessageBox.question(self, 'Message',
+                                           quit_msg, QtWidgets.QMessageBox.Yes, QtWidgets.QMessageBox.No)
+        if reply == QtWidgets.QMessageBox.Yes:
+            if self.controller != None:
+                op = self.controller.reset_system()
+                self.controller = None
+                gc.collect()
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setIcon(QtWidgets.QMessageBox.Information)
+                msgBox.setWindowTitle("Reset")
+                msgBox.setText("System has been rested Successfuly.")
+                msgBox.exec()
+                print("Holy shit System has been reset!")
+            else:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setIcon(QtWidgets.QMessageBox.Information)
+                msgBox.setWindowTitle("Reset")
+                msgBox.setText("Nothing to Delete.")
+                msgBox.exec()
 
     def show_features(self):
         print("Crazy Features")

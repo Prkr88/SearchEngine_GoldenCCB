@@ -11,10 +11,10 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>GoldenCCB</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="resources/resource.qrc">
+   <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
     <normaloff>:/windowIcon/goldenccb_icon_E7q_icon.ico</normaloff>:/windowIcon/goldenccb_icon_E7q_icon.ico</iconset>
   </property>
   <property name="styleSheet">
@@ -66,7 +66,7 @@ QPushButton:pressed {
      <string>browse</string>
     </property>
     <property name="icon">
-     <iconset resource="resources/resource.qrc">
+     <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
       <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
     </property>
    </widget>
@@ -115,7 +115,7 @@ QPushButton:pressed {
      <string>browse</string>
     </property>
     <property name="icon">
-     <iconset resource="resources/resource.qrc">
+     <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
       <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
     </property>
    </widget>
@@ -139,7 +139,7 @@ border-radius: 10px;
      <string/>
     </property>
     <property name="placeholderText">
-     <string>Enter StopWords Path</string>
+     <string>Enter Posting Destination Path</string>
     </property>
     <property name="clearButtonEnabled">
      <bool>true</bool>
@@ -396,7 +396,7 @@ color: rgb(72, 72, 72);</string>
   </widget>
   <action name="actionShow_current_dictionary">
    <property name="icon">
-    <iconset resource="resources/resource.qrc">
+    <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
      <normaloff>:/show_dic/iconfinder_note_1296370.ico</normaloff>:/show_dic/iconfinder_note_1296370.ico</iconset>
    </property>
    <property name="text">
@@ -405,7 +405,7 @@ color: rgb(72, 72, 72);</string>
   </action>
   <action name="actionLoad_dicationary_from_file">
    <property name="icon">
-    <iconset resource="resources/resource.qrc">
+    <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
      <normaloff>:/load_dic/iconfinder_9_330409.ico</normaloff>:/load_dic/iconfinder_9_330409.ico</iconset>
    </property>
    <property name="text">
@@ -414,7 +414,7 @@ color: rgb(72, 72, 72);</string>
   </action>
   <action name="actionReset_System">
    <property name="icon">
-    <iconset resource="resources/resource.qrc">
+    <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
      <normaloff>:/reset_ico/iconfinder_close_1282956.ico</normaloff>:/reset_ico/iconfinder_close_1282956.ico</iconset>
    </property>
    <property name="text">
@@ -423,7 +423,7 @@ color: rgb(72, 72, 72);</string>
   </action>
   <action name="actionFeatures">
    <property name="icon">
-    <iconset resource="resources/resource.qrc">
+    <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
      <normaloff>:/features_icon/iconfinder_star_1054969.ico</normaloff>:/features_icon/iconfinder_star_1054969.ico</iconset>
    </property>
    <property name="text">
@@ -432,7 +432,7 @@ color: rgb(72, 72, 72);</string>
   </action>
   <action name="actionThe_Team">
    <property name="icon">
-    <iconset resource="resources/resource.qrc">
+    <iconset resource="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc">
      <normaloff>:/team_icon/iconfinder_ramen_3377055.ico</normaloff>:/team_icon/iconfinder_ramen_3377055.ico</iconset>
    </property>
    <property name="text">
@@ -441,7 +441,7 @@ color: rgb(72, 72, 72);</string>
   </action>
  </widget>
  <resources>
-  <include location="resources/resource.qrc"/>
+  <include location="../../../../../Python35/Lib/site-packages/PyQt5/resources/resource.qrc"/>
  </resources>
  <connections>
   <connection>

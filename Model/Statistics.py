@@ -19,6 +19,7 @@ class Statistics:
         self.corpus_cities = {}
         self.cities_in_docs = {}
         self.file_list = self.set_file_list(self.path + '/temp_hash_objects')
+        self.stat_log = open(path + '/Statistics/statistics_log.txt', 'w')
 
     def create_vocabulary(self):
         file_list = self.file_list
@@ -30,7 +31,7 @@ class Statistics:
                     self.vocabulary[key] = 0
             hash_file.close()
             file_hash_terms = {}
-        with open(self.path + '/Vocabulary/Vocabulary.pkl', 'wb') as output:
+        with open(self.path + '/Statistics/Vocabulary.pkl', 'wb') as output:
             pickle.dump(self.vocabulary, output, pickle.HIGHEST_PROTOCOL)
 
     def create_vocabulary_tfc(self):
@@ -38,6 +39,7 @@ class Statistics:
         for file in file_list:
             with open(file, 'rb') as hash_file:
                 file_hash_terms = pickle.load(hash_file)
+            del file_hash_terms['#doc_number']
             for key in file_hash_terms:
                 if key not in self.vocabulary_tfc:
                     self.vocabulary_tfc[key] = file_hash_terms[key]['tf_c']
@@ -45,7 +47,7 @@ class Statistics:
                     self.vocabulary_tfc[key] = self.vocabulary_tfc[key] + file_hash_terms[key]['tf_c']
             hash_file.close()
             file_hash_terms = {}
-        with open(self.path + '/Vocabulary/Vocabulary_tfc.pkl', 'wb') as output:
+        with open(self.path + '/Statistics/Vocabulary_tfc.pkl', 'wb') as output:
             pickle.dump(self.vocabulary_tfc, output, pickle.HIGHEST_PROTOCOL)
 
     def create_corpus_cities(self):
@@ -125,15 +127,15 @@ class Statistics:
                     num_counter += 1
             except IndexError:
                 pass
-        print("Number terms: " + str(num_counter))
+        return num_counter
 
-    def count_cities(self):
+    def count_capital_cities(self):
         counter = 0
         for key in self.cities_hash:
             upper_key = key.upper()
             if upper_key in self.corpus_cities:
                 counter += 1
-        print(counter)
+        return counter
 
     def create_cities_with_tfc(self):
         file_list = self.file_list
@@ -149,21 +151,25 @@ class Statistics:
             pickle.dump(self.cities_in_docs, output, pickle.HIGHEST_PROTOCOL)
 
     def print_cities_max_tf(self):
+        ans =""
         maxT = 0
         winner_doc = ""
+        tresh_hold = 15
         path = self.path + '/Statistics/cities_in_docs.pkl'
         with open(path, 'rb') as vocab:
             to_load = pickle.load(vocab)
         self.cities_in_docs = to_load
         for key in self.cities_in_docs:
-            if self.cities_in_docs[key]['tf_c'] >= 10:
+            if self.cities_in_docs[key]['tf_c'] >= 15:
                 for doc_id in self.cities_in_docs[key]['hash_docs']:
                     if self.cities_in_docs[key]['hash_docs'][doc_id]['tf_d'] > maxT:
                         maxT = self.cities_in_docs[key]['hash_docs'][doc_id]['tf_d']
                         winner_doc = doc_id
-                print(str(key) + ' -> D_ID: ' + str(winner_doc) + ', tf_d: ' + str(maxT))
+                if maxT>tresh_hold:
+                    ans = ans + str(key) + ' -> D_ID: ' + str(winner_doc) + ', tf_d: ' + str(maxT) + '\n'
                 maxT = 0
                 winner = ""
+        return ans
 
     def count_countries(self):
         countries = {}
@@ -177,14 +183,25 @@ class Statistics:
                     countries[self.cities_hash[key]['Country_Name']] = ""
             hash_file.close()
             file_hash_terms = {}
-        print("Number of Countries :" + str(len(countries)))
+        return str(len(countries))
 
     def terms_to_file_sorted_by_most_common_to_file(self):
-        self.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Vocabulary/vocabulary_tfc.pkl')
+        ans = "least common Terms: \n"
+        common = 0
+        counter = 0
+        self.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Statistics/vocabulary_tfc.pkl')
         sorted_vocab_tfc = sorted(self.vocabulary_tfc.items(), key=lambda x: x[1])
         with open(self.path + '/Statistics/sorted_vocab_tfc.txt', 'w') as f:
             for item in sorted_vocab_tfc:
-                f.write(str(item) + '\n')
+                if counter<10:
+                    ans = ans +(str(item)) +'\n'
+                if counter == 10:
+                    ans = ans + "\nMost common Terms: \n"
+                if counter>len(sorted_vocab_tfc)-11:
+                    ans = ans + (str(item)) +'\n'
+                counter += 1
+                #f.write(str(item) + '\n')
+        return ans
 
     def plot_zipf_law(self):
         ranks = len(self.vocabulary_tfc)
@@ -200,9 +217,21 @@ class Statistics:
         a = 2.  # distribution parameter
         count, bins, ignored = plt.hist(s[s < 20], 20, normed=True)
         x = np.arange(1., 50.)
+        #y = x ** (-a) / special.zetac(a)
         y = x ** (-a) / special.zetac(a)
         plt.plot(x, y / max(y), linewidth=2, color='r')
-        plt.show()
+        #plt.show()
+        plt.savefig(stat.path + '/Statistics/zipf_law_Graph.png')
+
+    def write_statistics_log(self):
+        self.stat_log.write('#Number of Unique Terms: ' + str(len(stat.vocabulary)) + '\n\n')
+        self.stat_log.write('#Number of terms who are numbers: ' + str(stat.count_numbers()) + '\n\n')
+        self.stat_log.write('#Number of countries in corpus: ' + str(stat.count_countries()) + '\n\n')
+        self.stat_log.write('#Number of cities in corpus: ' + str(len(self.corpus_cities)) + '\n\n')
+        self.stat_log.write('#Number of non capital cities in corpus: ' +
+                            str(len(self.corpus_cities) - self.count_capital_cities()) + '\n\n')
+        self.stat_log.write(self.terms_to_file_sorted_by_most_common_to_file() + '\n\n')
+        self.stat_log.write("Most common cities: " + self.print_cities_max_tf() + '\n\n')
 
 
 if __name__ == '__main__':
@@ -218,15 +247,16 @@ if __name__ == '__main__':
     # print("Cities Corpus file Created")
     # stat.create_cities_with_tfc()
     # print("Cities in docs file Created")
-    stat.vocabulary = stat.load_pickle_file(stat.path + '/Vocabulary/Vocabulary.pkl')
-    stat.stemmed_vocabulary = stat.load_pickle_file(stat.path + '/Vocabulary/Stemmed_Vocabulary.pkl')
-    stat.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Vocabulary/Vocabulary_tfc.pkl')
+    stat.vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary.pkl')
+    stat.stemmed_vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Stemmed_Vocabulary.pkl')
+    stat.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary_tfc.pkl')
     stat.cities_hash = stat.load_pickle_file("../resources/cities_data.pkl")
     stat.corpus_cities = stat.load_pickle_file(stat.path + '/Statistics/corpus_cities.pkl')
     stat.cities_in_docs = stat.load_pickle_file(stat.path + '/Statistics/cities_in_docs.pkl')
-    # stat.print_cities_max_tf()
-    # stat.count_countries()
-    # stat.count_numbers()
-    # stat.terms_to_file_sorted_by_most_common_to_file()
+    #stat.print_cities_max_tf()
+    #stat.count_countries()
+    #stat.count_numbers()
+    #stat.terms_to_file_sorted_by_most_common_to_file()
+    stat.write_statistics_log()
     stat.plot_zipf_law()
     print("done")
