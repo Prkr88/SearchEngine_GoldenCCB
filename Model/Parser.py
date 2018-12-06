@@ -1,12 +1,16 @@
 import copy
-import os
-import time
-from Model.API import API
-from Model.Stemmer import Stemmer
 from nltk.stem.snowball import EnglishStemmer
 
 
+########################################################################################################################
+# Class Parser:                                                                                                        #
+#                                                                                                                      #
+# Initialized every file. Receives document and returns a dictionary of tokens.                                        #
+########################################################################################################################
+
+
 class Parser:
+
     # initializes strings
 
     str_doc = ""
@@ -16,20 +20,21 @@ class Parser:
 
     # initializes dictionaries
 
-    hash_terms = {}
-    hash_docs = {}
-    hash_cities = {}
-    hash_stopwords = {}
-    hash_keywords_months = {}
-    hash_keywords_prices = {}
-    hash_punc_middle = {}
-    hash_punc = {}
-    hash_stemmer = {}
+    hash_terms = {}  # hash dictionary of terms
+    hash_docs = {}  # hash dictionary of documents
+    hash_cities = {}  # hash dictionary of cities
+    hash_stopwords = {}  # hash dictionary of stopwords
+    hash_keywords_months = {}  # hash dictionary of months
+    hash_keywords_prices = {}  # hash dictionary of prices
+    hash_punc_middle = {}  # hash dictionary of punctuations
+    hash_punc = {}  # hash dictionary of punctuations
+    hash_stemmer = {}  # hash dictionary of stemmed terms
+    hash_alphabet = {}  # hash dictionary of the alphabet
 
     # initializes lists
 
-    list_tokens = []
-    list_fractions = []
+    list_tokens = []  # list of the documents' tokens
+    list_fractions = []  # list of the documents' fractions
 
     # global vars
 
@@ -40,7 +45,7 @@ class Parser:
 
     # constructor #
 
-    def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, stemmer):
+    def __init__(self, hash_stopwords, hash_keywords_months, hash_keywords_prices, hash_punc, hash_punc_middle, hash_alphabet, stemmer):
         self.hash_terms = {}
         self.hash_docs = {}
         # self.hash_cities = {}
@@ -50,6 +55,7 @@ class Parser:
         self.hash_punc = hash_punc
         self.hash_punc_middle = hash_punc_middle
         self.hash_headers = {}
+        self.hash_alphabet = hash_alphabet
         self.stemming_mode = stemmer
         if self.stemming_mode:
             self.stemmer = EnglishStemmer()
@@ -85,6 +91,8 @@ class Parser:
         except Exception:
             a = 0
 
+    # function sets header terms (our rule) #
+
     def set_headers(self):
         str_header = ''
         l_header = None
@@ -113,28 +121,6 @@ class Parser:
         except Exception:
             a = 0
 
-    # function creates stopword list #
-
-    # function test #
-
-    def set_test_file(self, file_path):
-        with open(file_path, 'r') as file:
-            self.str_txt = file.read().replace('\n', ' ')
-
-    # function creates keyword list #
-
-    # function prints tokens list #
-
-    def print_list(self):
-        print(*self.list_tokens, sep=", ")
-
-    # function prints term dictionary #
-
-    def print_dict(self):
-        for key, value in self.hash_terms.items():
-            var = "key: ", key, "=>", "value: ", value
-            print(var)
-
     # function counts capitalized letters #
 
     def count_upper(self, term):
@@ -152,11 +138,15 @@ class Parser:
         except Exception:
             pass
 
+    # function checks if the first letter  and the second of a string is an upper case #
+
     def is_fully_upper(self, term):
         if len(term) > 1:
             return 64 < ord(term[0]) < 91 and 64 < ord(term[1]) < 91
         else:
             return 64 < ord(term[0]) < 91
+
+    # main function receives a token term and inserts it appropriately to the set of hash terms #
 
     def term_case_filter(self, other_term):
         try:
@@ -184,12 +174,11 @@ class Parser:
                         this_tf = this_term['hash_docs'][self.str_doc_id]['tf_d'] + 1
                         this_header = this_term['hash_docs'][self.str_doc_id]['h']
                         this_term.update({'tf_c': this_term['tf_c'] + 1})
-
                         this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': this_header + is_header}})
                         if this_tf == 2:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                    except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                    except Exception:  # if it's the first occurrence in the new doc -> we update tf_c, df, tf_d and pos
                         this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                         this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                         this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
@@ -237,7 +226,7 @@ class Parser:
                         if this_tf == 2:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                    except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                    except Exception:  # if it's the first occurrence in the new doc -> we update tf_c, df, tf_d and pos
                         this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                         this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                         if other_term in self.hash_terms:
@@ -267,7 +256,7 @@ class Parser:
                             if this_tf == 2:
                                 this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                                 self.hash_docs[self.str_doc_id]['unique_count'] = this_unique - 1
-                        except Exception:  # if it's the first occurrence in this new doc -> we update tf_c, df, tf_d and pos
+                        except Exception:  # if it's the first occurrence in the new doc -> we update tf_c, df, tf_d and pos
                             this_tf = 1  # new doc therefore new value for tf_d and added to existing tf_c
                             this_term.update({'tf_c': this_term['tf_c'] + this_tf, 'df': this_term['df'] + 1})
                             this_term['hash_docs'].update({self.str_doc_id: {'tf_d': this_tf, 'h': is_header}})
@@ -291,6 +280,8 @@ class Parser:
         except Exception:
             print("MotherFucking Term : " + other_term)
 
+    # function implements method upper() #
+
     def make_upper_case(self, term):
         i = 0
         word = term
@@ -299,6 +290,8 @@ class Parser:
                 word = word[:i] + chr(ord(ch) - 32) + word[i + 1:]
             i += 1
         return word
+
+    # function implements method lower() #
 
     def make_lower_case(self, term):
         i = 0
@@ -309,7 +302,7 @@ class Parser:
             i += 1
         return word
 
-    # function filters regular terms #
+    # main function filters regular terms of unnecessary punctuations #
 
     def is_regular_term(self, term):
         try:
@@ -340,13 +333,15 @@ class Parser:
                         if key in term:
                             skip = True
                             break
-                if not skip and term != '':
+                if not skip and term != '' and term not in self.hash_punc and term not in self.hash_alphabet:
                     self.term_case_filter(term)
         except Exception:
             print("MotherFucking Term : " + term)
 
     # prevent index increment if double delete
     two_deleted = 0
+
+    # main function receives index of a number token and inserts the token appropriately to the hash terms
 
     def convert_numbers_in_list(self, index):
         list_t = self.list_tokens
@@ -397,6 +392,8 @@ class Parser:
                     self.list_tokens[index] = to_add
         return self.list_tokens[index]
 
+    # function checks if the given term is a number #
+
     def is_number(self, term):
         term.replace('.', '')
         contain_special = False
@@ -418,7 +415,7 @@ class Parser:
         ans = all_numbers or contain_special
         return ans
 
-    # convert number term according to rules
+    # function converts number term according to the rules #
 
     def numbers_rules(self, num_str):
         # num_edit = num_str.replace(",", "")
@@ -449,7 +446,7 @@ class Parser:
                 ans = "".join(ans)
         return ans
 
-    '''this function formats big numbers acording to rules'''
+    # function formats big numbers according to rules #
 
     def format_num(self, number, sign, mode, after_point):
         zero_killer = 1
@@ -460,6 +457,8 @@ class Parser:
             zero_killer = zero_killer + 1
         num_desired_format = "".join(num_desired_format)
         return num_desired_format + after_point + sign
+
+    # function formats dollars according to rules #
 
     def format_num_dollar_mode(self, number):
         multy = 0
@@ -483,6 +482,8 @@ class Parser:
         if (float(number)) > 1000:
             num_desired_format = number.replace('.', '')
         return '$' + num_desired_format + 'M'
+
+    # function formats prices according to rules #
 
     def edit_list_by_key_word_prices(self, index):
         term_prev = ""
@@ -583,6 +584,8 @@ class Parser:
             # self.list_tokens[index] = ans
         return ans
 
+    # function formats dates according to rules #
+
     def edit_list_by_key_word_dates(self, index):
         term_prev = ""
         term_next = ""
@@ -641,6 +644,8 @@ class Parser:
                 del self.list_tokens[index_front]
                 self.list_tokens[index] = ans
 
+    # function formats year according to rules #
+
     def is_year(self, index):
         term_prev = ""
         term_next = ""
@@ -654,17 +659,23 @@ class Parser:
             return True
         return False
 
+    # function formats asterisks that are replacing '/n' #
+
     def ignore_asterisk_back_mode(self, index):
         index -= 1
         while index > 0 and self.list_tokens[index] == '*':
             index -= 1
         return index
 
+    # function formats asterisks that are replacing '/n' #
+
     def ignore_asterisk_front_mode(self, index):
         index += 1
         while index < len(self.list_tokens) - 2 and self.list_tokens[index] == '*':
             index += 1
         return index
+
+    # function formats fractions #
 
     def is_fraction(self, index):
         to_add = ""
@@ -673,13 +684,17 @@ class Parser:
             del self.list_tokens[index - 1]
         return to_add
 
+    # function formats percentages #
+
     def num_percent(self, number):
         return number + "%"
+
+    # function formats numbers #
 
     def num_dollar(self, number):
         return number + " Dollars"
 
-    # check if string represents int
+    # function checks if string represents int #
     def represents_int(self, str):
         try:
             int(str)
@@ -687,12 +702,12 @@ class Parser:
         except ValueError:
             return False
 
-    # add city line numbers
+    # function adds a city line number #
 
     def city_lines_and_docs(self):
         self.line_counter = self.line_counter + self.str_doc.count('\n')
 
-    # function filters all terms #
+    # main function of the parsing sequence. receives a long string and divides it to tokens #
 
     def start_pase(self, str_doc):
         self.doc_counter += 1
@@ -739,7 +754,6 @@ class Parser:
                                     # print('Term| ' +term+' |inserted.')
                         except Exception:
                             a = 0
-                            #print('dickTerm: ' + term)
                         hyphen_term = term
                         if "--" in term:  # term1--term2
                             try:

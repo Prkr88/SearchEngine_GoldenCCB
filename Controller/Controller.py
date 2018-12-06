@@ -1,15 +1,15 @@
-from Model.Parser import Parser
-# import View
 from Model.ReadFile import ReadFile
-from tkinter import *
 from Model.Indexer import Indexer
 import pickle
 import os
 import time
 import json
 
-# indx = Indexer('C:\\Users\\edoli\\Desktop\\SE_PA')
-# indx = Indexer('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine')
+########################################################################################################################
+# Class Controller:                                                                                                    #
+#                                                                                                                      #
+# Listens to actions being made in the GUI by the user and calls the appropriate function in the MODEL                 #
+########################################################################################################################
 
 
 class Controller:
@@ -40,6 +40,7 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Cities_hash_objects')
         if not os.path.exists(self.post_path + '/Engine_Data/posting_files'):
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
+
         rf = ReadFile(data_path, post_path, stemmer, self)
         rf.start_evaluating()
         self.create_vocabulary()
