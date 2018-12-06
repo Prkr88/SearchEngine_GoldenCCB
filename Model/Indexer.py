@@ -121,17 +121,6 @@ class Indexer:
         i2 = pool2.map_async(self.merger, self.file_list, chunksize=1)
         i2.wait()
 
-        # c = 0
-        # for path in hash_list:
-        #     if (c==30):
-        #         break
-        #     else:
-        #         self.write_temp_posts_coded(path)
-        #         print('done merge #: ' + str(c))
-        #         c += 1
-        # for m_path in self.file_list:
-        #     self.merger(m_path)
-
     # function sets path list for the process work #
 
     def set_file_list(self):
@@ -208,6 +197,7 @@ class Indexer:
                                     if condition_list[posting_index][LOWERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][LOWERCASE][UPPERBOUND] or condition_list[posting_index][UPPERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][UPPERCASE][UPPERBOUND]:
                                         try:
                                             curr_file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                                            curr_file.flush()
                                         except Exception:
                                             hash_collector[str(ikey)] = "WriteToFileException"
                                         collection_index += 1
@@ -385,6 +375,7 @@ class Indexer:
                                 try:
                                     file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
                                         float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
+                                    file.flush()
                                 except Exception:
                                     hash_collector[str(ikey)] = "WriteFileException"
                         else:

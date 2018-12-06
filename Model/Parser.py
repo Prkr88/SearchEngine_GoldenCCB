@@ -153,6 +153,8 @@ class Parser:
             if other_term != '' and other_term.lower()  in self.hash_stopwords or other_term in self.hash_alphabet:
                 a = 0
             else:
+                if str(other_term) == 'in' or str(other_term) == 'the' or str(other_term) == 'all' or str(other_term) == 'after' or str(other_term) == 'ALL':
+                    print("fucking: " + other_term)
                 this_term = None
                 if self.stemming_mode:
                     if other_term not in self.hash_stemmer:  # (1) new 'cars' or 'car'
@@ -326,10 +328,10 @@ class Parser:
                 if term != '' and "@" in term:  # '@' our new rule
                     list_mail = term.split('@')
                     if list_mail[0] != '':
-                        if list_mail[0].lower()  not in self.hash_stopwords:
+                        if list_mail[0].lower() not in self.hash_stopwords:
                             self.term_case_filter(list_mail[0])
                     if list_mail[1] != '':
-                        if list_mail[1].lower()  not in self.hash_stopwords:
+                        if list_mail[1].lower() not in self.hash_stopwords:
                             self.term_case_filter(list_mail[1])
                     del list_mail
                 skip = False
@@ -753,13 +755,14 @@ class Parser:
                         skip = True
                     if not skip:
                         try:
-                            if term  != '' and term[0].isdigit() or term[0] == '$':
+                            if term != '' and term[0].isdigit() or term[0] == '$':
                                 term = self.convert_numbers_in_list(index)
                                 if term == 'SyntaxError{}':
                                     term = self.list_tokens[index]
                                     # print('Term| ' +term+' |inserted.')
                                 else:
-                                    self.term_case_filter(term)
+                                    if term != '' and term not in self.hash_punc and term.lower() not in self.hash_stopwords:
+                                        self.term_case_filter(term)
                                     num_inserted = 1
                         except Exception:
                             a = 0
@@ -770,10 +773,12 @@ class Parser:
                                     list_double = term.split('--')
                                     if list_double[0] != '' and list_double[0] not in self.hash_punc and list_double[0].lower()  not in self.hash_stopwords:
                                         self.is_regular_term(list_double[0])
+                                        a=0
                                     else:
                                         skip = True
                                     if list_double[1] != '' and list_double[1] not in self.hash_punc and list_double[1].lower()  not in self.hash_stopwords:
                                         self.is_regular_term(list_double[1])
+                                        a = 0
                                     else:
                                         skip = True
                                     del list_double
@@ -785,14 +790,16 @@ class Parser:
                                     while "-" in hyphen_term:
                                         word_split = hyphen_term.rstrip().split('-', 1)
                                         term1 = word_split[0]
-                                        if term1 != '' and term1 not in self.hash_punc and term1.lower()  not in self.hash_stopwords:
+                                        if term1 != '' and term1 not in self.hash_punc and term1.lower() not in self.hash_stopwords:
                                             self.is_regular_term(term1)
+                                            a = 0
                                         else:
                                             skip = True
                                         word_split.remove(term1)
                                         hyphen_term = word_split[0]
                                         if hyphen_term != '' and hyphen_term not in self.hash_punc and hyphen_term.lower()  not in self.hash_stopwords:
                                             self.is_regular_term(term)
+                                            a = 0
                                         else:
                                             skip = True
                                     del word_split

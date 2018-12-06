@@ -18,6 +18,7 @@ class Statistics:
         self.cities_hash = {}
         self.corpus_cities = {}
         self.cities_in_docs = {}
+        self.vocabulary_with_pointers ={}
         self.file_list = self.set_file_list(self.path + '/temp_hash_objects')
         self.stat_log = open(path + '/Statistics/statistics_log.txt', 'w')
 
@@ -51,17 +52,20 @@ class Statistics:
             pickle.dump(self.vocabulary_tfc, output, pickle.HIGHEST_PROTOCOL)
 
     def create_corpus_cities(self):
+        with open('../resources/cities_of_the_world.pkl', 'rb') as file:
+            cities_of_the_world = pickle.load(file)
         file_list = self.set_file_list(self.path + '/Cities_hash_objects')
         for file in file_list:
             with open(file, 'rb') as hash_file:
                 file_hash_terms = pickle.load(hash_file)
             for key in file_hash_terms:
-                if key not in self.corpus_cities:
+                if key in cities_of_the_world and key not in self.corpus_cities:
                     self.corpus_cities[key] = 0
             hash_file.close()
             file_hash_terms = {}
         with open(self.path + '/Statistics/corpus_cities.pkl', 'wb') as output:
             pickle.dump(self.corpus_cities, output, pickle.HIGHEST_PROTOCOL)
+        print(len(self.corpus_cities))
 
     def load_pickle_file(self, path):
         with open(path, 'rb') as file:
@@ -110,9 +114,9 @@ class Statistics:
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
-        # files_list_tmp = []
-        # for i in range(20):
-        #     files_list_tmp.append(files_list[i])
+        files_list_tmp = []
+        for i in range(20):
+            files_list_tmp.append(files_list[i])
         return files_list
 
     def count_numbers(self):
@@ -200,7 +204,7 @@ class Statistics:
                 if counter>len(sorted_vocab_tfc)-30:
                     ans = ans + (str(item)) +'\n'
                 counter += 1
-                #f.write(str(item) + '\n')
+                f.write(str(item) + '\n')
         return ans
 
     def plot_zipf_law(self):
@@ -233,30 +237,47 @@ class Statistics:
         self.stat_log.write(self.terms_to_file_sorted_by_most_common_to_file() + '\n\n')
         self.stat_log.write("Most common cities: " + self.print_cities_max_tf() + '\n\n')
 
+    def write_pointers_to_file(self):
+        with open(self.path + '/Statistics/vocab_pointers.txt', 'w') as f:
+            for item in self.vocabulary_with_pointers:
+                f.write(str(item) + ' -->' + str(self.vocabulary_with_pointers[item]) + '\n')
+
+    def write_some_pickles(self):
+        counter = 0
+        file_list = self.set_file_list(self.path + '/temp_hash_objects')
+        for path in file_list:
+            hash_file = self.load_pickle_file(path)
+            with open(self.path + '/Statistics/KAKA_PICKLE/'+str(counter) +'.txt', 'a') as f:
+                for item in hash_file:
+                    f.write(str(item) + ' -->' + str(hash_file[item]) + '\n')
+            counter += 1
 
 if __name__ == '__main__':
     path = 'C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/Engine_Data'
     stat = Statistics(path)
-    stat.create_vocabulary()
-    print("Vocabulary Created")
-    stat.create_vocabulary_tfc()
-    print("Vocabulary_tfc Created")
-    stat.stem_vocabulary()
-    print("Stemmed_Vocabulary Created")
-    stat.create_corpus_cities()
-    print("Cities Corpus file Created")
-    stat.create_cities_with_tfc()
-    print("Cities in docs file Created")
+    # stat.create_vocabulary()
+    # print("Vocabulary Created")
+    # stat.create_vocabulary_tfc()
+    # print("Vocabulary_tfc Created")
+    # stat.stem_vocabulary()
+    # print("Stemmed_Vocabulary Created")
+    #stat.create_corpus_cities()
+    # print("Cities Corpus file Created")
+    # stat.create_cities_with_tfc()
+    # print("Cities in docs file Created")
     stat.vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary.pkl')
     stat.stemmed_vocabulary = stat.load_pickle_file(stat.path + '/Statistics/Stemmed_Vocabulary.pkl')
     stat.vocabulary_tfc = stat.load_pickle_file(stat.path + '/Statistics/Vocabulary_tfc.pkl')
     stat.cities_hash = stat.load_pickle_file("../resources/cities_data.pkl")
     stat.corpus_cities = stat.load_pickle_file(stat.path + '/Statistics/corpus_cities.pkl')
     stat.cities_in_docs = stat.load_pickle_file(stat.path + '/Statistics/cities_in_docs.pkl')
-    #stat.print_cities_max_tf()
-    #stat.count_countries()
-    #stat.count_numbers()
-    #stat.terms_to_file_sorted_by_most_common_to_file()
-    stat.write_statistics_log()
-    stat.plot_zipf_law()
+    stat.vocabulary_with_pointers = stat.load_pickle_file(stat.path + '/Vocabulary/Vocabulary_with_pointers.pkl')
+    stat.terms_to_file_sorted_by_most_common_to_file()
+    # stat.write_statistics_log()
+    # stat.plot_zipf_law()
+    #stat.vocabulary_with_pointers = stat.load_pickle_file(stat.path + '/Vocabulary/Vocabulary_with_pointers.pkl')
+    #stat.write_pointers_to_file()
+    #stat.write_some_pickles()
+    #print(str(len(stat.corpus_cities) - stat.count_capital_cities()))
+    #print("stemmed " + str(len(stat.stemmed_vocabulary)))
     print("done")
