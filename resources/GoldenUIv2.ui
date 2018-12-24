@@ -1,0 +1,1145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GoldenMainWindow</class>
+ <widget class="QMainWindow" name="GoldenMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1450</width>
+    <height>1036</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>GoldenCCB</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QStackedWidget" name="stackedWidget">
+    <property name="geometry">
+     <rect>
+      <x>-11</x>
+      <y>-1</y>
+      <width>1461</width>
+      <height>1051</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">background-image: url(:/back1/intro-bg.jpg);</string>
+    </property>
+    <property name="currentIndex">
+     <number>2</number>
+    </property>
+    <widget class="QWidget" name="Menu">
+     <widget class="QPushButton" name="search_btn">
+      <property name="geometry">
+       <rect>
+        <x>820</x>
+        <y>530</y>
+        <width>321</width>
+        <height>111</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 13pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#c9df8a, stop: 1 #32CD32
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #c9df8a, stop: 1 #ADFF2F
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Serach</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="create_index_btn">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>530</y>
+        <width>321</width>
+        <height>111</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	
+	font: 13pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Create Index</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="logo_label_2">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>40</y>
+        <width>1001</width>
+        <height>411</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/logo/white_goldenCCB_logo.png);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="jump_to_rst_btn">
+      <property name="geometry">
+       <rect>
+        <x>1260</x>
+        <y>0</y>
+        <width>201</width>
+        <height>91</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+image: url(:/rstA/nav_btn_A.png);
+    border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:hover {
+image: url(:/rstB/nav_btn_B.png);
+ border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:pressed {
+image: url(:/rstC/nav_btn_C.png);
+   border: none;
+    background: none;
+    padding: 5px;
+    }</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="CreateIndex">
+     <widget class="QComboBox" name="lang_comboBox">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>690</y>
+        <width>171</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <property name="toolTip">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QComboBox {
+
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+
+
+}
+
+
+QComboBox::drop-down {
+border: 2px solid #cccccc;
+border-radius: 10px;
+background-image: url(:/back1/icon_in_the_input_box_drop_down_arrow_511486.png);
+}
+
+</string>
+      </property>
+      <property name="editable">
+       <bool>false</bool>
+      </property>
+      <property name="currentText">
+       <string>English</string>
+      </property>
+      <property name="iconSize">
+       <size>
+        <width>40</width>
+        <height>40</height>
+       </size>
+      </property>
+      <item>
+       <property name="text">
+        <string>English</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Hebrew</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>German</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="browse_post_dest_btn">
+      <property name="geometry">
+       <rect>
+        <x>1020</x>
+        <y>600</y>
+        <width>151</width>
+        <height>57</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>browse</string>
+      </property>
+      <property name="icon">
+       <iconset resource="resources/resource.qrc">
+        <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
+      </property>
+     </widget>
+     <widget class="QLabel" name="logo_label">
+      <property name="geometry">
+       <rect>
+        <x>220</x>
+        <y>40</y>
+        <width>1001</width>
+        <height>411</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/logo/white_goldenCCB_logo.png);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="stemmer_checkBox">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>470</y>
+        <width>181</width>
+        <height>37</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/trasparent/transparent.png);
+font: 81 8pt &quot;Raleway ExtraBold&quot;;</string>
+      </property>
+      <property name="text">
+       <string>Stemmer</string>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_data_path">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>520</y>
+        <width>711</width>
+        <height>39</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }</string>
+      </property>
+      <property name="inputMask">
+       <string/>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>Enter Corpus Path</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="start_btn">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>800</y>
+        <width>191</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Start</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="browse_data_btn">
+      <property name="geometry">
+       <rect>
+        <x>1020</x>
+        <y>510</y>
+        <width>151</width>
+        <height>57</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>browse</string>
+      </property>
+      <property name="icon">
+       <iconset resource="resources/resource.qrc">
+        <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="lineEdit_posting_dest_path">
+      <property name="geometry">
+       <rect>
+        <x>290</x>
+        <y>610</y>
+        <width>711</width>
+        <height>39</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>Enter StopWords Path</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="back_btn_create">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>151</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+image: url(:/backA/nav_back_btn_A.png);
+    border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:hover {
+image: url(:/backB/nav_back_btn_B.png);
+ border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:pressed {
+image: url(:/backC/nav_back_btn_C.png);
+   border: none;
+    background: none;
+    padding: 5px;
+    }
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Serach">
+     <widget class="QLabel" name="logo_label_3">
+      <property name="geometry">
+       <rect>
+        <x>210</x>
+        <y>-30</y>
+        <width>1001</width>
+        <height>411</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/logo/white_goldenCCB_logo.png);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QLineEdit" name="serach_query_lineEdit">
+      <property name="geometry">
+       <rect>
+        <x>300</x>
+        <y>430</y>
+        <width>841</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QLineEdit {
+ color: #BEBEBE; 
+border: 2px solid #cccccc;
+border-radius: 10px;
+ }</string>
+      </property>
+      <property name="inputMask">
+       <string/>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="placeholderText">
+       <string>Enter Query</string>
+      </property>
+      <property name="clearButtonEnabled">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="search_query_btn">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>620</y>
+        <width>301</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Search</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="browse_Query_btn">
+      <property name="geometry">
+       <rect>
+        <x>350</x>
+        <y>510</y>
+        <width>301</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Load Query File</string>
+      </property>
+      <property name="icon">
+       <iconset resource="resources/resource.qrc">
+        <normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</normaloff>:/FolderIcon/iconfinder_icon-101-folder-search_314678.ico</iconset>
+      </property>
+     </widget>
+     <widget class="QCheckBox" name="stemmer_checkBox_2">
+      <property name="geometry">
+       <rect>
+        <x>240</x>
+        <y>390</y>
+        <width>271</width>
+        <height>37</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/trasparent/transparent.png);
+font: 10pt &quot;RelishPro 2&quot;;
+</string>
+      </property>
+      <property name="text">
+       <string>Use Semantics</string>
+      </property>
+     </widget>
+     <widget class="QListWidget" name="listWidget_cities">
+      <property name="geometry">
+       <rect>
+        <x>570</x>
+        <y>710</y>
+        <width>301</width>
+        <height>271</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QListWidget{
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: #F5F5F5;
+    padding: 5px;
+
+}</string>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::MultiSelection</enum>
+      </property>
+      <item>
+       <property name="text">
+        <string>Tel-Aviv</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>Gaza</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLabel" name="query_loaded_lbl">
+      <property name="geometry">
+       <rect>
+        <x>880</x>
+        <y>620</y>
+        <width>261</width>
+        <height>33</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/trasparent/transparent.png);
+color: rgb(170, 255, 0);
+font: 9pt &quot;RelishPro 2&quot;;</string>
+      </property>
+      <property name="text">
+       <string>Query File Loaded</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="city_limited_lbl">
+      <property name="geometry">
+       <rect>
+        <x>880</x>
+        <y>660</y>
+        <width>261</width>
+        <height>33</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">background-image: url(:/trasparent/transparent.png);
+color: rgb(170, 255, 0);
+font: 9pt &quot;RelishPro 2&quot;;</string>
+      </property>
+      <property name="text">
+       <string>City Limit Recieved </string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="limit_by_city_btn">
+      <property name="geometry">
+       <rect>
+        <x>800</x>
+        <y>510</y>
+        <width>301</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    color: #404040;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #F5F5F5, stop: 1 #F5F5F5
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Limit Results by City</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="submit_limit_btn">
+      <property name="geometry">
+       <rect>
+        <x>890</x>
+        <y>900</y>
+        <width>191</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Submit Limit</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="back_btn_search">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>151</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+image: url(:/backA/nav_back_btn_A.png);
+    border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:hover {
+image: url(:/backB/nav_back_btn_B.png);
+ border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:pressed {
+image: url(:/backC/nav_back_btn_C.png);
+   border: none;
+    background: none;
+    padding: 5px;
+    }
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="Results">
+     <widget class="QListWidget" name="listWidget_results">
+      <property name="geometry">
+       <rect>
+        <x>140</x>
+        <y>380</y>
+        <width>361</width>
+        <height>531</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QListWidget{
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: #F5F5F5;
+    padding: 5px;
+
+}</string>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::SingleSelection</enum>
+      </property>
+      <item>
+       <property name="text">
+        <string>FBI-12</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>FBI-13</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QLabel" name="logo_label_4">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>10</y>
+        <width>671</width>
+        <height>361</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">image: url(:/logo/white_goldenCCB_logo.png);</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+     <widget class="QListWidget" name="listWidget_entities">
+      <property name="geometry">
+       <rect>
+        <x>920</x>
+        <y>380</y>
+        <width>361</width>
+        <height>531</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QListWidget{
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #BEBEBE;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: #F5F5F5;
+    padding: 5px;
+
+}</string>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::NoSelection</enum>
+      </property>
+      <item>
+       <property name="text">
+        <string>DICK_PIC</string>
+       </property>
+      </item>
+      <item>
+       <property name="text">
+        <string>PUSSY_SLAP</string>
+       </property>
+      </item>
+     </widget>
+     <widget class="QPushButton" name="show_entities_btn">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>460</y>
+        <width>221</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Show entities</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_DocNUm_entities">
+      <property name="geometry">
+       <rect>
+        <x>880</x>
+        <y>270</y>
+        <width>531</width>
+        <height>101</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">font: 11pt &quot;RelishPro 2&quot;;</string>
+      </property>
+      <property name="text">
+       <string>Entities for DOC: XXXXXXX</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="save_results_btn">
+      <property name="geometry">
+       <rect>
+        <x>610</x>
+        <y>680</y>
+        <width>221</width>
+        <height>81</height>
+       </rect>
+      </property>
+      <property name="cursor">
+       <cursorShape>PointingHandCursor</cursorShape>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+	font: 10pt &quot;RelishPro 2&quot;;
+    color: #F5F5F5;
+    border: 2px solid #555;
+    border-radius: 20px;
+    border-style: outset;
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 	#68abfd, stop: 1 #157efb
+        );
+    padding: 5px;
+    }
+
+QPushButton:hover {
+    background: qradialgradient(
+        cx: 0.3, cy: -0.4, fx: 0.3, fy: -0.4,
+        radius: 1.35, stop: 0 #cde3fe, stop: 1 #68abfd
+        );
+    }
+
+QPushButton:pressed {
+    border-style: inset;
+    background: qradialgradient(
+        cx: 0.4, cy: -0.1, fx: 0.4, fy: -0.1,
+        radius: 1.35, stop: 0 #fff, stop: 1 #ddd
+        );
+    }</string>
+      </property>
+      <property name="text">
+       <string>Save Results</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="back_btn_results">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>0</y>
+        <width>151</width>
+        <height>121</height>
+       </rect>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QPushButton {
+image: url(:/backA/nav_back_btn_A.png);
+    border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:hover {
+image: url(:/backB/nav_back_btn_B.png);
+ border: none;
+    background: none;
+    padding: 5px;
+    }
+
+QPushButton:pressed {
+image: url(:/backC/nav_back_btn_C.png);
+   border: none;
+    background: none;
+    padding: 5px;
+    }
+</string>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+     </widget>
+    </widget>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1450</width>
+     <height>47</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuOptions">
+    <property name="title">
+     <string>Options</string>
+    </property>
+    <addaction name="actionShow_current_dictionary"/>
+    <addaction name="actionLoad_Dicationary_from_file"/>
+    <addaction name="separator"/>
+    <addaction name="actionReset_System_Data"/>
+   </widget>
+   <widget class="QMenu" name="menuAbout">
+    <property name="title">
+     <string>About</string>
+    </property>
+    <addaction name="actionFeatures"/>
+    <addaction name="actionMeet_the_Tem"/>
+   </widget>
+   <addaction name="menuOptions"/>
+   <addaction name="menuAbout"/>
+  </widget>
+  <action name="actionShow_current_dictionary">
+   <property name="text">
+    <string>Show current dictionary</string>
+   </property>
+  </action>
+  <action name="actionLoad_Dicationary_from_file">
+   <property name="text">
+    <string>Load Dicationary from file</string>
+   </property>
+  </action>
+  <action name="actionReset_System_Data">
+   <property name="text">
+    <string>Reset System Data</string>
+   </property>
+  </action>
+  <action name="actionFeatures">
+   <property name="text">
+    <string>Features</string>
+   </property>
+  </action>
+  <action name="actionMeet_the_Tem">
+   <property name="text">
+    <string>Meet the Team</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="resources/resource.qrc"/>
+ </resources>
+ <connections/>
+</ui>
