@@ -1,5 +1,6 @@
 import os
 from Model.Parser import Parser
+from Model.Searcher import Searcher
 import time
 import multiprocessing
 import pickle
@@ -28,6 +29,7 @@ class ReadFile:
     semaphore = None
     number_of_files = 0
     hash_stopwords = {}
+    hash_qry_stopwords = {}
     hash_keywords_months = {}
     hash_keywords_prices = {}
     hash_punc = {}
@@ -52,7 +54,7 @@ class ReadFile:
 
     # constructor #
 
-    def __init__(self, data_path, post_path, stemmer,controller):
+    def __init__(self, data_path, post_path, stemmer, controller):
         self.data_path = data_path
         self.post_path = post_path
         print('\n' * 100)
@@ -107,7 +109,7 @@ class ReadFile:
             'i': "", 'I': "", 'j': "", 'J': "", 'k': "", 'K': "", 'l': "", 'L': "", 'm': "", 'M': "", 'n': "", 'N': "",
             'o': "", 'O': "", 'p': "", 'P': "", 'q': "", 'Q': "", 'r': "", 'R': "", 's': "", 'S': "",
             't': "", 'T': "", 'u': "", 'U': "", 'v': "", 'V': "", 'w': "", 'W': "", 'x': "", 'X': "",
-            'y': "", 'Y': "", 'z': "", 'Z': "" , 'MR': "", 'mr': "" , '': ""}
+            'y': "", 'Y': "", 'z': "", 'Z': "" , 'MR': "", 'mr': "", '': ""}
 
     # function sets alphabetical keywords #
 
@@ -122,10 +124,17 @@ class ReadFile:
     # function sets punctuation keywords #
 
     def set_middlewords(self):
-        list_punc = {'.', '/','|', '>', ';', '^', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', "}" }
+        list_punc = {'.', '/', '|', "'", '>', '<', ';', '^', '$', '&', '?', '\"', '!', "=", '+', "#", "\\", '\\\\', '[', ']', '(', ')', '{', '}'}
         for word in list_punc:
             self.hash_punc_middle[word] = ""
         del list_punc
+
+    def set_qry_stopwords(self):
+        list_terms = {'relevant', 'identify', 'document', 'discuss', 'include', 'topic', 'focus', 'purpose', 'current',
+        'status', 'contain', 'following', 'information'}
+        for word in list_terms:
+            self.hash_qry_stopwords[word] = ""
+        del list_terms
 
     # function inits paths and dictionaries #
 
@@ -134,8 +143,6 @@ class ReadFile:
         str_path_stopwords = 'resources\\stopwords.txt'  # sets stop word dictionary
         str_path_keywords_months = 'resources\\keywords_months.txt'  # sets key word dictionary
         str_path_keywords_prices = 'resources\\keywords_prices.txt'  # sets key word dictionary
-        # str_path_test = 'C:\\Users\\edoli\\Desktop\\SE_PA\\test1.txt'
-        # self.set_test_file(str_path_test)
         self.abs_stopword_path = os.path.join(project_dir, str_path_stopwords)
         self.abs_keyword_path_months = os.path.join(project_dir, str_path_keywords_months)
         self.abs_keyword_path_prices = os.path.join(project_dir, str_path_keywords_prices)
@@ -145,21 +152,38 @@ class ReadFile:
         self.set_puncwords()  # sets punctuation vocabulary
         self.set_middlewords()
         self.set_alphabet()
+        self.set_qry_stopwords()
         with open('resources\\cities_data.pkl', 'rb') as input:
             self.hash_cities = pickle.load(input)
 
     # main function that runs over the given corpus and calls the Parser Class #
 
-    def start_evaluating(self):
+    def start_evaluating_doc(self):
         global f_counter
         f_counter = multiprocessing.Value('i', 0)
         files_list = self.set_file_list()
         self.number_of_files = len(files_list)
+
         # for file in files_list:
         #     self.parse_file(file)
+
         pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
+
+    def start_evaluating_qry(self, vocabulary):
+        self.init_helpers()
+        qry_parser = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
+        s_text = "<top> \n <num> Number: 387 \n <title> radioactive waste \n <desc> Description: \n " \
+                 "Identify documents that discuss effective and safe ways to \n permanently handle long-lived" \
+                 " radioactive wastes. \n <narr> Narrative: /n Documents that discuss incineration, cementation," \
+                 " bitumenization, \n vitrification, and in underground nuclear explosion are relevant. \n </top>"
+        qry_parser.start_parse(s_text, 0)
+        hash_qry_terms = qry_parser.hash_terms
+        max_tf = 100000
+        b = 0.2
+        s = Searcher(hash_qry_terms, max_tf, b, vocabulary)
+        s.run(1000, 0.2)
 
     # function sets path list of files for the process pool jobs #
 
@@ -187,13 +211,13 @@ class ReadFile:
         with f_counter.get_lock():
            f_counter.value += 1
         f_start = time.time()
-        p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer)
+        p = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer, None)
         self.get_doc_from_file(file_path, p)
         for c in self.final_solution:
-            if c in p.hash_terms:
+            while c in p.hash_terms:
                 del p.hash_terms[c]
         for term in self.hash_stopwords:
-            if term in p.hash_terms:
+            while term in p.hash_terms or term.upper() in p.hash_terms:
                 del p.hash_terms[term]
         if '' in p.hash_terms:
             del p.hash_terms['']
@@ -216,7 +240,7 @@ class ReadFile:
 
     def print_prog(self, p_c):
         print('\n'*100)
-        print('Parssing:\n[' + '*'*int(p_c/2) + ' '*int((100-p_c)/2) +str(p_c) + '%' ']')
+        print('Parsing:\n[' + '*'*int(p_c/2) + ' '*int((100-p_c)/2) +str(p_c) + '%' ']')
 
     # main function extracting documents from given strings and calls the start_parse(doc) method #
 
@@ -233,7 +257,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_pase(doc)
+                    parser_object.start_parse(doc, 1)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter
