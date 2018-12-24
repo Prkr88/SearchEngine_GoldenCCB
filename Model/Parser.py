@@ -75,9 +75,9 @@ class Parser:
                 str_city_name2 = l_city[1].upper()
                 str_two_words = str_city_name1 + " " + str_city_name2
                 if str_city_name1 not in self.hash_cities:
-                    self.hash_cities.update({str_city_name1: {self.str_doc_id: "(FP=104)"}})
+                    self.hash_cities.update({str_city_name1: {self.str_doc_id: "(FP=104);"}})
                 if str_two_words not in self.hash_cities:
-                    self.hash_cities.update({str_two_words: {self.str_doc_id: "(FP=104)"}})
+                    self.hash_cities.update({str_two_words: {self.str_doc_id: "(FP=104);"}})
                 del str_city_name1
                 del str_city_name2
             else:
@@ -190,7 +190,7 @@ class Parser:
                             this_unique = self.hash_docs[self.str_doc_id]['unique_count']
                             self.hash_docs[self.str_doc_id]['unique_count'] = this_unique + 1
                         if other_term in self.hash_cities:
-                            str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ')'
+                            str_new_pos = '(' + str(self.line_in_doc_counter) + ',' + str(self.word_in_line_counter) + ');'
                             try:
                                 str_this_pos = self.hash_cities[other_term][self.str_doc_id]
                                 self.hash_cities[other_term].update({self.str_doc_id: str_this_pos + str_new_pos})
