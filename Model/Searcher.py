@@ -21,6 +21,7 @@ class Searcher:
         self.set_hash_index_terms()
         self.run(max_tf, b)
 
+
     def set_hash_qry(self):
         for term, qry_val in self.hash_qry_terms.items():
             for qry_id, tf_q in qry_val.items():

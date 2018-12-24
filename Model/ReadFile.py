@@ -156,6 +156,7 @@ class ReadFile:
         with open('resources\\cities_data.pkl', 'rb') as input:
             self.hash_cities = pickle.load(input)
 
+
     # main function that runs over the given corpus and calls the Parser Class #
 
     def start_evaluating_doc(self):

@@ -15,7 +15,7 @@ import json
 class Controller:
     data_path = ""
     post_path = ""
-
+    stemmer = False
 
     def __init__(self, vocab):
         self.vocabulary = vocab
@@ -30,6 +30,7 @@ class Controller:
         start = time.time()
         self.data_path = data_path
         self.post_path = post_path
+        self.stemmer = stemmer
         if not os.path.exists(self.post_path + '/Engine_Data'):
             os.makedirs(self.post_path + '/Engine_Data')
         if not os.path.exists(self.post_path + '/Engine_Data/temp_hash_objects'):
@@ -49,10 +50,12 @@ class Controller:
         # self.indx = Indexer(post_path, self.doc_counter)
         # self.indx = Indexer(post_path, 472525)
         # self.indx.start_indexing()
-        self.vocabulary = {}
-        rf.start_evaluating_qry(self.vocabulary)
         end = time.time()
         self.total_time = (end - start)
+
+    def search(self):
+        rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
+        rf.start_evaluating_qry(self.vocabulary)
 
     def create_vocabulary(self):
         counter = 0
