@@ -41,13 +41,16 @@ class Controller:
         if not os.path.exists(self.post_path + '/Engine_Data/posting_files'):
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
         rf = ReadFile(data_path, post_path, stemmer, self)
-        rf.start_evaluating()
-        self.create_vocabulary()
-        self.update_vocabulary_pointers()
-        self.create_city_index()
-        self.unique_terms = len(self.vocabulary)
-        self.indx = Indexer(post_path,self.doc_counter)
-        self.indx.start_indexing()
+        # rf.start_evaluating_doc()
+        # self.create_vocabulary()
+        # self.update_vocabulary_pointers()
+        # self.create_city_index()
+        # self.unique_terms = len(self.vocabulary)
+        # self.indx = Indexer(post_path, self.doc_counter)
+        # self.indx = Indexer(post_path, 472525)
+        # self.indx.start_indexing()
+        self.vocabulary = {}
+        rf.start_evaluating_qry(self.vocabulary)
         end = time.time()
         self.total_time = (end - start)
 

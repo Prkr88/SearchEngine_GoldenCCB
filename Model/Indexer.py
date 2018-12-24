@@ -47,10 +47,11 @@ class Indexer:
         self.file_path10 = self.posting_path + '/wxyz.txt'
         self.file_list = [self.file_path0, self.file_path1, self.file_path2, self.file_path3, self.file_path4,
                           self.file_path5,self.file_path6, self.file_path7, self.file_path8, self.file_path9, self.file_path10]
+        self.number_of_files = 0
         self.counter = 0
         self.hash_collector = {}
+        self.hash_alphabet = {}
         self.N = N_docs
-        self.number_of_files = 0
 
     # initializes mutexes #
 
@@ -115,11 +116,19 @@ class Indexer:
         i1 = pool1.map_async(self.write_temp_posts, hash_list, chunksize=1)
         i1.wait()
 
+        # non-process pool 1 #
+        # for o_hash in hash_list:
+        #     self.write_temp_posts(o_hash)
+
         # pool2: loads, merges and sorts the posting files #
         file_counter.value = 0
         pool2 = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(lock0,lock1,lock2,lock3,lock4,lock5,lock6,lock7,lock8,lock9,lock10,file_counter))
         i2 = pool2.map_async(self.merger, self.file_list, chunksize=1)
         i2.wait()
+
+        # non-process pool 2 #
+        # for o_hash in self.file_list:
+        #     self.merger(o_hash)
 
     # function sets path list for the process work #
 
@@ -176,46 +185,44 @@ class Indexer:
         tuple_terms = sorted(hash_terms.items(), key=lambda x: x[0].lower())
         hash_collector = {}
         size = len(posting_list)
+        collection_index = 0
 
         for posting_index in range(0, size):
-            collection_index = 0
             with mutex_list[posting_index].get_lock():
                 with open(posting_list[posting_index], 'a', encoding='utf-8') as curr_file:
-                    for ikey, ival in tuple_terms:
-                        resume = True
-                        if ikey == "'" or (posting_index == 0 and ikey == '#doc_number'):
-                            collection_index += 1
-                            resume = False
-                        if resume:
-                            docs_val = self.load_nested_documents(ival)
-                            if docs_val != "CodingException":
-                                try:
+                    for ikey, ival in tuple_terms[collection_index:]:
+                        if ikey != '#doc_number' and ikey not in self.hash_alphabet:
+                            try:
+                                docs_val = self.compressor(ival)
+                                if docs_val != "CompressorException":
                                     ch = ikey[0]
                                     if ch == "'" or (posting_index == 0 and ch == '$'):
                                         ikey = ikey[1:]
                                         ch = ikey[0]
                                     if condition_list[posting_index][LOWERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][LOWERCASE][UPPERBOUND] or condition_list[posting_index][UPPERCASE][LOWERBOUND] <= ord(ch) <= condition_list[posting_index][UPPERCASE][UPPERBOUND]:
                                         try:
-                                            curr_file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                                            curr_file.flush()
+                                            str_data = ikey + '|' + str(ival['tf_c']) + ',' + str(ival['df']) + '<' + docs_val + '\n'
+                                            # str_data = ikey
+                                            if '|' in str_data:
+                                                curr_file.write(str_data)
+                                            # curr_file.flush()
                                         except Exception:
+                                            # print(str(ikey) + " " + "WriteToFileException")
                                             hash_collector[str(ikey)] = "WriteToFileException"
-                                        collection_index += 1
                                     elif posting_index < (size-1) and (condition_list[posting_index+1][LOWERCASE][LOWERBOUND] <= ord(ch) <= condition_list[size-1][LOWERCASE][UPPERBOUND] or condition_list[posting_index+1][UPPERCASE][LOWERBOUND] <= ord(ch) <= condition_list[size-1][UPPERCASE][UPPERBOUND]):
                                         break
                                     else:
+                                        # print(str(ikey) + " " + "CollectionCharValue")
                                         hash_collector[str(ikey)] = "CollectionCharValue"
-                                        collection_index += 1
-                                except Exception:
-                                    hash_collector[str(ikey)] = "WriteToFileException"
-                                    collection_index += 1
+                            except Exception:
+                                # print(str(ikey) + " " + "ValidationException")
+                                hash_collector[str(ikey)] = "ValidationException"
+                        collection_index += 1
                     curr_file.close()
-            for x in range(0, collection_index):
-                del tuple_terms[0]
 
     # functions compresses the documents list #
     
-    def load_nested_documents(self, nest):
+    def compressor(self, nest):
         docs_val = ""
         try:
             first_full_id = list(nest['hash_docs'].keys())[0]
@@ -247,53 +254,45 @@ class Indexer:
                     first_doc_id = curr_doc_id  # different doc same gap
                     curr_doc_id = curr_doc_id + "-"
                     prev_gap_id = curr_gap_id
-                docs_val = docs_val + str(curr_doc_id) + str(curr_gap_id) + ":" + str(j_val['tf_d']) + "," + str(
-                    j_val['h']) + ">"
+                docs_val = docs_val + str(curr_doc_id) + str(curr_gap_id) + ':' + str(j_val['tf_d']) + ',' + str(
+                    j_val['h']) + '>'
         except Exception:
-            docs_val = "CodingException"
+            docs_val = "CompressorException"
         return docs_val
 
-    # main functions for merging temp posting files to the final posting files. receives path of the temp posting files #
-
-    def merger(self, path):
-        with open(path, 'r', encoding='utf-8') as file:
-            list_terms = [line.strip() for line in file]
-            file.close()
-        hash_file_terms = {}
-        hash_collector = {}
+    def coded_decompressor(self, list_terms):
         for term in list_terms:
             other_tf_c = 0
             other_df = 0
-            other_doc_id = ""
+            other_doc_id = ''
             hash_temp_doc = {}
             list_term = term.split('|')
-            this_term = None
             other_term = list_term[0]
-            if other_term == "island's":
-                skip = False
-            skip = False
-            if other_term != '':
+            resume = True
+            value_size = len(list_term)
+            if other_term != '' and 1 < value_size < 3:
                 try:
                     value_term = list_term[1].split('>')
-                    get_val = value_term[0].split(',')
-                    other_tf_c = int(get_val[0])
-                    other_df = int(get_val[1])
-                    other_header = int(get_val[3])
-                    info_list = get_val[2].split('<')
-                    info_list = info_list[1].split(':')
-                    other_doc_id = info_list[0]
-                    other_tf_d = int(info_list[1])
+                    list_gbl = value_term[0].split('<')
+                    other_global = list_gbl[0].split("'")[0].split(',')
+                    other_tf_c = int(other_global[0])
+                    other_df = int(other_global[1])
+                    list_lcl = list_gbl[1].split(':')
+                    other_doc_id = list_lcl[0]
+                    other_lcl = list_lcl[1].split(':')[0].split(',')
+                    other_tf_d = int(other_lcl[0])
+                    other_header = int(other_lcl[1])
                     hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_header}})
                     prev_doc_id = other_doc_id.split('-')[0]
                     prev_gap_id = int(other_doc_id.split('-')[1])
-                    del value_term[0], get_val, info_list
+                    del value_term[0], list_gbl, list_lcl
                     while len(value_term) > 1:  # starts from 2nd iteration
                         info_list = value_term[0].split(':')
                         curr_full_doc_id = info_list[0]
                         if curr_full_doc_id[0].isdigit():  # same doc id
                             curr_doc_id = int(curr_full_doc_id)
                             curr_id = curr_doc_id + prev_gap_id
-                            other_doc_id = str(prev_doc_id) + "-" + str(curr_id)
+                            other_doc_id = str(prev_doc_id) + '-' + str(curr_id)
                             info_list = info_list[1].split(':')
                             info_list = info_list[0].split(',')
                             other_tf_d = int(info_list[0])
@@ -312,78 +311,188 @@ class Indexer:
                         del value_term[0]
                     del list_term
                 except Exception:
-                    hash_collector[str(other_term)] = str(other_doc_id) + "DecodeException"
-                    skip = True
-                if not skip:
-                    this_term = None
-                    if self.is_first_upper(other_term):  # other = PEN
-                        if other_term in hash_file_terms:  # (1) other=PEN and dict=PEN -> update
-                            this_term = hash_file_terms[other_term]
-                        else:  # (2) other=PEN and dict=pen -> update
-                            temp_term_lower = other_term.lower()  # temp=pen
-                            if temp_term_lower in hash_file_terms:  # (2) other=PEN and dict=pen -> update
-                                this_term = hash_file_terms[temp_term_lower]
-                        if this_term is not None:
+                    # print("term: " + other_term + "id: " + other_doc_id + " " + "DecompressorException")
+                    # hash_collector[str(other_term)] = str(other_doc_id) + "DecompressorException"
+                    resume = False
+            else:
+                # print("term: " + other_term + " docID: " + other_doc_id + " " + "NullValueException")
+                resume = False
+
+    def uncoded_decompressor(self, list_terms):
+        for term in list_terms:
+            other_term = ""
+            other_doc_id = ""
+            other_tf_c = ""
+            other_df = ""
+            hash_temp_doc = {}
+            resume = True
+            try:
+                list_term = term.split('{')
+                other_term = list_term[0].split("'")[1]
+                other_global = list_term[1].split(':')
+                other_tf_c = int(other_global[1].split(",")[0].strip())
+                other_df = int(other_global[2].split(",")[0].strip())
+                del list_term[0], list_term[0]
+                other_doc_id = list_term[0].split("'")[1]
+                other_local = list_term[1].split("'")
+                other_tf_d = int(other_local[2].split(':')[1].split(',')[0].strip())
+                other_h = int(other_local[4].split(':')[1].split('}')[0].strip())
+                hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_h}})
+                del list_term[0]
+                while len(list_term) > 1:
+                    other_doc_id = list_term[0].split("'")[5]
+                    other_local = list_term[1].split("'")
+                    other_tf_d = int(other_local[2].split(':')[1].split(',')[0].strip())
+                    other_h = int(other_local[4].split(':')[1].split('}')[0].strip())
+                    hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_h}})
+                    del list_term[0]
+            except Exception:
+                # print(other_term + " " + other_doc_id + "DecompressorException")
+                # hash_collector[other_term] = other_doc_id + "DecompressorException"
+                resume = False
+
+    # main functions for merging temp posting files to the final posting files. receives path of the tmp posting files #
+
+    def merger(self, path):
+        with open(path, 'r', encoding='utf-8') as file:
+            list_terms = [line.strip() for line in file]
+            file.close()
+        hash_file_terms = {}
+        hash_collector = {}
+        for term in list_terms:
+            other_tf_c = 0
+            other_df = 0
+            other_doc_id = ''
+            hash_temp_doc = {}
+            list_term = term.split('|')
+            other_term = list_term[0]
+            resume = True
+            if other_term != '' and len(list_term) == 2:
+                try:
+                    value_term = list_term[1].split('>')
+                    list_gbl = value_term[0].split('<')
+                    other_global = list_gbl[0].split("'")[0].split(',')
+                    other_tf_c = int(other_global[0])
+                    other_df = int(other_global[1])
+                    list_lcl = list_gbl[1].split(':')
+                    other_doc_id = list_lcl[0]
+                    other_lcl = list_lcl[1].split(':')[0].split(',')
+                    other_tf_d = int(other_lcl[0])
+                    other_header = int(other_lcl[1])
+                    hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_header}})
+                    prev_doc_id = other_doc_id.split('-')[0]
+                    prev_gap_id = int(other_doc_id.split('-')[1])
+                    del value_term[0], list_gbl, list_lcl
+                    while len(value_term) > 1:  # starts from 2nd iteration
+                        info_list = value_term[0].split(':')
+                        curr_full_doc_id = info_list[0]
+                        if curr_full_doc_id[0].isdigit():  # same doc id
+                            curr_doc_id = int(curr_full_doc_id)
+                            curr_id = curr_doc_id + prev_gap_id
+                            other_doc_id = str(prev_doc_id) + '-' + str(curr_id)
+                            info_list = info_list[1].split(':')
+                            info_list = info_list[0].split(',')
+                            other_tf_d = int(info_list[0])
+                            other_header = int(info_list[1])
+                            hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_header}})
+                            prev_gap_id = curr_id
+                        else:
+                            other_doc_id = curr_full_doc_id  # new doc id
+                            info_list = info_list[1].split(',')
+                            other_tf_d = int(info_list[0])
+                            other_header = int(info_list[1])
+                            hash_temp_doc.update({other_doc_id: {'tf_d': other_tf_d, 'h': other_header}})
+                            last_info = curr_full_doc_id.split('-')
+                            prev_doc_id = last_info[0]
+                            prev_gap_id = int(last_info[1])
+                        del value_term[0]
+                    del list_term
+                except Exception:
+                    # print("term: " + other_term + "id: " + other_doc_id + " " + "DecompressorException")
+                    hash_collector[str(other_term)] = str(other_doc_id) + "DecompressorException"
+                    resume = False
+            else:
+                # print("term: " + other_term + " docID: " + other_doc_id + " " + "NullValueException")
+                resume = False
+            if resume:
+                this_term = None
+                if self.is_first_upper(other_term):  # other = PEN
+                    if other_term in hash_file_terms:  # (1) other=PEN and dict=PEN -> update
+                        this_term = hash_file_terms[other_term]
+                    else:  # (2) other=PEN and dict=pen -> update
+                        temp_term_lower = other_term.lower()  # temp=pen
+                        if temp_term_lower in hash_file_terms:  # (2) other=PEN and dict=pen -> update
+                            this_term = hash_file_terms[temp_term_lower]
+                    if this_term is not None:
+                        try:
+                            this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
+                            this_term['hash_docs'].update(hash_temp_doc)
+                        except Exception:
+                            # print(other_term + " " + other_doc_id + " " + "1+2")
+                            hash_collector[other_term] = other_doc_id + "MergeTermException"
+                        pass  # end of update (1+2)
+                    else:  # (5) if its a new term (other=PEN and dict='none')
+                        nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
+                        hash_file_terms[other_term] = nested_hash
+                        pass  # end of adding a new term
+                else:  # if the current term is lower case 'pen'
+                    if other_term in hash_file_terms:  # (3) other=pen and dict=pen -> update
+                        this_term = hash_file_terms[other_term]
+                        try:
+                            this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
+                            this_term['hash_docs'].update(hash_temp_doc)
+                        except Exception:
+                            # print(other_term + " " + other_doc_id + " " + "3")
+                            hash_collector[other_term] = other_doc_id + "MergeTermException"
+                        pass  # end of update (3)
+                    else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
+                        temp_term_upper = other_term.upper()  # temp = PEN
+                        if temp_term_upper in hash_file_terms:
+                            old_term_nest = hash_file_terms[temp_term_upper]  # old_term = PEN
+                            this_term = copy.deepcopy(old_term_nest)  # creates new lower case term 'pen'
                             try:
                                 this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
                                 this_term['hash_docs'].update(hash_temp_doc)
                             except Exception:
-                                hash_collector[str(other_term)] = str(other_doc_id) + "MergeTermException"
-                            pass  # end of update (1+2)
-                        else:  # (5) if its a new term (other=PEN and dict='none')
+                                # print(other_term + " " + other_doc_id + " " + "4+5")
+                                hash_collector[other_term] = other_doc_id + "MergeTermException"
+                            hash_file_terms[other_term] = this_term  # adds 'pen'
+                            del hash_file_terms[temp_term_upper]  # deletes old upper case term 'PEN'
+                            pass  # end of update (4)
+                        else:  # (5) if its a new term (other=pen and dict='none')
                             nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
                             hash_file_terms[other_term] = nested_hash
-                            pass  # end of adding a new term
-                    else:  # if the current term is lower case 'pen'
-                        if other_term in hash_file_terms:  # (3) other=pen and dict=pen -> update
-                            this_term = hash_file_terms[other_term]
-                            try:
-                                this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
-                                this_term['hash_docs'].update(hash_temp_doc)
-                            except Exception:
-                                hash_collector[str(other_term)] = str(other_doc_id) + "MergeTermException"
-                            pass  # end of update (3)
-                        else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
-                            temp_term_upper = other_term.upper()  # temp = PEN
-                            if temp_term_upper in hash_file_terms:
-                                old_term_nest = hash_file_terms[temp_term_upper]  # old_term = PEN
-                                this_term = copy.deepcopy(old_term_nest)  # creates new lower case term 'pen'
-                                try:
-                                    this_term.update({'tf_c': this_term['tf_c'] + other_tf_c, 'df': this_term['df'] + other_df})
-                                    this_term['hash_docs'].update(hash_temp_doc)
-                                except Exception:
-                                    hash_collector[str(other_term)] = str(other_doc_id) + "MergeTermException"
-                                hash_file_terms[other_term] = this_term  # adds 'pen'
-                                del hash_file_terms[temp_term_upper]  # deletes old upper case term 'PEN'
-                                pass  # end of update (4)
-                            else:  # (5) if its a new term (other=pen and dict='none')
-                                nested_hash = ({'tf_c': other_tf_c, 'df': other_df, 'hash_docs': hash_temp_doc})
-                                hash_file_terms[other_term] = nested_hash
-                                pass
+                            pass
         hash_check = self.hash_filter(path)
         with open(path, 'w', encoding='utf-8') as file:
             file.close()
         with open(path, 'a', encoding='utf-8') as file:
-            hash_file_terms = sorted(hash_file_terms.items(), key=lambda x: x[0].lower())
-            for ikey, ival in hash_file_terms:
+            # hash_file_terms = sorted(hash_file_terms.items(), key=lambda x: x[0].lower())
+            for ikey, ival in hash_file_terms.items():
                 try:
-                    docs_val = self.load_nested_documents(ival)
-                    if docs_val != "CodingException":
+                    docs_val = self.compressor(ival)
+                    if docs_val != "CompressorException":
                         ch = ikey[0]
                         if hash_check is not None:
                             if ch in hash_check:
                                 try:
-                                    file.write(str(ikey) + "|" + str(ival['tf_c']) + "," + str(ival['df']) + "," + str(
-                                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + "<" + str(docs_val) + '\n')
-                                    file.flush()
+                                    str_data = ikey + '|' + str(ival['tf_c']) + ',' + str(ival['df']) + ',' + str(
+                                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + '<' + str(docs_val) + '\n'
+                                    if '|' in str_data:
+                                        file.write(str_data)
+                                    # file.flush()
                                 except Exception:
+                                    # print(ikey + " " + ival + "WriteFileException")
                                     hash_collector[str(ikey)] = "WriteFileException"
                         else:
+                            # print(ikey + " " + ival + "HashCheckException")
                             hash_collector[str(ikey)] = "HashCheckException"
                     else:
+                        # print(ikey + " " + ival + "CodingException")
                         hash_collector[str(ikey)] = "CodingException"
                 except Exception:
-                    a = 0
+                    # print(ikey + " " + ival + "WriteFileException")
+                    hash_collector[str(ikey)] = "WriteFileException"
             file.close()
         hash_file_terms = {}
         with file_counter.get_lock():
@@ -400,6 +509,14 @@ class Indexer:
                 file.write(str(ikey) + '\n')
             file.close()
         hash_collector = []
+
+    def set_alphabet(self):
+            self.hash_alphabet = {'a': "", 'A': "", 'b': "", 'B': "", 'c': "", 'C': "", 'd': "", 'D': "",
+            'e': "", 'E': "", 'f': "", 'F': "", 'g': "", 'G': "", 'h': "", 'H': "",
+            'i': "", 'I': "", 'j': "", 'J': "", 'k': "", 'K': "", 'l': "", 'L': "", 'm': "", 'M': "", 'n': "", 'N': "",
+            'o': "", 'O': "", 'p': "", 'P': "", 'q': "", 'Q': "", 'r': "", 'R': "", 's': "", 'S': "",
+            't': "", 'T': "", 'u': "", 'U': "", 'v': "", 'V': "", 'w': "", 'W': "", 'x': "", 'X': "",
+            'y': "", 'Y': "", 'z': "", 'Z': ""}
 
     def hash_filter(self, path):
         hash_check = {}
@@ -443,6 +560,52 @@ class Indexer:
         if self.posting_path is not None:
             if os.path.exists(self.engine_data_path):
                 shutil.rmtree(self.engine_data_path)
+
+    def get_hash_docs(self, str_data):
+        list_term = str_data.split(' ')
+        other_tf_c = 0
+        other_df = 0
+        other_doc_id = ''
+        hash_temp_doc = {}
+        try:
+            value_term = list_term[0].split('>')
+            list_lcl = value_term[0].split('<')[0].split(':')
+            other_doc_id = list_lcl[0]
+            other_lcl = list_lcl[1].split(':')[0].split(',')
+            other_tf_d = int(other_lcl[0])
+            other_header = int(other_lcl[1])
+            hash_temp_doc.update({other_doc_id: [other_tf_d, other_header]})
+            prev_doc_id = other_doc_id.split('-')[0]
+            prev_gap_id = int(other_doc_id.split('-')[1])
+            del value_term[0]
+            while value_term and len(value_term) > 0:  # starts from 2nd iteration
+                if value_term[0] != '':
+                    info_list = value_term[0].split(':')
+                    curr_full_doc_id = info_list[0]
+                    if curr_full_doc_id[0].isdigit():  # same doc id
+                        curr_doc_id = int(curr_full_doc_id)
+                        curr_id = curr_doc_id + prev_gap_id
+                        other_doc_id = str(prev_doc_id) + '-' + str(curr_id)
+                        info_list = info_list[1].split(':')
+                        info_list = info_list[0].split(',')
+                        other_tf_d = int(info_list[0])
+                        other_header = int(info_list[1])
+                        hash_temp_doc.update({other_doc_id: [other_tf_d, other_header]})
+                        prev_gap_id = curr_id
+                    else:
+                        other_doc_id = curr_full_doc_id  # new doc id
+                        info_list = info_list[1].split(',')
+                        other_tf_d = int(info_list[0])
+                        other_header = int(info_list[1])
+                        hash_temp_doc.update({other_doc_id: [other_tf_d, other_header]})
+                        last_info = curr_full_doc_id.split('-')
+                        prev_doc_id = last_info[0]
+                        prev_gap_id = int(last_info[1])
+                del value_term[0]
+            del list_term
+        except Exception:
+            return hash_temp_doc
+        return hash_temp_doc
 
     def print_prog(self, p_c ,op):
         print('\n'*100)
