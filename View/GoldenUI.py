@@ -17,7 +17,6 @@ class Gu(QtWidgets.QMainWindow):
         self.vocabulary = {}
         self.controller = None
         self.vocabulary_display_mode = None
-        self.controller = None
 
     # Methods
     def browse_one(self):
@@ -64,6 +63,17 @@ class Gu(QtWidgets.QMainWindow):
             msgBox.setWindowTitle("Input Error")
             msgBox.setText(error_message)
             msgBox.exec()
+
+    def search_query(self):
+        if self.controller is None:
+
+            path_voc = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
+            with open(path_voc, 'rb') as input:
+                vocabulary = pickle.load(input)
+        else:
+            vocabulary = self.controller.vocabulary
+        self.controller = Controller(vocabulary)
+        self.controller.search(vocabulary)
 
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
@@ -241,6 +251,7 @@ class Gu(QtWidgets.QMainWindow):
         self.browse_data_btn.clicked.connect(self.browse_one)
         self.browse_post_dest_btn.clicked.connect(self.browse_two)
         self.start_btn.clicked.connect(self.start_program)
+        self.search_query_btn.clicked.connect(self.search_query)
         self.actionShow_current_dictionary.triggered.connect(self.show_dictionary)
         self.actionLoad_Dicationary_from_file.triggered.connect(self.load_dictionary)
         self.actionReset_System_Data.triggered.connect(self.reset_system)
