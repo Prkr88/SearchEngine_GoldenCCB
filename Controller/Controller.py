@@ -50,17 +50,16 @@ class Controller:
         rf.start_evaluating_doc()
         self.update_docs_number()
         self.unique_terms = len(self.vocabulary)
-        self.indx = Indexer(post_path,self.doc_counter)
+        self.indx = Indexer(post_path, self.doc_counter)
         self.indx.start_indexing()
         self.create_vocabulary()
         self.create_city_index()
-        # rf.start_evaluating_qry(self.vocabulary)
         end = time.time()
         self.total_time = (end - start)
 
-    def search(self):
+    def search(self, vocabulary):
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.vocabulary)
+        rf.start_evaluating_qry(vocabulary)
 
     def create_vocabulary(self):
         counter = 0
