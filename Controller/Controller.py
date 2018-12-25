@@ -4,6 +4,7 @@ import pickle
 import os
 import time
 import heapq
+import shutil
 import json
 from itertools import chain
 import base64
@@ -28,6 +29,7 @@ class Controller:
         self.vocabulary_display_mode = ""
         self.capital_cities = {}
         self.doc_entities = {}
+        self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize] #
         self.doc_counter = 0
 
     def start(self, data_path, post_path, stemmer):
@@ -44,14 +46,18 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Cities_hash_objects')
         if not os.path.exists(self.post_path + '/Engine_Data/posting_files'):
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
-        rf = ReadFile(data_path, post_path, stemmer, self)
-        rf.start_evaluating_doc()
-        self.update_docs_number()
-        self.unique_terms = len(self.vocabulary)
+        if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
+            os.makedirs(self.post_path + '/Engine_Data/Docs_hash_objects')
+        # rf = ReadFile(data_path, post_path, stemmer, self)
+        # rf.start_evaluating_doc()
+        # self.update_docs_number()
+        # self.unique_terms = len(self.vocabulary)
         self.indx = Indexer(post_path,self.doc_counter)
-        self.indx.start_indexing()
+        # self.indx.start_indexing()
         self.create_vocabulary()
-        self.create_city_index()
+        # self.create_city_index()
+        # self.create_hash_docs_data()
+        # self.clear_temp_files()
         # rf.start_evaluating_qry(self.vocabulary)
         end = time.time()
         self.total_time = (end - start)
@@ -66,31 +72,33 @@ class Controller:
             byte_offset = 0
             filename_w_ext = os.path.basename(file)
             filename, file_extension = os.path.splitext(filename_w_ext)
-            with open(file, 'r', encoding='utf-8') as post_file:
-                # seek_list =[33,71,110,14117,24636]
-                # for seek in seek_list:
-                #     post_file.seek(seek)
-                #     line = post_file.readline()
-                #     line = str(line).replace('\n', '')
-                #     print(line)
-                counter += 1
-                if counter % 2 == 0:
-                    p_c = float(counter)
-                    p_c = int(p_c * 100 / number_of_files)
-                    self.print_prog(p_c)
-                line = str(post_file.readline())
-                while line:
-                    data = line.split('|')[0:2]
-                    term = data[0]
-                    term_tfc = data[1].split(',')[0]
-                    # decoded_offset = base64.b8encode(str(byte_offset).encode('UTF-8'))  # compress as Base32 element
-                    self.vocabulary[term] = [filename, byte_offset]
-                    if term.isupper():
-                        self.update_entities(data)
-                    byte_offset = byte_offset + self.utf8len(line)  # update Offset
-                    term_tfc_list.append((term, term_tfc))  # append to list for display mode
+            if filename != 'cities_index':
+                with open(file, 'r', encoding='utf-8') as post_file:
+                    # seek_list =[33,71,110,14117,24636]
+                    # for seek in seek_list:
+                    #     post_file.seek(seek)
+                    #     line = post_file.readline()
+                    #     line = str(line).replace('\n', '')
+                    #     print(line)
+                    counter += 1
+                    if counter % 2 == 0:
+                        p_c = float(counter)
+                        p_c = int(p_c * 100 / number_of_files)
+                        self.print_prog(p_c)
                     line = str(post_file.readline())
+                    while line:
+                        data = line.split('|')[0:2]
+                        term = data[0]
+                        term_tfc = data[1].split(',')[0]
+                        # decoded_offset = base64.b8encode(str(byte_offset).encode('UTF-8'))  # compress as Base32 element
+                        self.vocabulary[term] = [filename, byte_offset]
+                        if term.isupper():
+                            self.update_entities(data)
+                        byte_offset = byte_offset + self.utf8len(line)  # update Offset
+                        term_tfc_list.append((term, int(term_tfc)))  # append to list for display mode
+                        line = str(post_file.readline())
         term_tfc_list = sorted(term_tfc_list, key=lambda tup: tup[1])  # sort list for display
+        self.vocabulary['#max_tfc'] = term_tfc_list[len(term_tfc_list)-1][1]
         to_display = "\n".join(
             str(term_tfc_list[i]).replace("'", '') for i in range(len(term_tfc_list)))  # create display file
         # for term_data in term_tfc_list:
@@ -143,6 +151,22 @@ class Controller:
         with open(self.post_path + "/Engine_Data/posting_files/cities_index.txt", 'w') as file:
             file.write(cities_index)
 
+    def create_hash_docs_data(self):
+        docs_size_in_corpus = 0
+        file_list = self.set_file_list(self.post_path + '/Engine_Data/Docs_hash_objects')
+        for docs in file_list:
+            with open(docs, 'rb') as file:
+                hash_docs = pickle.load(file)
+            for doc, data in hash_docs.items():
+                self.hash_docs_data[doc] = []
+                self.hash_docs_data[doc].append(data['max_tf'])
+                self.hash_docs_data[doc].append(data['unique_count'])
+                self.hash_docs_data[doc].append(data['doc_size'])
+                docs_size_in_corpus += data['doc_size']
+        self.hash_docs_data['#docs_size'] = docs_size_in_corpus
+        with open(self.post_path + '/Engine_Data/Vocabulary/hash_docs_data.pkl', 'wb') as output:
+            pickle.dump(self.hash_docs_data, output, pickle.HIGHEST_PROTOCOL)
+
     def set_file_list(self, path):
         files_list = []
         for root, dirs, files in os.walk(path):
@@ -177,9 +201,7 @@ class Controller:
         data_split = data[1].split('<')
         term_tfc = data_split[0].split(',')[0]
         to_tanslate = (data_split[1])[:-2]
-        # doc_map = self.indx.get_doc_list(data_split[1])
-        doc_map = {'FBI123': [4, 0], 'FBI124': [5, 0], 'FBI125': [2, 0], 'FBI130': [5, 0], 'FBI143': [2, 0],
-                   'FBI223': [1, 0]}
+        doc_map = self.indx.get_hash_docs(to_tanslate)
         for doc_id in doc_map:
             rank = int(term_tfc) / doc_map[doc_id][0]
             if doc_id not in self.doc_entities:
@@ -191,9 +213,15 @@ class Controller:
                     heapq.heappush(temp_heap, (rank, term))
                 else:
                     min_val = heapq.heappop(temp_heap)
-                    if min_val[0]<rank:
+                    if min_val[0] < rank:
                         heapq.heappush(temp_heap, (rank, term))
                     else:
                         heapq.heappush(temp_heap, min_val)
                     temp_heap.sort(key=lambda tup: tup[0])
-                    #self.doc_entities[doc_id] = temp_heap
+                    # self.doc_entities[doc_id] = temp_heap
+
+
+    def clear_temp_files(self):
+        shutil.rmtree(self.post_path + '/Engine_Data/Docs_hash_objects')
+        shutil.rmtree(self.post_path + '/Engine_Data/Cities_hash_objects')
+        shutil.rmtree(self.post_path + '/Engine_Data/temp_hash_objects')

@@ -225,6 +225,8 @@ class ReadFile:
             pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
         with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:
             pickle.dump(p.hash_cities, output, pickle.HIGHEST_PROTOCOL)
+        with open(self.post_path + '/Engine_Data/Docs_hash_objects/hash_docs'+ p_name+'.pkl', 'wb') as output:
+            pickle.dump(p.hash_docs, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}
         f_end = time.time()

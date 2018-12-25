@@ -871,4 +871,4 @@ class Parser:
                             index += 1
         if is_doc:
             self.hash_headers = {}
-            self.hash_docs.update({self.str_doc_id: {'doc_size': index}})
+            self.hash_docs[self.str_doc_id]['doc_size'] = index
