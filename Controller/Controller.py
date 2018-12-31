@@ -1,5 +1,6 @@
 from Model.ReadFile import ReadFile
 from Model.Indexer import Indexer
+from Model.Searcher import Searcher
 import pickle
 import os
 import time
@@ -21,6 +22,7 @@ class Controller:
     data_path = ""
     post_path = ""
     stemmer = False
+    searcher = None
 
     def __init__(self, vocab):
         self.vocabulary = vocab
@@ -67,8 +69,12 @@ class Controller:
         self.total_time = (end - start)
 
     def search(self, vocabulary):
+        if self.searcher is None:
+            # list_user_cities = ['BEIJING', 'TOKYO']
+            list_user_cities = None
+            self.searcher = Searcher(vocabulary, list_user_cities)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(vocabulary)
+        rf.start_evaluating_qry(self.searcher)
 
     def create_vocabulary(self):
         counter = 0
@@ -180,6 +186,7 @@ class Controller:
             except Exception as e:
                 print(e)
         self.hash_docs_data['#docs_size'] = docs_size_in_corpus
+        self.hash_docs_data['#doc_c'] = self.doc_counter
         with open(self.post_path + '/Engine_Data/Vocabulary/hash_docs_data.pkl', 'wb') as output:
             pickle.dump(self.hash_docs_data, output, pickle.HIGHEST_PROTOCOL)
 

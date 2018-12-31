@@ -70,11 +70,14 @@ class Gu(QtWidgets.QMainWindow):
 
     def search_query(self):
         if self.controller is None:
-            self.results_screen()
+            hash_path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
+            with open(hash_path, 'rb') as input_object:
+                vocabulary = pickle.load(input_object)
+            self.controller = Controller(vocabulary)
         else:
             vocabulary = self.controller.vocabulary
-        self.controller = Controller(vocabulary)
         self.controller.search(vocabulary)
+        self.results_screen()
 
     def show_dictionary(self):
         self.window = QtWidgets.QScrollArea()
