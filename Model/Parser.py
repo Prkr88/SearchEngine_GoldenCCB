@@ -855,6 +855,10 @@ class Parser:
                 self.str_doc = s_content
             try:
                 self.str_doc_id = (self.str_doc.split("</DOCNO>", 1)[0]).split("<DOCNO>")[1].strip()
+                d_id_split = self.str_doc_id.split('-')
+                cut_zeros = int(d_id_split[1])
+                d_id = d_id_split[0] + '-' + str(cut_zeros)
+                self.str_doc_id = d_id
             except AttributeError:
                 a = 0
             try:

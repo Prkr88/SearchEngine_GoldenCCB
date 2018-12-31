@@ -168,7 +168,7 @@ class ReadFile:
         # for file in files_list:
         #     self.parse_file(file)
 
-        pool = multiprocessing.Pool(processes=4, initializer=self.init_globals, initargs=(f_counter,))
+        pool = multiprocessing.Pool(processes=8, initializer=self.init_globals, initargs=(f_counter,))
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
@@ -229,12 +229,13 @@ class ReadFile:
                 del p.hash_terms[term]
         if '' in p.hash_terms:
             del p.hash_terms['']
-        with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
-            pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
-        with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:
-            pickle.dump(p.hash_cities, output, pickle.HIGHEST_PROTOCOL)
-        with open(self.post_path + '/Engine_Data/Docs_hash_objects/hash_docs'+ p_name+'.pkl', 'wb') as output:
-            pickle.dump(p.hash_docs, output, pickle.HIGHEST_PROTOCOL)
+        if len(p.hash_terms)>1:
+            with open(self.post_path + '/Engine_Data/temp_hash_objects/file_hash_'+ p_name+'.pkl', 'wb') as output:
+                pickle.dump(p.hash_terms, output, pickle.HIGHEST_PROTOCOL)
+            with open(self.post_path + '/Engine_Data/Cities_hash_objects/hash_cities'+ p_name+'.pkl', 'wb') as output:
+                pickle.dump(p.hash_cities, output, pickle.HIGHEST_PROTOCOL)
+            with open(self.post_path + '/Engine_Data/Docs_hash_objects/hash_docs'+ p_name+'.pkl', 'wb') as output:
+                pickle.dump(p.hash_docs, output, pickle.HIGHEST_PROTOCOL)
         file_terms = {}
         self.vocabulary = {}
         f_end = time.time()
