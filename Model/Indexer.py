@@ -476,8 +476,9 @@ class Indexer:
                         if hash_check is not None:
                             if ch in hash_check:
                                 try:
-                                    str_data = ikey + '|' + str(ival['tf_c']) + ',' + str(ival['df']) + ',' + str(
-                                        float("{0:.2f}".format(log2(self.N / ival['df'])))) + '<' + str(docs_val) + '\n'
+                                    # idf = float("{0:.2f}".format(log2((self.N+1) / ival['df'])))
+                                    idf = float("{0:.2f}".format(log2((self.N - ival['df'] + 0.5) / (ival['df'] + 0.5))))
+                                    str_data = ikey + '|' + str(ival['tf_c']) + ',' + str(ival['df']) + ',' + str(idf) + '<' + str(docs_val) + '\n'
                                     if '|' in str_data:
                                         file.write(str_data)
                                     # file.flush()

@@ -33,8 +33,8 @@ class Gu(QtWidgets.QMainWindow):
     # self.lineEdit_posting_dest_path.setText("C:/Users/edoli/Desktop/SE_PA/")
 
     def start_program(self):
-        self.lineEdit_data_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine/corpus")
-        self.lineEdit_posting_dest_path.setText("C:/Users/Prkr_Xps/Documents/InformationSystems/Year_C/SearchEngine")
+        self.lineEdit_data_path.setText("C:/Users/edoli/Desktop/SE_PA/corpus")
+        self.lineEdit_posting_dest_path.setText("C:/Users/edoli/Desktop/SE_PA/")
         if any(c in self.lineEdit_data_path.text() for c in ('\\', '/')) and \
                 any(c in self.lineEdit_posting_dest_path.text() for c in ('\\', '/')):
             stemmer = self.stemmer_checkBox.isChecked()
@@ -66,13 +66,12 @@ class Gu(QtWidgets.QMainWindow):
 
     def search_query(self):
         if self.controller is None:
-
-            path_voc = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
-            with open(path_voc, 'rb') as input:
-                vocabulary = pickle.load(input)
+            hash_path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
+            with open(hash_path, 'rb') as input_object:
+                vocabulary = pickle.load(input_object)
+            self.controller = Controller(vocabulary)
         else:
             vocabulary = self.controller.vocabulary
-        self.controller = Controller(vocabulary)
         self.controller.search(vocabulary)
 
     def show_dictionary(self):

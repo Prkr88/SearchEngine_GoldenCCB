@@ -1,5 +1,6 @@
 from Model.ReadFile import ReadFile
 from Model.Indexer import Indexer
+from Model.Searcher import Searcher
 import pickle
 import os
 import time
@@ -21,6 +22,7 @@ class Controller:
     data_path = ""
     post_path = ""
     stemmer = False
+    searcher = None
 
     def __init__(self, vocab):
         self.vocabulary = vocab
@@ -50,23 +52,29 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
         if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Docs_hash_objects')
-        # rf = ReadFile(data_path, post_path, stemmer, self)
-        # rf.start_evaluating_doc()
-        # self.update_docs_number()
-        # self.unique_terms = len(self.vocabulary)
-        self.indx = Indexer(post_path,self.doc_counter)
-        # self.indx.start_indexing()
+        rf = ReadFile(data_path, post_path, stemmer, self)
+        rf.start_evaluating_doc()
+        self.update_docs_number()
+        self.unique_terms = len(self.vocabulary)
+        self.indx = Indexer(post_path, self.doc_counter)
+        self.indx.start_indexing()
         self.create_vocabulary()
-        # self.create_city_index()
-        # self.create_hash_docs_data()
-        # self.clear_temp_files()
-        # rf.start_evaluating_qry(self.vocabulary)
+        self.create_city_index()
+        self.create_hash_docs_data()
+        self.clear_temp_files()
+        # list_user_cities = ['BEIJING', 'TOKYO']
+        list_user_cities = None
+        self.searcher = Searcher(self.vocabulary, list_user_cities)
         end = time.time()
         self.total_time = (end - start)
 
     def search(self, vocabulary):
+        if self.searcher is None:
+            # list_user_cities = ['BEIJING', 'TOKYO']
+            list_user_cities = None
+            self.searcher = Searcher(vocabulary, list_user_cities)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(vocabulary)
+        rf.start_evaluating_qry(self.searcher)
 
     def create_vocabulary(self):
         counter = 0
@@ -170,6 +178,7 @@ class Controller:
                 self.hash_docs_data[doc].append(data['doc_size'])
                 docs_size_in_corpus += data['doc_size']
         self.hash_docs_data['#docs_size'] = docs_size_in_corpus
+        self.hash_docs_data['#doc_c'] = self.doc_counter
         with open(self.post_path + '/Engine_Data/Vocabulary/hash_docs_data.pkl', 'wb') as output:
             pickle.dump(self.hash_docs_data, output, pickle.HIGHEST_PROTOCOL)
 

@@ -33,6 +33,7 @@ class Parser:
     hash_alphabet = {}  # hash dictionary of the alphabet
     hash_header = {}  # hash dictionary of header terms
     hash_qry_stopwords = {}  # hash dictionary of query stopwords
+    hash_titles = {}
 
     # initializes lists
 
@@ -52,6 +53,7 @@ class Parser:
         self.hash_terms = {}
         self.hash_docs = {}
         self.hash_cities = {}
+        self.hash_titles = {}
         self.hash_stopwords = hash_stopwords
         self.hash_keywords_months = hash_keywords_months
         self.hash_keywords_prices = hash_keywords_prices
@@ -65,6 +67,9 @@ class Parser:
             self.stemmer = EnglishStemmer()
         else:
             self.stemmer = None
+        self.str_txt_title = ''
+        self.str_txt_desc = ''
+        self.str_txt_narr = ''
 
     # function sets the cities #
 
@@ -198,11 +203,12 @@ class Parser:
                             if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
                                 self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
                         else:  # if query
-                            try:  # if was already seen in curr qry -> we update tf_q
-                                this_tf = this_term[self.str_qry_id] + 1
-                            except Exception:  # if it's the first occurrence in the new qry
-                                this_tf = 1  # new qry therefore new value for tf_q
-                            this_term.update({self.str_qry_id: this_tf})
+                            if other_term not in self.hash_titles[self.str_qry_id] and other_term.lower() not in self.hash_titles[self.str_qry_id]:
+                                try:  # if was already seen in curr qry -> we update tf_q
+                                    this_tf = this_term[self.str_qry_id] + 1
+                                except Exception:  # if it's the first occurrence in the new qry
+                                    this_tf = 1  # new qry therefore new value for tf_q
+                                this_term.update({self.str_qry_id: this_tf})
                         return  # end of doc/qry update (1+2)
                     else:  # (5) if its a new term (other=PEN and dict='none')
                         if is_doc:
@@ -251,11 +257,12 @@ class Parser:
                             if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
                                 self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
                         else:  # if query
-                            try:  # if was already seen in curr qry -> we update tf_q
-                                this_tf = this_term[self.str_qry_id] + 1
-                            except Exception:  # if it's the first occurrence in the new qry
-                                this_tf = 1  # new qry therefore new value for tf_q
-                            this_term.update({self.str_qry_id: this_tf})
+                            if other_term not in self.hash_titles[self.str_qry_id] and other_term.lower() not in self.hash_titles[self.str_qry_id]:
+                                try:  # if was already seen in curr qry -> we update tf_q
+                                    this_tf = this_term[self.str_qry_id] + 1
+                                except Exception:  # if it's the first occurrence in the new qry
+                                    this_tf = 1  # new qry therefore new value for tf_q
+                                this_term.update({self.str_qry_id: this_tf})
                         return  # end of doc/qry update (1+2)
                     else:  # (4) other=pen and Dict=PEN  -> now will be Dict=pen + update
                         temp_term_upper = other_term.upper()  # temp = PEN
@@ -281,11 +288,13 @@ class Parser:
                                 if this_tf > self.hash_docs[self.str_doc_id]['max_tf']:  # update max tf
                                     self.hash_docs[self.str_doc_id]['max_tf'] = this_tf
                             else:  # if query
-                                try:  # if was already seen in curr qry -> we update tf_q
-                                    this_tf = this_term[self.str_qry_id] + 1
-                                except Exception:  # if it's the first occurrence in the new qry
-                                    this_tf = 1  # new qry therefore new value for tf_q
-                                this_term.update({self.str_qry_id: this_tf})
+                                if other_term not in self.hash_titles[self.str_qry_id] and other_term.lower() not in \
+                                        self.hash_titles[self.str_qry_id]:
+                                    try:  # if was already seen in curr qry -> we update tf_q
+                                        this_tf = this_term[self.str_qry_id] + 1
+                                    except Exception:  # if it's the first occurrence in the new qry
+                                        this_tf = 1  # new qry therefore new value for tf_q
+                                    this_term.update({self.str_qry_id: this_tf})
                             self.hash_terms[other_term] = this_term  # adds 'pen'
                             del self.hash_terms[temp_term_upper]  # deletes old upper case term 'PEN'
                             return  # end of doc or qry update (4)
@@ -747,9 +756,95 @@ class Parser:
                 else:
                     return True
             else:
+                if not is_doc:
+                    if term.lower() == 'not' or term.lower() == 'non':
+                        return True
                 return False
         except Exception:
-            return False
+            return
+
+    def analyze_title(self):
+        self.str_txt_title = self.str_txt_title.replace('\n', ' * ')
+        list_title = self.str_txt_title.split()
+        for word in list_title:
+            if self.clean_term(word, 0):
+                if "-" in word:
+                    try:
+                        word_split = word.rstrip().split('-', 1)
+                        word1 = word_split[0]
+                        if self.clean_term(word1, 0):
+                            nested_hash = {word1.lower(): ""}
+                            try:
+                                self.hash_titles[self.str_qry_id].update(nested_hash)
+                            except Exception:
+                                self.hash_titles[self.str_qry_id] = nested_hash
+                        word2 = word_split[1]
+                        if self.clean_term(word2, 0):
+                            nested_hash = {word2.lower(): ""}
+                            try:
+                                self.hash_titles[self.str_qry_id].update(nested_hash)
+                            except Exception:
+                                self.hash_titles[self.str_qry_id] = nested_hash
+                        if "-" in word2:
+                            word_split = word2.rstrip().split('-', 1)
+                            word3 = word_split[0]
+                            if self.clean_term(word3, 0):
+                                nested_hash = {word3.lower(): ""}
+                                try:
+                                    self.hash_titles[self.str_qry_id].update(nested_hash)
+                                except Exception:
+                                    self.hash_titles[self.str_qry_id] = nested_hash
+                            word4 = word_split[1]
+                            if self.clean_term(word4, 0):
+                                nested_hash = {word4.lower(): ""}
+                                try:
+                                    self.hash_titles[self.str_qry_id].update(nested_hash)
+                                except Exception:
+                                    self.hash_titles[self.str_qry_id] = nested_hash
+                        del word_split
+                    except Exception:
+                        a = 0
+                nested_hash = {word.lower(): ""}
+                try:
+                    self.hash_titles[self.str_qry_id].update(nested_hash)
+                except Exception:
+                    self.hash_titles[self.str_qry_id] = nested_hash
+        self.list_tokens = list_title
+        # print('title' + '\n')
+        # for word in self.list_tokens:
+        #     print(word)
+
+    def analyze_desc(self):
+        self.str_txt_desc = self.str_txt_desc.replace('\n', ' * ')
+        self.list_tokens.extend(self.str_txt_desc.split())
+        # print('desc' + '\n')
+        # for word in self.str_txt_desc.split():
+        #     print(word)
+
+    def analyze_narr(self):
+        self.str_txt_narr = self.str_txt_narr.replace('-', ' ')
+        self.str_txt_narr = self.str_txt_narr.split()
+        sentence_list = []
+        sentence = ''
+        for word in self.str_txt_narr:
+            last_ch = word[-1:]
+            if self.clean_term(word, 0) and last_ch != '.' and last_ch != ':':
+                sentence = sentence + word + ' '
+            elif last_ch == '.' or last_ch == ':' or last_ch == '*':
+                if sentence[-4:] == 'not ' and word == 'relevant:':
+                    break
+                word = word[:-1]
+                if self.clean_term(word, 0):
+                    sentence = sentence + word
+                if sentence != '' and 'non relevant' not in sentence and 'not relevant' not in sentence:
+                    if 'relevant' in sentence:
+                        sentence = sentence.replace('relevant', '')
+                    sentence_list.append(sentence)
+                sentence = ''
+        self.list_tokens.extend(sentence.split())
+        # print('narr' + '\n')
+        # for sentence in sentence_list:
+            # print(sentence)
 
     # main function of the parsing sequence. receives a long string and divides it to tokens #
 
@@ -779,10 +874,11 @@ class Parser:
                 s_num = s_content.split("<num>")[1]
                 s_num = s_num.split("<title")[0]
                 l_qry_id = s_num.split(":")
-                get_qry_id = l_qry_id[1].split(" ")
-                self.str_qry_id = get_qry_id[1]
+                get_qry_id = l_qry_id[1].split('\n')
+                self.str_qry_id = get_qry_id[0].replace(' ', '')
                 s_title = s_content.split("<title>")[1]
                 s_title = s_title.split("<desc>")[0]
+                self.str_txt_title = s_title.replace('*', '')
             except Exception:
                 a = 0
             try:
@@ -790,12 +886,17 @@ class Parser:
                 s_desc = s_desc.split("<narr>")[0]
                 s_narr = s_content.split("<narr>")[1]
                 s_narr = s_narr.split("</top>")[0]
+                self.str_txt_desc = s_desc.replace('*', '')
+                self.str_txt_narr = s_narr.replace(' - ', '* ')
             except Exception:
                 a = 0
             try:
-                self.str_txt = s_title.replace('*', '')
-                self.str_txt = s_title.replace('\n', ' * ')
-                self.list_tokens = self.str_txt.split()
+                self.analyze_title()
+            except Exception:
+                a = 0
+            try:
+                self.analyze_desc()
+                self.analyze_narr()
             except Exception:
                 a = 0
         index = 0

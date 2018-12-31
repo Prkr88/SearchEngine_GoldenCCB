@@ -1,6 +1,5 @@
 import os
 from Model.Parser import Parser
-from Model.Searcher import Searcher
 import time
 import multiprocessing
 import pickle
@@ -130,8 +129,9 @@ class ReadFile:
         del list_punc
 
     def set_qry_stopwords(self):
-        list_terms = {'relevant', 'identify', 'document', 'discuss', 'include', 'topic', 'focus', 'purpose', 'current',
-        'status', 'contain', 'following', 'information'}
+        list_terms = {'description:', 'description', 'and/or' 'associated', 'background', 'contain', 'current', 'consistent', 'col.', 'considered', 'concerns', 'document', 'documents', 'discuss', 'discussing', 'focus', 'factor', 'following', 'impact', 'include',
+                      'information', 'identify', 'incidents', 'instances', 'issues', 'topic', 'lt.', 'narrative:', 'narrative', 'play', 'purpose', 'provide', 'participants', 'mr.', 'ms.', 'minister.', 'i.e.', 'etc.', 'status', 'reliable', 'regarding',
+                      'role'}
         for word in list_terms:
             self.hash_qry_stopwords[word] = ""
         del list_terms
@@ -172,19 +172,26 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-    def start_evaluating_qry(self, vocabulary):
+    def start_evaluating_qry(self, searcher):
         self.init_helpers()
+        file_path = 'C:/Users/edoli/Desktop/SE_PA/queries.txt'
         qry_parser = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
-        s_text = "<top> \n <num> Number: 387 \n <title> radioactive waste \n <desc> Description: \n " \
-                 "Identify documents that discuss effective and safe ways to \n permanently handle long-lived" \
-                 " radioactive wastes. \n <narr> Narrative: /n Documents that discuss incineration, cementation," \
-                 " bitumenization, \n vitrification, and in underground nuclear explosion are relevant. \n </top>"
-        qry_parser.start_parse(s_text, 0)
+        skip_one = 0
+        with open(file_path, 'r') as file:
+            q_counter = 0
+            data = file.read()
+            data_list = data.split("<top>")
+            del data
+            for qry in data_list:
+                if skip_one == 1:
+                    q_counter += 1
+                    qry = "<top>" + qry
+                    qry_parser.start_parse(qry, 0)
+                else:
+                    skip_one = 1
+        hash_titles = qry_parser.hash_titles
         hash_qry_terms = qry_parser.hash_terms
-        max_tf = 100000
-        b = 0.2
-        s = Searcher(hash_qry_terms, max_tf, b, vocabulary)
-        s.run(1000, 0.2)
+        searcher.search(hash_qry_terms, hash_titles)
 
     # function sets path list of files for the process pool jobs #
 
@@ -195,7 +202,7 @@ class ReadFile:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
         files_list_tmp = []
-        for i in range(100):
+        for i in range(180):
              files_list_tmp.append(files_list[i])
         files_list = files_list_tmp
         return files_list
