@@ -771,7 +771,7 @@ class Parser:
             self.str_txt = self.str_txt.replace('*', '')
             self.str_txt = self.str_txt.replace('\n', ' * ')
             self.list_tokens = self.str_txt.split()
-            self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0}})
+            self.hash_docs.update({self.str_doc_id: {'max_tf': 0, 'unique_count': 0,'words':{},'entities':{}}})
             self.set_city()
             self.set_headers()
         else:  # is query
@@ -824,6 +824,22 @@ class Parser:
                         except Exception:
                             a = 0
                         if num_inserted == 0:
+                            try:
+                                if term.isalpha() and term.lower() not in self.hash_stopwords:
+                                    if term[0].isupper():
+                                        if term.lower() not in self.hash_docs[self.str_doc_id]['words']:
+                                            if term.upper() in self.hash_docs[self.str_doc_id]['entities']:
+                                                self.hash_docs[self.str_doc_id]['entities'][term.upper()] += 1
+                                            else:
+                                                self.hash_docs[self.str_doc_id]['entities'][term.upper()] = 1
+                                        else:
+                                            if term.upper() in self.hash_docs[self.str_doc_id]['entities']:
+                                                del self.hash_docs[self.str_doc_id]['entities'][term.upper()]
+                                                self.hash_docs[self.str_doc_id]['words'][term.lower()] = 0
+                                    else:
+                                        self.hash_docs[self.str_doc_id]['words'][term.lower()] = 0
+                            except Exception as e:
+                                print(e)
                             if "--" in term:  # term1--term2
                                 try:
                                     list_double = term.split('--')
@@ -872,3 +888,7 @@ class Parser:
         if is_doc:
             self.hash_headers = {}
             self.hash_docs[self.str_doc_id]['doc_size'] = index
+            del self.hash_docs[self.str_doc_id]['words']
+
+
+

@@ -194,10 +194,10 @@ class ReadFile:
             for file in files:
                 file_path = os.path.join(root, file)
                 files_list.append(file_path)
-        files_list_tmp = []
-        for i in range(100):
-             files_list_tmp.append(files_list[i])
-        files_list = files_list_tmp
+        # files_list_tmp = []
+        # for i in range(100):
+        #      files_list_tmp.append(files_list[i])
+        # files_list = files_list_tmp
         return files_list
 
     # main function initializing folders saving data and send documents to the parser #

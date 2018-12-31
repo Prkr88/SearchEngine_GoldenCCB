@@ -30,8 +30,9 @@ class Controller:
         self.vocabulary_display_mode = ""
         self.capital_cities = {}
         self.doc_entities = {}
-        self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize] #
+        self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize,entities] #
         self.doc_counter = 0
+        self.city_list_to_limit = []
 
     def start(self, data_path, post_path, stemmer):
         start = time.time()
@@ -50,15 +51,16 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/posting_files')
         if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Docs_hash_objects')
+        if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
+            os.makedirs(self.post_path + '/Engine_Data/Results')
         # rf = ReadFile(data_path, post_path, stemmer, self)
         # rf.start_evaluating_doc()
         # self.update_docs_number()
         # self.unique_terms = len(self.vocabulary)
-        self.indx = Indexer(post_path,self.doc_counter)
+        # self.indx = Indexer(post_path,self.doc_counter)
         # self.indx.start_indexing()
         self.create_vocabulary()
-        # self.create_city_index()
-        # self.create_hash_docs_data()
+        #self.create_city_index()
         # self.clear_temp_files()
         # rf.start_evaluating_qry(self.vocabulary)
         end = time.time()
@@ -71,6 +73,7 @@ class Controller:
     def create_vocabulary(self):
         counter = 0
         byte_offset = 0
+        terms_tfc_hash = {}
         term_tfc_list = []
         file_list = self.set_file_list(self.post_path + '\\Engine_Data\\posting_files')
         number_of_files = len(file_list)
@@ -88,7 +91,7 @@ class Controller:
                     #     print(line)
                     counter += 1
                     if counter % 2 == 0:
-                        p_c = float(counter)
+                        p_c = float(counter+1)
                         p_c = int(p_c * 100 / number_of_files)
                         self.print_prog(p_c)
                     line = str(post_file.readline())
@@ -98,12 +101,14 @@ class Controller:
                         term_tfc = data[1].split(',')[0]
                         # decoded_offset = base64.b8encode(str(byte_offset).encode('UTF-8'))  # compress as Base32 element
                         self.vocabulary[term] = [filename, byte_offset]
-                        if term.isupper():
-                            self.update_entities(data)
+                        # if term.isupper() and term.isalpha():
+                        #     self.update_entities(data)
                         byte_offset = byte_offset + self.utf8len(line)  # update Offset
+                        terms_tfc_hash[term] = int(term_tfc)  # append to dict for  entities
                         term_tfc_list.append((term, int(term_tfc)))  # append to list for display mode
                         line = str(post_file.readline())
-        term_tfc_list = sorted(term_tfc_list, key=lambda tup: tup[1])  # sort list for display
+        self.create_hash_docs_data(terms_tfc_hash)
+        term_tfc_list = sorted(term_tfc_list, key=lambda tup: tup[1]) # sort list for display
         self.vocabulary['#max_tfc'] = term_tfc_list[len(term_tfc_list)-1][1]
         to_display = "\n".join(
             str(term_tfc_list[i]).replace("'", '') for i in range(len(term_tfc_list)))  # create display file
@@ -157,18 +162,23 @@ class Controller:
         with open(self.post_path + "/Engine_Data/posting_files/cities_index.txt", 'w') as file:
             file.write(cities_index)
 
-    def create_hash_docs_data(self):
+    def create_hash_docs_data(self,terms_tfc_hash):
         docs_size_in_corpus = 0
         file_list = self.set_file_list(self.post_path + '/Engine_Data/Docs_hash_objects')
         for docs in file_list:
             with open(docs, 'rb') as file:
                 hash_docs = pickle.load(file)
-            for doc, data in hash_docs.items():
-                self.hash_docs_data[doc] = []
-                self.hash_docs_data[doc].append(data['max_tf'])
-                self.hash_docs_data[doc].append(data['unique_count'])
-                self.hash_docs_data[doc].append(data['doc_size'])
-                docs_size_in_corpus += data['doc_size']
+            try:
+                for doc, data in hash_docs.items():
+                    entities = self.update_entities(data['entities'],terms_tfc_hash)
+                    self.hash_docs_data[doc] = []
+                    self.hash_docs_data[doc].append(data['max_tf'])
+                    self.hash_docs_data[doc].append(data['unique_count'])
+                    self.hash_docs_data[doc].append(data['doc_size'])
+                    self.hash_docs_data[doc].append(entities)
+                    docs_size_in_corpus += data['doc_size']
+            except Exception as e:
+                print(e)
         self.hash_docs_data['#docs_size'] = docs_size_in_corpus
         with open(self.post_path + '/Engine_Data/Vocabulary/hash_docs_data.pkl', 'wb') as output:
             pickle.dump(self.hash_docs_data, output, pickle.HIGHEST_PROTOCOL)
@@ -202,32 +212,78 @@ class Controller:
     def utf8len(self, s):
         return len(s.encode('utf-8')) + 1
 
-    def update_entities(self, data):
-        term = data[0]
-        data_split = data[1].split('<')
-        term_tfc = data_split[0].split(',')[0]
-        to_tanslate = (data_split[1])[:-2]
-        doc_map = self.indx.get_hash_docs(to_tanslate)
-        for doc_id in doc_map:
-            rank = int(term_tfc) / doc_map[doc_id][0]
-            if doc_id not in self.doc_entities:
-                self.doc_entities[doc_id] = []
-                heapq.heappush(self.doc_entities[doc_id], (rank, term))
+    # entity rank is calculated with term_tfd/term_tfc , in other word - higher rank for strong entities in document in
+    # inverse relation to its appearance in the entire corpus
+    def update_entities(self,entities, term_tfc_hash):
+        term_tfc = 10000
+        for entity, tfd in entities.items():
+            if entity.upper() in term_tfc_hash:
+                term_tfc = term_tfc_hash[entity.upper()]
+            elif entity.lower() in term_tfc_hash:
+                term_tfc = term_tfc_hash[entity.lower()]
+            elif entity in term_tfc_hash:
+                term_tfc = term_tfc_hash[entity]
+            if term_tfc<3:   # if term tfc is lower than 3 it is probably Garbage
+                entities[entity] = 0
             else:
-                temp_heap = self.doc_entities[doc_id]
-                if len(temp_heap) < 5:
-                    heapq.heappush(temp_heap, (rank, term))
-                else:
-                    min_val = heapq.heappop(temp_heap)
-                    if min_val[0] < rank:
-                        heapq.heappush(temp_heap, (rank, term))
-                    else:
-                        heapq.heappush(temp_heap, min_val)
-                    temp_heap.sort(key=lambda tup: tup[0])
-                    # self.doc_entities[doc_id] = temp_heap
+                rank = tfd/term_tfc
+                entities[entity] = rank
+        sorted_entities = sorted(entities.items(), key=lambda kv: kv[1],reverse=True)
+        sorted_cut = []
+        for i in range(0, len(sorted_entities)):
+            if sorted_entities[i][1] !=0:
+                sorted_cut.append(sorted_entities[i])
+        sorted_entities = sorted_cut
+        sorted_cut = []
+        if len(sorted_entities) > 5:
+            for i in range(0, 5):
+                sorted_cut.append(sorted_entities[i])
+            entities = sorted_cut
+        else:
+            entities = sorted_entities
+        return entities
+
+
 
 
     def clear_temp_files(self):
         shutil.rmtree(self.post_path + '/Engine_Data/Docs_hash_objects')
         shutil.rmtree(self.post_path + '/Engine_Data/Cities_hash_objects')
         shutil.rmtree(self.post_path + '/Engine_Data/temp_hash_objects')
+
+
+    def set_cities_list_limit(self):
+        path = self.post_path.replace('/Engine_Data','')
+        with open(path + '/Engine_Data/posting_files/cities_index.txt', 'r', encoding='utf-8') as cities_file:
+            line = str(cities_file.readline())
+            while line:
+                city = line.split('|')
+                city = city[0]
+                city_tp = (city,0)
+                self.city_list_to_limit.append(city_tp)
+                line = str(cities_file.readline())
+        self.city_list_to_limit = sorted(self.city_list_to_limit, key=lambda tup: tup[0])
+
+    # def update_entities(self, data):
+    #     term = data[0]
+    #     data_split = data[1].split('<')
+    #     term_tfc = data_split[0].split(',')[0]
+    #     to_tanslate = (data_split[1])[:-2]
+    #     doc_map = self.indx.get_hash_docs(to_tanslate)
+    #     for doc_id in doc_map:
+    #         rank = int(term_tfc) / doc_map[doc_id][0]
+    #         if doc_id not in self.doc_entities:
+    #             self.doc_entities[doc_id] = []
+    #             heapq.heappush(self.doc_entities[doc_id], (rank, term))
+    #         else:
+    #             temp_heap = self.doc_entities[doc_id]
+    #             if len(temp_heap) < 5:
+    #                 heapq.heappush(temp_heap, (rank, term))
+    #             else:
+    #                 min_val = heapq.heappop(temp_heap)
+    #                 if min_val[0] < rank:
+    #                     heapq.heappush(temp_heap, (rank, term))
+    #                 else:
+    #                     heapq.heappush(temp_heap, min_val)
+    #                 temp_heap.sort(key=lambda tup: tup[0])
+    #                 # self.doc_entities[doc_id] = temp_heap
