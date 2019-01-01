@@ -8,6 +8,7 @@ import pickle
 import json
 import datetime
 import gc
+import gensim
 
 
 class Gu(QtWidgets.QMainWindow):
@@ -22,6 +23,7 @@ class Gu(QtWidgets.QMainWindow):
         self.queries_file_path = ""
         self.results = ""
         self.docs_data = {}
+        self.semantic_model = None
 
     # Methods
     def browse_one(self):
@@ -76,7 +78,7 @@ class Gu(QtWidgets.QMainWindow):
             self.controller = Controller(vocabulary)
         else:
             vocabulary = self.controller.vocabulary
-        self.controller.search(vocabulary)
+        self.controller.search(vocabulary, self.semantic_model)
         self.results_screen()
 
     def show_dictionary(self):
@@ -346,6 +348,9 @@ class Gu(QtWidgets.QMainWindow):
             docs_data = pickle.load(file)
         with open(path +'/Vocabulary/Vocabulary.pkl', 'rb') as file:
             vocabulary = pickle.load(file)
+        self.semantic_model = gensim.models.Word2Vec.load(path + '/Semantics/word2vec.model')
+        word_sem = 'FALKLAND'
+        list_sem = self.semantic_model.wv.most_similar(positive=word_sem, topn=2)
         self.controller = Controller(vocabulary)
         self.controller.post_path = path
         self.controller.hash_docs_data = docs_data

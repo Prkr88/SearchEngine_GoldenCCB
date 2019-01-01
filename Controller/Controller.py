@@ -68,13 +68,13 @@ class Controller:
         end = time.time()
         self.total_time = (end - start)
 
-    def search(self, vocabulary):
+    def search(self, vocabulary, semantic_model):
         if self.searcher is None:
             # list_user_cities = ['BEIJING', 'TOKYO']
             list_user_cities = None
             self.searcher = Searcher(vocabulary, list_user_cities)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.searcher)
+        rf.start_evaluating_qry(self.searcher, semantic_model)
 
     def create_vocabulary(self):
         counter = 0

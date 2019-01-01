@@ -69,7 +69,7 @@ class Searcher:
         try:
             self.M = self.hash_doc_data['#doc_c']
         except Exception:
-            self.M = 475000
+            self.M = 486000
         docs_total_size = self.hash_doc_data['#docs_size']
         self.avgdl = float("{0:.4f}".format(docs_total_size / self.M))
 
@@ -123,16 +123,19 @@ class Searcher:
                             self.hash_seeker[file_name] = [[q_term, seek_term, tf_q]]
             self.set_hash_posting()
             self.set_hash_docs()
-            self.tuple_results = self.ranker.start_rank_bm25(self.hash_docs, qry_max_tf, qry_id)
-            print('QueryID: ' + qry_id + ' Relevant Docs: ' + '\n' + str(qry_val) + '\n')
-            i = 1
-            for tup_res in self.tuple_results:
-                print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
-                i += 1
-            print('\n')
-            self.write_to_trec_eval(qry_id, qry_val)
+            self.set_rank(qry_max_tf, qry_id, qry_val)
+            self.write_to_trec_eval(qry_id)
 
-    def write_to_trec_eval(self, qry_id, qry_val):
+    def set_rank(self, qry_max_tf, qry_id, qry_val):
+        self.tuple_results = self.ranker.start_rank(self.hash_docs, qry_max_tf, qry_id)
+        print('QueryID: ' + qry_id + ' Relevant Docs: ' + '\n' + str(qry_val) + '\n')
+        i = 1
+        for tup_res in self.tuple_results:
+            print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
+            i += 1
+        print('\n')
+
+    def write_to_trec_eval(self, qry_id):
         iter = str(0)
         i = 1
         path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/results.txt'
