@@ -172,9 +172,10 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-    def start_evaluating_qry(self, searcher):
+    def start_evaluating_qry(self, searcher , q_file_path):
         self.init_helpers()
-        file_path = 'C:/Users/edoli/Desktop/SE_PA/queries.txt'
+        #file_path = 'C:/Users/edoli/Desktop/SE_PA/queries.txt'
+        file_path = q_file_path
         qry_parser = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
         skip_one = 0
         with open(file_path, 'r') as file:

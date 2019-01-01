@@ -7,6 +7,7 @@ import time
 import heapq
 import shutil
 import json
+import numpy
 from itertools import chain
 import base64
 
@@ -33,8 +34,10 @@ class Controller:
         self.capital_cities = {}
         self.doc_entities = {}
         self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize,entities] #
-        self.doc_counter = 0
+        self.doc_counter = 486000
         self.city_list_to_limit = []
+        self.queries_file_path = ""
+        self.results_list = []
 
     def start(self, data_path, post_path, stemmer):
         start = time.time()
@@ -55,16 +58,19 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Docs_hash_objects')
         if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Results')
-        rf = ReadFile(data_path, post_path, stemmer, self)
-        rf.start_evaluating_doc()
-        self.update_docs_number()
-        self.indx = Indexer(post_path,self.doc_counter)
-        self.indx.start_indexing()
-        self.create_vocabulary()
-        self.unique_terms = len(self.vocabulary)
-        #self.create_city_index()
+        # with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'wb') as file:
+        with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'rb') as data:
+            cos_data = pickle.load(data)
+        # rf = ReadFile(data_path, post_path, stemmer, self)
+        # rf.start_evaluating_doc()
+        #self.update_docs_number()
+        # self.indx = Indexer(post_path,self.doc_counter)
+        # self.indx.start_indexing()
+        # self.create_vocabulary()
+        # self.unique_terms = len(self.vocabulary)
+        # self.create_city_index()
         # self.clear_temp_files()
-        # rf.start_evaluating_qry(self.vocabulary)
+        #self.create_cos_data()
         end = time.time()
         self.total_time = (end - start)
 
@@ -72,9 +78,9 @@ class Controller:
         if self.searcher is None:
             # list_user_cities = ['BEIJING', 'TOKYO']
             list_user_cities = None
-            self.searcher = Searcher(vocabulary, list_user_cities)
+            self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.searcher)
+        rf.start_evaluating_qry(self.searcher ,self.queries_file_path)
 
     def create_vocabulary(self):
         counter = 0
@@ -105,8 +111,9 @@ class Controller:
                         data = line.split('|')[0:2]
                         term = data[0]
                         term_tfc = data[1].split(',')[0]
+                        df = int(data[1].split(',')[1])
                         # decoded_offset = base64.b8encode(str(byte_offset).encode('UTF-8'))  # compress as Base32 element
-                        self.vocabulary[term] = [filename, byte_offset]
+                        self.vocabulary[term] = [filename, byte_offset, df]
                         # if term.isupper() and term.isalpha():
                         #     self.update_entities(data)
                         byte_offset = byte_offset + self.utf8len(line)  # update Offset
@@ -205,6 +212,36 @@ class Controller:
     def print_prog(self, p_c):
         print('\n' * 100)
         print('Creating Vocabulary:\n[' + '*' * int(p_c / 2) + ' ' * int((100 - p_c) / 2) + str(p_c) + '%' ']')
+
+    def create_cos_data(self):
+        if len(self.vocabulary)<1:
+            with open(self.post_path + '/Engine_Data/Vocabulary/Vocabulary.pkl', 'rb') as data:
+                self.vocabulary = pickle.load(data)
+        cos_data = {}
+        counter = 0
+        file_list = self.set_file_list(self.post_path + '/Engine_Data/temp_hash_objects')
+        for doc in file_list:
+            with open(doc, 'rb') as data:
+                hash_terms = pickle.load(data)
+                for term, data in hash_terms.items():
+                    if term.lower() in self.vocabulary:
+                        df = self.vocabulary[term.lower()][2]
+                    elif term.upper() in self.vocabulary:
+                        df = self.vocabulary[term.upper()][2]
+                    else:
+                        df = -1
+                    if df != -1:
+                        for doc, values in data['hash_docs'].items():
+                            if doc not in cos_data:
+                                cos_data[doc] = 0
+                            tf = values['tf_d']
+                            idf = numpy.log2((self.doc_counter+1)/df)
+                            cos_data[doc] += pow(tf * idf, 2)
+                    counter += 1
+                    if counter % 100000 == 0:
+                        print(str(counter))
+        with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'wb') as output:
+            pickle.dump(cos_data, output, pickle.HIGHEST_PROTOCOL)
 
     def reset_system(self):
         if self.indx != None:

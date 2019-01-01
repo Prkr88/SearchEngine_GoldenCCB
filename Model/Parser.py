@@ -930,7 +930,7 @@ class Parser:
                             a = 0
                         if num_inserted == 0:
                             try:
-                                if term.isalpha() and term.lower() not in self.hash_stopwords:
+                                if term != '' and term.isalpha() and term.lower() not in self.hash_stopwords:
                                     if term[0].isupper():
                                         if term.lower() not in self.hash_docs[self.str_doc_id]['words']:
                                             if term.upper() in self.hash_docs[self.str_doc_id]['entities']:
@@ -944,7 +944,7 @@ class Parser:
                                     else:
                                         self.hash_docs[self.str_doc_id]['words'][term.lower()] = 0
                             except Exception as e:
-                                print(e)
+                                a = 0
                             if "--" in term:  # term1--term2
                                 try:
                                     list_double = term.split('--')

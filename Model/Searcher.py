@@ -1,5 +1,6 @@
 import pickle
 import time
+import datetime
 
 from Model.Ranker import Ranker
 LOWERCASE = 0
@@ -19,25 +20,29 @@ class Searcher:
     hash_docs = {}
     hash_cities_limit = {}
     tuple_results = []
+    all_tuple_results = []
     list_user_cities = []
+    data_path = ""
     M = 0
     k = 0
     avgdl = 0
     ranker = None
 
-    def __init__(self, vocabulary, list_user_cities):
+    def __init__(self, vocabulary, list_user_cities ,data_path,hash_docs_data):
         self.list_user_cities = list_user_cities
         self.vocabulary = vocabulary
+        self.data_path = data_path
+        self.hash_doc_data = hash_docs_data
         self.k = self.vocabulary['#max_tfc']
         self.set_hash_doc_data()
         self.set_cities_limit()
         self.ranker = Ranker(self.k, self.avgdl, self.M, self.hash_doc_data)
-        path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/results.txt'
-        with open(path, 'w', encoding='utf-8') as file:
-            file.close()
+        # path = self.data_path + '/Results/results.txt'
+        # with open(path, 'w', encoding='utf-8') as file:
+        #     file.close()
 
     def set_cities_limit(self):
-        path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/posting_files/cities_index.txt'
+        path = self.data_path + '/posting_files/cities_index.txt'
         with open(path, 'r', encoding='utf-8') as file:
             list_cities = [line.strip() for line in file]
             file.close()
@@ -63,9 +68,6 @@ class Searcher:
         print('Total search time: ' + str(end - start))
 
     def set_hash_doc_data(self):
-        hash_path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/hash_docs_data.pkl'
-        with open(hash_path, 'rb') as input_object:
-            self.hash_doc_data = pickle.load(input_object)
         try:
             self.M = self.hash_doc_data['#doc_c']
         except Exception:
@@ -126,16 +128,18 @@ class Searcher:
             self.tuple_results = self.ranker.start_rank_bm25(self.hash_docs, qry_max_tf, qry_id)
             print('QueryID: ' + qry_id + ' Relevant Docs: ' + '\n' + str(qry_val) + '\n')
             i = 1
+            self.all_tuple_results.append(('Query_ID:',qry_id))
             for tup_res in self.tuple_results:
-                print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
+                self.all_tuple_results.append(tup_res)
+                #print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
                 i += 1
             print('\n')
-            self.write_to_trec_eval(qry_id, qry_val)
+            #self.write_to_trec_eval(qry_id, qry_val)
 
     def write_to_trec_eval(self, qry_id, qry_val):
         iter = str(0)
         i = 1
-        path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/results.txt'
+        path = self.data_path +'/Results/results.txt'
         with open(path, 'a', encoding='utf-8') as file:
             for tup_res in self.tuple_results:
                 doc_id = tup_res[0]
@@ -146,8 +150,28 @@ class Searcher:
                 file.write(str_to_write)
                 i += 1
 
+    def save_final_results(self):
+        i = 1
+        iter = str(0)
+        qry_id = ''
+        time_stamp = str(datetime.datetime.now()).split('.')[0]
+        time_stamp = time_stamp.replace(' ', '.')
+        time_stamp = time_stamp.replace(':', '-')
+        with open(self.data_path + '/Results/results' + time_stamp + '.txt', 'w', encoding='utf-8') as file:
+            for tup_res in self.all_tuple_results:
+                if tup_res[0] == 'Query_ID:':
+                    qry_id = str(tup_res[1])
+                else:
+                    doc_id = tup_res[0]
+                    rank = str(tup_res[1])
+                    sim = str(float(42.38))
+                    run_id = str(i)
+                    str_to_write = qry_id + ' ' + iter + ' ' + doc_id + ' ' + rank + ' ' + sim + ' ' + run_id + '\n'
+                    file.write(str_to_write)
+                    i += 1
+
     def set_hash_posting(self):
-        path_source = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/posting_files/'
+        path_source = self.data_path + '/posting_files/'
         path_target = '.txt'
         for curr_file_name, list_data in self.hash_seeker.items():  # loops file by file to seek from
             if list_data is not None:

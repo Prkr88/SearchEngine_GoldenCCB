@@ -8,6 +8,7 @@ import pickle
 import json
 import datetime
 import gc
+import os
 
 
 class Gu(QtWidgets.QMainWindow):
@@ -22,6 +23,7 @@ class Gu(QtWidgets.QMainWindow):
         self.queries_file_path = ""
         self.results = ""
         self.docs_data = {}
+
 
     # Methods
     def browse_one(self):
@@ -69,14 +71,14 @@ class Gu(QtWidgets.QMainWindow):
             msgBox.exec()
 
     def search_query(self):
-        if self.controller is None:
-            hash_path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
-            with open(hash_path, 'rb') as input_object:
-                vocabulary = pickle.load(input_object)
-            self.controller = Controller(vocabulary)
-        else:
-            vocabulary = self.controller.vocabulary
-        self.controller.search(vocabulary)
+        # if self.controller is None:
+        #     hash_path = 'C:/Users/edoli/Desktop/SE_PA/Engine_Data/Vocabulary/Vocabulary.pkl'
+        #     with open(hash_path, 'rb') as input_object:
+        #         vocabulary = pickle.load(input_object)
+        #     self.controller = Controller(vocabulary)
+        # else:
+        #     vocabulary = self.controller.vocabulary
+        self.controller.search(self.controller.vocabulary)
         self.results_screen()
 
     def show_dictionary(self):
@@ -129,33 +131,43 @@ class Gu(QtWidgets.QMainWindow):
         print('show entities')
         docs_entities = {}
         s = QtWidgets.QListWidgetItem()
-        self.label_DocNUm_entities.setVisible(True)
-        self.listWidget_entities.setVisible(True)
         selected = self.listWidget_results.selectedItems()
         item = selected[0]
         doc_id = item.text()
-        entities = self.controller.hash_docs_data[doc_id][3]
-        entities_list = []
-        for entity in entities:
-            to_add = (entity[0] + ' , rank: ' + str(entity[1]) , '')
-            entities_list.append(to_add)
-        self.feed_listWidget(entities_list,self.listWidget_entities,0)
-        self.label_DocNUm_entities.setText("Entities for Doc:  " + doc_id)
+        if 'Query_ID:' not in doc_id:
+            self.label_DocNUm_entities.setVisible(True)
+            self.listWidget_entities.setVisible(True)
+            entities = self.controller.hash_docs_data[doc_id][3]
+            entities_list = []
+            for entity in entities:
+                to_add = (entity[0] + ' , rank: ' + str(entity[1]) , '')
+                entities_list.append(to_add)
+            self.feed_listWidget(entities_list,self.listWidget_entities,0)
+            self.label_DocNUm_entities.setText("Entities for Doc:  " + doc_id)
+        else:
+            msgBox = QtWidgets.QMessageBox()
+            msgBox.setIcon(QtWidgets.QMessageBox.Information)
+            msgBox.setWindowTitle("Bad Choice")
+            msgBox.setText("Are you trying to crash the program?  Please choose valid doc")
+            msgBox.exec()
 
     # Save Results to file
     def save_results_to_file(self):
-        time_stamp = str(datetime.datetime.now()).split('.')[0]
-        time_stamp = time_stamp.replace(' ','.')
-        time_stamp = time_stamp.replace(':','-')
-        with open(self.controller.post_path + '/Results/q_results'+time_stamp+'.txt' , 'w',) as curr_file:
-            curr_file.write('RESULTS')
+        self.controller.searcher.save_final_results()
+        msgBox = QtWidgets.QMessageBox()
+        msgBox.setIcon(QtWidgets.QMessageBox.Information)
+        msgBox.setWindowTitle("Results saved!")
+        msgBox.setText("Results saved to ../Engine_data/Results.")
+        msgBox.exec()
 
     # @Save_screen load Queries from file
     def load_Query_file(self):
         print('load queries')
         path = QtWidgets.QFileDialog.getOpenFileName(self)[0]
-        self.queries_file_path = path
-        self.query_loaded_lbl.setVisible(True)
+        if path != '':
+            self.controller.queries_file_path = path
+            self.query_loaded_lbl.setVisible(True)
+            self.serach_query_lineEdit.setDisabled(True)
 
     # @Save_screen set city limit
     def limit_by_city(self):
@@ -199,12 +211,15 @@ class Gu(QtWidgets.QMainWindow):
         self.listWidget_cities.setVisible(False)
         self.submit_limit_btn.setVisible(False)
         if self.controller == None:
-            msgBox = QtWidgets.QMessageBox()
-            msgBox.setIcon(QtWidgets.QMessageBox.Warning)
-            msgBox.setWindowTitle("User input needed")
-            msgBox.setText("Please provide Engine_Data folder location.")
-            msgBox.exec()
-            engine_data_path = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory")
+            if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
+                engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+            else:
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setIcon(QtWidgets.QMessageBox.Warning)
+                msgBox.setWindowTitle("User input needed")
+                msgBox.setText("Please provide Engine_Data folder location.")
+                msgBox.exec()
+                engine_data_path = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory")
             self.load_files(engine_data_path)
         self.stackedWidget.setCurrentIndex(2)
 
@@ -214,7 +229,8 @@ class Gu(QtWidgets.QMainWindow):
         #result_list = Bring me the Fucking List!
         listW = QtWidgets.QListWidget()
        # item = listW.selectedItems()
-        result_list = [('FBIS4-9640',156.1),('FBI2',16.1),('FBI3',156.1)]
+        #result_list = [('FBIS4-9640',156.1),('FBI2',16.1),('FBI3',156.1)]
+        result_list = self.controller.searcher.all_tuple_results
         self.feed_listWidget(result_list,self.listWidget_results,0)
         self.stackedWidget.setCurrentIndex(3)
         # Add Docs to ListWidget
@@ -227,10 +243,20 @@ class Gu(QtWidgets.QMainWindow):
             item = QtWidgets.QListWidgetItem()
             list_widget.addItem(item)
             # item = self.listWidget_results.item(idx)
-            item.setText(_translate("GoldenMainWindow", doc[type]))
+            to_add = doc[type]
+            if to_add == 'Query_ID:':
+                to_add = to_add + ' ' + str(doc[1])
+                item.setBackground(QtGui.QColor("black"))
+            item.setText(_translate("GoldenMainWindow", to_add))
 
     def back_to_menu(self):
         self.stackedWidget.setCurrentIndex(0)
+        if self.controller is not None:
+            if self.controller.searcher is not None:
+                btn = QtWidgets.QPushButton()
+                self.jump_to_rst_btn.setVisible(True)
+        else:
+            self.jump_to_rst_btn.setVisible(False)
 
     # Setup GUI
     def setup_ui(self):
@@ -238,7 +264,8 @@ class Gu(QtWidgets.QMainWindow):
         self.setStyleSheet("background-image: url(resources//intro-bg.jpg);")
 
         # Set Main window
-        self.stackedWidget.setCurrentIndex(0)
+        #self.stackedWidget.setCurrentIndex(0)
+        self.back_to_menu()
         # Set logos
         self.logo_label_2.setStyleSheet("image: url(resources//white_goldenCCB_logo.png);")
         self.logo_label_3.setStyleSheet("image: url(resources//white_goldenCCB_logo.png);")
@@ -342,13 +369,16 @@ class Gu(QtWidgets.QMainWindow):
         self.save_results_btn.clicked.connect(self.save_results_to_file)
 
     def load_files(self,path):
-        with open(path +'/Vocabulary/hash_docs_data.pkl', 'rb') as file:
-            docs_data = pickle.load(file)
-        with open(path +'/Vocabulary/Vocabulary.pkl', 'rb') as file:
-            vocabulary = pickle.load(file)
-        self.controller = Controller(vocabulary)
-        self.controller.post_path = path
-        self.controller.hash_docs_data = docs_data
+        if path!='':
+            with open(path +'/Vocabulary/hash_docs_data.pkl', 'rb') as file:
+                docs_data = pickle.load(file)
+            with open(path +'/Vocabulary/Vocabulary.pkl', 'rb') as file:
+                vocabulary = pickle.load(file)
+            self.controller = Controller(vocabulary)
+            self.controller.post_path = path
+            self.controller.hash_docs_data = docs_data
+        else:
+            self.search_screen()
 
     def get_back_btn_style(self):
         return ("QPushButton {\n"

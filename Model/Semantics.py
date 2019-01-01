@@ -99,12 +99,12 @@ train_data = DocLiner('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_
                       'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data')  # a memory-friendly iterator
 # train_data.create_sentences()
 # train_data.print_sentences()
-model = gensim.models.Word2Vec(train_data, workers=8)
+#model = gensim.models.Word2Vec(train_data, workers=8)
 # model.save(train_data.train_data_path + '/word2vec.model')
 model = gensim.models.Word2Vec.load(train_data.train_data_path + '/word2vec.model')
-w1 = 'dog'
+w1 = 'alcohol'
 try:
-    most_similar = model.wv.most_similar(positive=w1, topn=6)
+    most_similar = model.wv.most_similar(positive=w1, topn=10)
     print(most_similar)
 except KeyError:
     print('sorry , this word does not exsist in dictionary')
