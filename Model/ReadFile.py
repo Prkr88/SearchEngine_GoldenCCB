@@ -172,7 +172,7 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-    def start_evaluating_qry(self, searcher , q_file_path):
+    def start_evaluating_qry(self, searcher ,q_file_path, semantic_model):
         self.init_helpers()
         #file_path = 'C:/Users/edoli/Desktop/SE_PA/queries.txt'
         file_path = q_file_path
@@ -187,7 +187,7 @@ class ReadFile:
                 if skip_one == 1:
                     q_counter += 1
                     qry = "<top>" + qry
-                    qry_parser.start_parse(qry, 0)
+                    qry_parser.start_parse(qry, 0, semantic_model)
                 else:
                     skip_one = 1
         hash_titles = qry_parser.hash_titles
@@ -269,7 +269,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc, 1)
+                    parser_object.start_parse(doc, 1, None)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter

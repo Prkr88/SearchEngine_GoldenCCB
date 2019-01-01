@@ -34,7 +34,7 @@ class Controller:
         self.capital_cities = {}
         self.doc_entities = {}
         self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize,entities] #
-        self.doc_counter = 486000
+        self.doc_counter = 0
         self.city_list_to_limit = []
         self.queries_file_path = ""
         self.results_list = []
@@ -59,8 +59,6 @@ class Controller:
         if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Results')
         # with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'wb') as file:
-        with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'rb') as data:
-            cos_data = pickle.load(data)
         # rf = ReadFile(data_path, post_path, stemmer, self)
         # rf.start_evaluating_doc()
         #self.update_docs_number()
@@ -74,13 +72,13 @@ class Controller:
         end = time.time()
         self.total_time = (end - start)
 
-    def search(self, vocabulary):
+    def search(self, vocabulary, semantic_model):
         if self.searcher is None:
             # list_user_cities = ['BEIJING', 'TOKYO']
             list_user_cities = None
             self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.searcher ,self.queries_file_path)
+        rf.start_evaluating_qry(self.searcher,self.queries_file_path, semantic_model)
 
     def create_vocabulary(self):
         counter = 0
