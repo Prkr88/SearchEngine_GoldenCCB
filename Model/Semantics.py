@@ -102,7 +102,7 @@ train_data = DocLiner('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_
 #model = gensim.models.Word2Vec(train_data, workers=8)
 # model.save(train_data.train_data_path + '/word2vec.model')
 model = gensim.models.Word2Vec.load(train_data.train_data_path + '/word2vec.model')
-w1 = 'alcohol'
+w1 = 'england'
 try:
     most_similar = model.wv.most_similar(positive=w1, topn=10)
     print(most_similar)

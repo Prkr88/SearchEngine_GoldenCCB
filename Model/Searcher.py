@@ -1,8 +1,10 @@
 import pickle
 import time
 import datetime
+import os
 
 from Model.Ranker import Ranker
+
 LOWERCASE = 0
 UPPERCASE = 1
 LOWERBOUND = 0
@@ -10,7 +12,6 @@ UPPERBOUND = 1
 
 
 class Searcher:
-
     vocabulary = {}
     hash_doc_data = {}
     hash_qry_parser = {}
@@ -28,7 +29,7 @@ class Searcher:
     avgdl = 0
     ranker = None
 
-    def __init__(self, vocabulary, list_user_cities ,data_path,hash_docs_data, hash_cos_data):
+    def __init__(self, vocabulary, list_user_cities, data_path, hash_docs_data, hash_cos_data):
         self.list_user_cities = list_user_cities
         self.vocabulary = vocabulary
         self.data_path = data_path
@@ -113,7 +114,10 @@ class Searcher:
                 if q_term and len(q_term) > 0:
                     file_key = ord(q_term[0])
                 for posting_index in range(0, size):
-                    if condition_list[posting_index][LOWERCASE][LOWERBOUND] <= file_key <= condition_list[posting_index][LOWERCASE][UPPERBOUND] or condition_list[posting_index][UPPERCASE][LOWERBOUND] <= file_key <= condition_list[posting_index][UPPERCASE][UPPERBOUND]:
+                    if condition_list[posting_index][LOWERCASE][LOWERBOUND] <= file_key <= \
+                            condition_list[posting_index][LOWERCASE][UPPERBOUND] or \
+                            condition_list[posting_index][UPPERCASE][LOWERBOUND] <= file_key <= \
+                            condition_list[posting_index][UPPERCASE][UPPERBOUND]:
                         file_name = file_list[posting_index]
                         tf_q = l_data[0]
                         seek_term = l_data[1]
@@ -135,23 +139,17 @@ class Searcher:
         self.all_tuple_results.append(('Query_ID:', qry_id))
         for tup_res in self.tuple_results:
             self.all_tuple_results.append(tup_res)
-            #print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
+            # print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
             i += 1
         print('\n')
 
-    def write_to_trec_eval(self, qry_id):
-        iter = str(0)
-        i = 1
-        path = self.data_path +'/Results/results.txt'
-        with open(path, 'a', encoding='utf-8') as file:
-            for tup_res in self.tuple_results:
-                doc_id = tup_res[0]
-                rank = str(tup_res[1])
-                sim = str(float(42.38))
-                run_id = str(i)
-                str_to_write = qry_id + ' ' + iter + ' ' + doc_id + ' ' + rank + ' ' + sim + ' ' + run_id + '\n'
-                file.write(str_to_write)
-                i += 1
+    def write_to_trec_eval(self):
+        if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'):
+            treceval_results_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'
+            temp = self.data_path
+            self.data_path = treceval_results_path
+            self.save_final_results()
+            self.data_path = temp
 
     def save_final_results(self):
         i = 1
@@ -160,7 +158,7 @@ class Searcher:
         time_stamp = str(datetime.datetime.now()).split('.')[0]
         time_stamp = time_stamp.replace(' ', '.')
         time_stamp = time_stamp.replace(':', '-')
-        with open(self.data_path + '/Results/results' + time_stamp + '.txt', 'w', encoding='utf-8') as file:
+        with open(self.data_path + '/Results/resultsX' + time_stamp + '.txt', 'w', encoding='utf-8') as file:
             for tup_res in self.all_tuple_results:
                 if tup_res[0] == 'Query_ID:':
                     qry_id = str(tup_res[1])
@@ -172,6 +170,18 @@ class Searcher:
                     str_to_write = qry_id + ' ' + iter + ' ' + doc_id + ' ' + rank + ' ' + sim + ' ' + run_id + '\n'
                     file.write(str_to_write)
                     i += 1
+        with open(self.data_path + '/Results/results_vStX' + time_stamp + '.txt', 'w', encoding='utf-8') as file_st:
+            k = str(self.ranker.k)
+            avgdl = str(self.ranker.avgdl)
+            N = str(self.ranker.N)
+            b = str(self.ranker.b)
+            l = str(self.ranker.l)
+            h_const = str(self.ranker.h_const)
+            w_bm25 = str(self.ranker.w_bm25)
+            w_cossim = str(self.ranker.w_cossim)
+            varSetup = 'k: ' + k + ', avgdl: ' + avgdl + ', N: ' + N + ', b: ' + b + '\n' + 'lambda: ' + l + ', ' \
+                        'h_const: ' + h_const + ', w_bm25: ' + w_bm25 + ', w_cossim: ' + w_cossim
+            file_st.write(varSetup)
 
     def set_hash_posting(self):
         path_source = self.data_path + '/posting_files/'
@@ -218,7 +228,8 @@ class Searcher:
                     resume = self.validate_doc(other_doc_id)
                 if resume:
                     try:
-                        self.hash_docs[other_doc_id].update({term: [other_tf_q, other_tf_d, other_float_idf, other_header]})
+                        self.hash_docs[other_doc_id].update(
+                            {term: [other_tf_q, other_tf_d, other_float_idf, other_header]})
                     except Exception:
                         self.hash_docs[other_doc_id] = {term: [other_tf_q, other_tf_d, other_float_idf, other_header]}
                 prev_doc_id = other_doc_id.split('-')[0]
