@@ -129,7 +129,7 @@ class ReadFile:
         del list_punc
 
     def set_qry_stopwords(self):
-        list_terms = {'description:', 'description', 'and/or' 'associated', 'background', 'contain', 'current', 'consistent', 'col.', 'considered', 'concerns', 'document', 'documents', 'discuss', 'discussing', 'focus', 'factor', 'following', 'impact', 'include',
+        list_terms = {'description:', 'description', 'and/or' 'associated', 'background', 'contain', 'current', 'consistent', 'col.', 'considered', 'concerns', 'document', 'documents', 'discuss', 'discussing', 'focus', 'factor', 'following', 'include',
                       'information', 'identify', 'incidents', 'instances', 'issues', 'topic', 'lt.', 'narrative:', 'narrative', 'play', 'purpose', 'provide', 'participants', 'mr.', 'ms.', 'minister.', 'i.e.', 'etc.', 'status', 'reliable', 'regarding',
                       'role'}
         for word in list_terms:

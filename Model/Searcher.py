@@ -79,14 +79,14 @@ class Searcher:
         for term, qry_val in self.hash_qry_parser.items():
             for qry_id, tf_q in qry_val.items():
                 resume = True
-                try:
+                try:  # find the query term in the vocabulary
                     seek_term = self.vocabulary[term][1]
-                except Exception:
+                except Exception:  # if the the term wasn't found in the vocabulary
                     try:
-                        if 64 < ord(term[0]) < 91:
+                        if 64 < ord(term[0]) < 91:  # if we failed to find uppercase we'll check now for lowercase
                             seek_term = self.vocabulary[term.lower()][1]
                         else:
-                            if 96 < ord(term[0]) < 123:
+                            if 96 < ord(term[0]) < 123:  # and if we failed to find lower we'll check for upper
                                 seek_term = self.vocabulary[term.upper()][1]
                     except Exception:
                         resume = False  # if the term is not stored in the indexing database we neglect it

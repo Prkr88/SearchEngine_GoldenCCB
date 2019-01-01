@@ -16,7 +16,7 @@ class Ranker:
         self.N = M
         self.b = 0.5
         self.l = 0.2
-        self.h_const = 30
+        self.h_const = 10
         self.w_bm25 = 0.05
         self.w_cossim = 0.95
         self.hash_doc_data = hash_doc_data
@@ -31,11 +31,10 @@ class Ranker:
         return self.start_filter_results()
 
     def start_rank_bm25(self, hash_docs, qry_id):
-        hash_curr_qry_titles = self.hash_titles[qry_id]
         for doc_id, hash_terms in hash_docs.items():
             # if doc_id == 'FBIS4-66185' or doc_id == 'LA111389-74':
             #     bingo = True
-            title_hit = self.set_title_hit(hash_terms, hash_curr_qry_titles)
+            title_hit = self.set_title_hit(hash_terms, qry_id)
             # if title_hit == 301:
             #     self.hash_view[doc_id] = hash_terms
             bm25 = 0
@@ -44,10 +43,7 @@ class Ranker:
             except Exception:
                 doc_size = self.avgdl
             for term, value in hash_terms.items():
-                if term.lower() in hash_curr_qry_titles:
-                    term_hit = 5
-                else:
-                    term_hit = 1
+                term_hit = self.set_term_hit(term, qry_id)
                 try:
                     max_tf_d = self.hash_doc_data[doc_id][0]
                 except Exception:
@@ -68,11 +64,19 @@ class Ranker:
             # tuple_results = tuple_results + (doc_id, bm25)
             if bm25 > 0:
                 # bm25 = float("{0:.5f}".format(bm25 * title_hit * self.w_bm25))
-                bm25 = float("{0:.5f}".format(bm25 * self.w_bm25))
+                bm25 = float("{0:.8f}".format(bm25 * self.w_bm25))
                 # tuple_results.append((doc_id, bm25))
                 self.hash_results[doc_id] = bm25
 
-    def set_title_hit(self, hash_terms, hash_curr_qry_titles):
+    def set_term_hit(self, term, qry_id):
+        hash_curr_qry_titles = self.hash_titles[qry_id]
+        if term.lower() in hash_curr_qry_titles:
+            return 5
+        else:
+            return 1
+
+    def set_title_hit(self, hash_terms, qry_id):
+        hash_curr_qry_titles = self.hash_titles[qry_id]
         title_hit = 1
         length = len(hash_curr_qry_titles)
         bool_hits = [False] * length
@@ -83,7 +87,7 @@ class Ranker:
                 i += 1
         for bool_value in bool_hits:
             if bool_value:
-                title_hit += 100
+                title_hit *= 2
             else:
                 title_hit *= 0.005
         return title_hit
@@ -93,6 +97,7 @@ class Ranker:
         tf_ttl_q = len(hash_curr_qry_titles)
         sigma_w_iq = tf_ttl_q
         for doc_id, hash_terms in hash_docs.items():
+            title_hit = self.set_title_hit(hash_terms, qry_id)
             cossim = 0
             nmr = 0
             for term, value in hash_terms.items():
@@ -100,16 +105,18 @@ class Ranker:
                 tf_d = value[1]
                 idf = value[2]
                 h = value[3]
+                term_hit = self.set_term_hit(term, qry_id)
                 tf_q_sum = ((tf_ttl_q * tf_q) / qry_max_tf)
-                nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
+                nmr += tf_q_sum * tf_d * idf + (self.h_const * h) + term_hit
+            nmr += title_hit
             sigma_w_ij = self.hash_cos_data[doc_id]
             dnmr = sqrt(sigma_w_ij * sigma_w_iq)
-            cossim = float("{0:.5f}".format((nmr / dnmr) * self.w_cossim))
+            cossim = (nmr / dnmr) * self.w_cossim
             if cossim > 0:
                 try:
-                    self.hash_results[doc_id] += cossim
+                    self.hash_results[doc_id] = float("{0:.8f}".format(self.hash_results[doc_id] + cossim))
                 except Exception:
-                    self.hash_results[doc_id] = cossim
+                    self.hash_results[doc_id] = float("{0:.8f}".format(cossim))
 
     def start_filter_results(self):
         tuple_results = sorted(self.hash_results.items(), key=lambda kv: kv[1], reverse=True)
