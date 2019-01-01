@@ -206,6 +206,11 @@ class Gu(QtWidgets.QMainWindow):
     def create_index_screen(self):
         self.stackedWidget.setCurrentIndex(1)
 
+    # if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
+    #     engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+    # if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'):
+    #     engine_data_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'
+
     def search_screen(self):
         self.query_loaded_lbl.setVisible(False)
         self.city_limited_lbl.setVisible(False)
@@ -213,8 +218,8 @@ class Gu(QtWidgets.QMainWindow):
         self.listWidget_cities.setVisible(False)
         self.submit_limit_btn.setVisible(False)
         if self.controller == None:
-            if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
-                engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+            if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'):
+                engine_data_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'
             else:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setIcon(QtWidgets.QMessageBox.Warning)
@@ -376,10 +381,13 @@ class Gu(QtWidgets.QMainWindow):
                 docs_data = pickle.load(file)
             with open(path +'/Vocabulary/Vocabulary.pkl', 'rb') as file:
                 vocabulary = pickle.load(file)
+            with open(path + '/Vocabulary/docs_cos_data.pkl', 'rb') as file:
+                cos_data = pickle.load(file)
             self.semantic_model = gensim.models.Word2Vec.load(path + '/Semantics/word2vec.model')
             self.controller = Controller(vocabulary)
             self.controller.post_path = path
             self.controller.hash_docs_data = docs_data
+            self.controller.hash_cos_data = cos_data
         else:
             self.search_screen()
 

@@ -7,18 +7,20 @@ class Ranker:
     hash_titles = {}
     hash_view = {}
     hash_results = {}
+    hash_cos_data = {}
 
-    def __init__(self, k, avgdl, M, hash_doc_data):
+    def __init__(self, k, avgdl, M, hash_doc_data, hash_cos_data):
         # self.k = k
         self.k = 2
         self.avgdl = avgdl
         self.N = M
-        self.b = 0.6
+        self.b = 0.5
         self.l = 0.2
         self.h_const = 30
-        self.w_bm25 = 0.25
-        self.w_cossim = 0.75
+        self.w_bm25 = 0.05
+        self.w_cossim = 0.95
         self.hash_doc_data = hash_doc_data
+        self.hash_cos_data = hash_cos_data
 
     def set_hash_titles(self, hash_titles):
         self.hash_titles = hash_titles
@@ -65,7 +67,8 @@ class Ranker:
                 bm25 += value
             # tuple_results = tuple_results + (doc_id, bm25)
             if bm25 > 0:
-                bm25 = float("{0:.5f}".format(bm25 * title_hit * self.w_bm25))
+                # bm25 = float("{0:.5f}".format(bm25 * title_hit * self.w_bm25))
+                bm25 = float("{0:.5f}".format(bm25 * self.w_bm25))
                 # tuple_results.append((doc_id, bm25))
                 self.hash_results[doc_id] = bm25
 
@@ -82,10 +85,10 @@ class Ranker:
             if bool_value:
                 title_hit += 100
             else:
-                title_hit *= 0.0005
+                title_hit *= 0.005
         return title_hit
 
-    def start_rank_cossim(self, hash_docs, qry_max_tf, qry_id, sigma_w_ij):
+    def start_rank_cossim(self, hash_docs, qry_max_tf, qry_id):
         hash_curr_qry_titles = self.hash_titles[qry_id]
         tf_ttl_q = len(hash_curr_qry_titles)
         sigma_w_iq = tf_ttl_q
@@ -99,7 +102,7 @@ class Ranker:
                 h = value[3]
                 tf_q_sum = ((tf_ttl_q * tf_q) / qry_max_tf)
                 nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
-            sigma_w_ij = self.hash_doc_data[doc_id][1]
+            sigma_w_ij = self.hash_cos_data[doc_id]
             dnmr = sqrt(sigma_w_ij * sigma_w_iq)
             cossim = float("{0:.5f}".format((nmr / dnmr) * self.w_cossim))
             if cossim > 0:
@@ -109,7 +112,7 @@ class Ranker:
                     self.hash_results[doc_id] = cossim
 
     def start_filter_results(self):
-        tuple_results = sorted(self.hash_results.items(), key=lambda kv: kv[1])
+        tuple_results = sorted(self.hash_results.items(), key=lambda kv: kv[1], reverse=True)
         if len(tuple_results) > 50:
             tuple_results = tuple_results[0:50]
         # tuple_results = sorted(tuple_results, key=lambda tup: tup[1])

@@ -38,6 +38,7 @@ class Controller:
         self.city_list_to_limit = []
         self.queries_file_path = ""
         self.results_list = []
+        self.hash_cos_data = {}
 
     def start(self, data_path, post_path, stemmer):
         start = time.time()
@@ -76,7 +77,7 @@ class Controller:
         if self.searcher is None:
             # list_user_cities = ['BEIJING', 'TOKYO']
             list_user_cities = None
-            self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data)
+            self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data, self.hash_cos_data)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
         rf.start_evaluating_qry(self.searcher,self.queries_file_path, semantic_model)
 

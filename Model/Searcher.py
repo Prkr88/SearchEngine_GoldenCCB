@@ -28,7 +28,7 @@ class Searcher:
     avgdl = 0
     ranker = None
 
-    def __init__(self, vocabulary, list_user_cities ,data_path,hash_docs_data):
+    def __init__(self, vocabulary, list_user_cities ,data_path,hash_docs_data, hash_cos_data):
         self.list_user_cities = list_user_cities
         self.vocabulary = vocabulary
         self.data_path = data_path
@@ -36,7 +36,7 @@ class Searcher:
         self.k = self.vocabulary['#max_tfc']
         self.set_hash_doc_data()
         self.set_cities_limit()
-        self.ranker = Ranker(self.k, self.avgdl, self.M, self.hash_doc_data)
+        self.ranker = Ranker(self.k, self.avgdl, self.M, self.hash_doc_data, hash_cos_data)
         # path = self.data_path + '/Results/results.txt'
         # with open(path, 'w', encoding='utf-8') as file:
         #     file.close()
@@ -126,7 +126,7 @@ class Searcher:
             self.set_hash_posting()
             self.set_hash_docs()
             self.set_rank(qry_max_tf, qry_id, qry_val)
-            self.write_to_trec_eval(qry_id)
+            # self.write_to_trec_eval(qry_id)
 
     def set_rank(self, qry_max_tf, qry_id, qry_val):
         self.tuple_results = self.ranker.start_rank(self.hash_docs, qry_max_tf, qry_id)
