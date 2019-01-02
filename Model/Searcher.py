@@ -22,14 +22,17 @@ class Searcher:
     hash_cities_limit = {}
     tuple_results = []
     all_tuple_results = []
+    all_hash_results = {}
     list_user_cities = []
+    mode_stem = False
+    mode_sem = False
     data_path = ""
     M = 0
     k = 0
     avgdl = 0
     ranker = None
 
-    def __init__(self, vocabulary, list_user_cities, data_path, hash_docs_data, hash_cos_data):
+    def __init__(self, vocabulary, list_user_cities, data_path, hash_docs_data, hash_cos_data ,stem ,sem):
         self.list_user_cities = list_user_cities
         self.vocabulary = vocabulary
         self.data_path = data_path
@@ -38,6 +41,8 @@ class Searcher:
         self.set_hash_doc_data()
         self.set_cities_limit()
         self.ranker = Ranker(self.k, self.avgdl, self.M, self.hash_doc_data, hash_cos_data)
+        self.mode_sem = sem
+        self.mode_stem = stem
         # path = self.data_path + '/Results/results.txt'
         # with open(path, 'w', encoding='utf-8') as file:
         #     file.close()
@@ -133,15 +138,22 @@ class Searcher:
             # self.write_to_trec_eval(qry_id)
 
     def set_rank(self, qry_max_tf, qry_id, qry_val):
+        # mass_filter = {}
+        # for doc_id, hash_terms in self.hash_docs.items():
+        #     if len(hash_terms) > 1:
+        #         mass_filter[doc_id] = hash_terms
+        # self.hash_docs = mass_filter
         self.tuple_results = self.ranker.start_rank(self.hash_docs, qry_max_tf, qry_id)
-        print('QueryID: ' + qry_id + ' Relevant Docs: ' + '\n' + str(qry_val) + '\n')
+        print('QueryID: ' + qry_id )
         i = 1
-        self.all_tuple_results.append(('Query_ID:', qry_id))
+        #self.all_tuple_results.append(('Query_ID:', qry_id))
+        self.all_hash_results[qry_id] = []
         for tup_res in self.tuple_results:
-            self.all_tuple_results.append(tup_res)
+            #self.all_tuple_results.append(tup_res)
+            self.all_hash_results[qry_id].append(tup_res)
             # print('Rank #' + str(i) + ' = ' + tup_res[0] + ' Score: ' + str(tup_res[1]))
             i += 1
-        print('\n')
+        #print('\n')
 
     def write_to_trec_eval(self):
         if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'):
@@ -152,36 +164,47 @@ class Searcher:
             self.data_path = temp
 
     def save_final_results(self):
-        i = 1
-        iter = str(0)
-        qry_id = ''
-        time_stamp = str(datetime.datetime.now()).split('.')[0]
-        time_stamp = time_stamp.replace(' ', '.')
-        time_stamp = time_stamp.replace(':', '-')
-        with open(self.data_path + '/Results/resultsX' + time_stamp + '.txt', 'w', encoding='utf-8') as file:
-            for tup_res in self.all_tuple_results:
-                if tup_res[0] == 'Query_ID:':
-                    qry_id = str(tup_res[1])
+        sorted_qids = sorted(self.all_hash_results.keys())
+        if len(sorted_qids) > 0 :
+            i = 1
+            iter = str(0)
+            qry_id = ''
+            time_stamp = str(datetime.datetime.now()).split('.')[0]
+            time_stamp = time_stamp.replace(' ', '.')
+            time_stamp = time_stamp.replace(':', '-')
+            with open(self.data_path + '/Results/results___' + time_stamp + '.txt', 'w', encoding='utf-8') as file:
+                for qry_id in sorted_qids:
+                    qid_tup = ('Query_ID:',qry_id)
+                    docs = self.all_hash_results[qry_id]
+                    self.all_tuple_results.append(qid_tup)
+                    for doc in docs:
+                        self.all_tuple_results.append(doc)
+                        doc_id = doc[0]
+                        rank = str(doc[1])
+                        sim = str(float(42.38))
+                        #run_id = str(i)
+                        str_to_write = qry_id + ' ' + iter + ' ' + doc_id + ' ' + rank + ' ' + sim + ' ' + 'mt\n'
+                        file.write(str_to_write)
+                        i += 1
+            with open(self.data_path + '/Results/vSt___' + time_stamp + '.txt', 'w', encoding='utf-8') as file_st:
+                k = str(self.ranker.k)
+                avgdl = str(self.ranker.avgdl)
+                N = str(self.ranker.N)
+                b = str(self.ranker.b)
+                l = str(self.ranker.l)
+                h_const = str(self.ranker.h_const)
+                w_bm25 = str(self.ranker.w_bm25)
+                w_cossim = str(self.ranker.w_cossim)
+                if self.mode_stem == False:
+                    stem = 'X'
                 else:
-                    doc_id = tup_res[0]
-                    rank = str(tup_res[1])
-                    sim = str(float(42.38))
-                    run_id = str(i)
-                    str_to_write = qry_id + ' ' + iter + ' ' + doc_id + ' ' + rank + ' ' + sim + ' ' + run_id + '\n'
-                    file.write(str_to_write)
-                    i += 1
-        with open(self.data_path + '/Results/results_vStX' + time_stamp + '.txt', 'w', encoding='utf-8') as file_st:
-            k = str(self.ranker.k)
-            avgdl = str(self.ranker.avgdl)
-            N = str(self.ranker.N)
-            b = str(self.ranker.b)
-            l = str(self.ranker.l)
-            h_const = str(self.ranker.h_const)
-            w_bm25 = str(self.ranker.w_bm25)
-            w_cossim = str(self.ranker.w_cossim)
-            varSetup = 'k: ' + k + ', avgdl: ' + avgdl + ', N: ' + N + ', b: ' + b + '\n' + 'lambda: ' + l + ', ' \
-                        'h_const: ' + h_const + ', w_bm25: ' + w_bm25 + ', w_cossim: ' + w_cossim
-            file_st.write(varSetup)
+                    stem = 'V'
+                if self.mode_sem == False:
+                    sem = 'X'
+                else:
+                    sem = 'V'
+                varSetup = k + ',' + avgdl + ',' + N + ',' + b + ',' + l + ',' + h_const + ',' + w_bm25 + ',' + w_cossim+ ','+stem+','+sem +','
+                file_st.write(varSetup)
 
     def set_hash_posting(self):
         path_source = self.data_path + '/posting_files/'

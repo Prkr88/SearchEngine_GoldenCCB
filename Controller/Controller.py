@@ -23,6 +23,7 @@ class Controller:
     data_path = ""
     post_path = ""
     stemmer = False
+    mode_semantic = False
     searcher = None
 
     def __init__(self, vocab):
@@ -59,17 +60,16 @@ class Controller:
             os.makedirs(self.post_path + '/Engine_Data/Docs_hash_objects')
         if not os.path.exists(self.post_path + '/Engine_Data/Docs_hash_objects'):
             os.makedirs(self.post_path + '/Engine_Data/Results')
-        # with open(self.post_path + '\\Engine_Data\\Vocabulary\\docs_cos_data.pkl', 'wb') as file:
         # rf = ReadFile(data_path, post_path, stemmer, self)
         # rf.start_evaluating_doc()
-        #self.update_docs_number()
+        # self.update_docs_number()
         # self.indx = Indexer(post_path,self.doc_counter)
         # self.indx.start_indexing()
         # self.create_vocabulary()
         # self.unique_terms = len(self.vocabulary)
         # self.create_city_index()
         # self.clear_temp_files()
-        #self.create_cos_data()
+        # self.create_cos_data()
         end = time.time()
         self.total_time = (end - start)
 
@@ -77,7 +77,7 @@ class Controller:
         if self.searcher is None:
             # list_user_cities = ['BEIJING', 'TOKYO']
             list_user_cities = None
-            self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data, self.hash_cos_data)
+            self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data, self.hash_cos_data, self.stemmer ,self.mode_semantic)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
         rf.start_evaluating_qry(self.searcher,self.queries_file_path, semantic_model)
 
@@ -297,6 +297,7 @@ class Controller:
 
     def set_cities_list_limit(self):
         path = self.post_path.replace('/Engine_Data','')
+        path = self.post_path.replace('\\Engine_Data','')
         with open(path + '/Engine_Data/posting_files/cities_index.txt', 'r', encoding='utf-8') as cities_file:
             line = str(cities_file.readline())
             while line:

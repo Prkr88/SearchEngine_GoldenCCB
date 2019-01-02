@@ -80,7 +80,14 @@ class Gu(QtWidgets.QMainWindow):
         #     self.controller = Controller(vocabulary)
         # else:
         #     vocabulary = self.controller.vocabulary
+        mode_semantic = False
+        query = ''
+        city_limit_list = []
+        if self.serach_query_lineEdit.text() != '':
+            query = self.serach_query_lineEdit.text()
+        mode_semantic = self.stemmer_checkBox_2.isChecked()
         self.controller.search(self.controller.vocabulary, self.semantic_model)
+        #self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list , mode_semantic)
         self.results_screen()
 
     def show_dictionary(self):
