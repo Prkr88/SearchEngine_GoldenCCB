@@ -21,6 +21,10 @@ class Ranker:
         self.w_cossim = 0.95
         self.hash_doc_data = hash_doc_data
         self.hash_cos_data = hash_cos_data
+        self.title_hit_bonus = 5
+        self.title_hit_fine = 0.05
+        self.term_hit_bonus = 5
+        self.term_hit_fine = 1
 
     def set_hash_titles(self, hash_titles):
         self.hash_titles = hash_titles
@@ -32,11 +36,7 @@ class Ranker:
 
     def start_rank_bm25(self, hash_docs, qry_id):
         for doc_id, hash_terms in hash_docs.items():
-            # if doc_id == 'FBIS4-66185' or doc_id == 'LA111389-74':
-            #     bingo = True
             title_hit = self.set_title_hit(hash_terms, qry_id)
-            # if title_hit == 301:
-            #     self.hash_view[doc_id] = hash_terms
             bm25 = 0
             try:
                 doc_size = self.hash_doc_data[doc_id][2]
@@ -73,9 +73,9 @@ class Ranker:
     def set_term_hit(self, term, qry_id):
         hash_curr_qry_titles = self.hash_titles[qry_id]
         if term.lower() in hash_curr_qry_titles:
-            return 5
+            return self.term_hit_bonus
         else:
-            return 1
+            return self.term_hit_fine
 
     def set_title_hit(self, hash_terms, qry_id):
         hash_curr_qry_titles = self.hash_titles[qry_id]
@@ -89,9 +89,9 @@ class Ranker:
                 i += 1
         for bool_value in bool_hits:
             if bool_value:
-                title_hit *= 2
+                title_hit *= self.title_hit_bonus
             else:
-                title_hit *= 0.005
+                title_hit *= self.title_hit_bonus
         return title_hit
 
     def start_rank_cossim(self, hash_docs, qry_max_tf, qry_id):
@@ -109,9 +109,9 @@ class Ranker:
                 h = value[3]
                 term_hit = self.set_term_hit(term, qry_id)
                 tf_q_sum = ((tf_ttl_q * tf_q) / qry_max_tf)
-                #nmr += tf_q_sum * tf_d * idf + (self.h_const * h) + term_hit
-                nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
-            #nmr += title_hit
+                nmr += tf_q_sum * tf_d * idf + (self.h_const * h) + term_hit
+                # nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
+            nmr += title_hit
             sigma_w_ij = self.hash_cos_data[doc_id]
             dnmr = sqrt(sigma_w_ij * sigma_w_iq)
             cossim = (nmr / dnmr) * self.w_cossim
@@ -134,12 +134,17 @@ class Ranker:
         # return tuple_results
         return tuple_results
 
-    def set_params(self,w_bm25,w_cossim , h, b, l):
-        self.w_bm25 = w_bm25
-        self.w_cossim = w_cossim
-        self.h_const = h
-        self.b = b
-        self.l = l
+    def set_params(self, title_hit_bonus, title_hit_fine, term_hit_bonus, term_hit_fine):
+        self.title_hit_bonus = title_hit_bonus
+        self.title_hit_fine = title_hit_fine
+        self.term_hit_bonus = term_hit_bonus
+        self.term_hit_fine = term_hit_fine
+        # self.w_bm25 = w_bm25
+        # self.w_cossim = w_cossim
+        # self.h_const = h
+        # self.b = b
+        # self.l = l
+
 
     def doc_decompressor(self, doc_id):
         doc_list = doc_id.split('-')
