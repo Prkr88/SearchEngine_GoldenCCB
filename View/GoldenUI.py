@@ -20,7 +20,7 @@ class Gu(QtWidgets.QMainWindow):
         self.vocabulary = {}
         self.controller = None
         self.vocabulary_display_mode = None
-        self.city_limit_list = []
+        self.city_limit_list = None
         self.queries_file_path = ""
         self.results = ""
         self.docs_data = {}
@@ -80,14 +80,12 @@ class Gu(QtWidgets.QMainWindow):
         #     self.controller = Controller(vocabulary)
         # else:
         #     vocabulary = self.controller.vocabulary
-        mode_semantic = False
         query = ''
-        city_limit_list = []
         if self.serach_query_lineEdit.text() != '':
             query = self.serach_query_lineEdit.text()
         mode_semantic = self.stemmer_checkBox_2.isChecked()
-        self.controller.search(self.controller.vocabulary, self.semantic_model)
-        #self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list , mode_semantic)
+        #self.controller.search(self.controller.vocabulary, self.semantic_model,qurey)
+        self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list ,mode_semantic)
         self.results_screen()
 
     def show_dictionary(self):
@@ -235,6 +233,12 @@ class Gu(QtWidgets.QMainWindow):
                 msgBox.exec()
                 engine_data_path = QtWidgets.QFileDialog.getExistingDirectory(None, "Select Directory")
             self.load_files(engine_data_path)
+        else:
+            if self.controller.searcher != None:
+                self.controller.searcher.all_tuple_results = []
+                self.controller.searcher.all_hash_results = []
+                self.controller.searcher.tuple_results = []
+                self.controller.searcher.hash_docs = {}
         self.stackedWidget.setCurrentIndex(2)
 
     def results_screen(self):

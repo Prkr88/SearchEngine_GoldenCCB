@@ -125,8 +125,8 @@ class Ranker:
 
     def start_filter_results(self):
         tuple_results = sorted(self.hash_results.items(), key=lambda kv: kv[1], reverse=True)
-        if len(tuple_results) > 50:
-            tuple_results = tuple_results[0:50]
+        if len(tuple_results) > 1000:
+            tuple_results = tuple_results[0:1000]
         # tuple_results = sorted(tuple_results, key=lambda tup: tup[1])
         # tuple_results = sorted(tuple_results, key=lambda tup: (-tup[1], tup[0]))
         # if len(tuple_results) > 1000:

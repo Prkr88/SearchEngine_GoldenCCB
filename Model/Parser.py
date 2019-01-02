@@ -783,19 +783,22 @@ class Parser:
                             except Exception:
                                 self.hash_titles[self.str_qry_id] = nested_hash
                             if is_semantic_mode:
+                                sem_num = 4
+                            else:
+                                sem_num = 1
+                            try:
+                                word_sem = self.make_lower_case(word1)
+                                list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
+                                list_title_token.append(list_sem[0][0])
+                                list_sem = []
+                            except Exception:
                                 try:
-                                    word_sem = self.make_lower_case(word1)
-                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                    word_sem = self.make_upper_case(word1)
+                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
                                     list_title_token.append(list_sem[0][0])
                                     list_sem = []
-                                except Exception:
-                                    try:
-                                        word_sem = self.make_upper_case(word1)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception as e:
-                                        a = 0
+                                except Exception as e:
+                                    a = 0
                         word2 = word_split[1]
                         if self.clean_term(word2, 0):
                             nested_hash = {word2.lower(): ""}
@@ -804,19 +807,22 @@ class Parser:
                             except Exception:
                                 self.hash_titles[self.str_qry_id] = nested_hash
                             if is_semantic_mode:
+                                sem_num = 4
+                            else:
+                                sem_num = 1
+                            try:
+                                word_sem = self.make_lower_case(word2)
+                                list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
+                                list_title_token.append(list_sem[0][0])
+                                list_sem = []
+                            except Exception:
                                 try:
-                                    word_sem = self.make_lower_case(word2)
-                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                    word_sem = self.make_upper_case(word2)
+                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
                                     list_title_token.append(list_sem[0][0])
                                     list_sem = []
-                                except Exception:
-                                    try:
-                                        word_sem = self.make_upper_case(word2)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception as e:
-                                        a = 0
+                                except Exception as e:
+                                    a = 0
                         if "-" in word2:
                             word_split = word2.rstrip().split('-', 1)
                             word3 = word_split[0]
@@ -827,19 +833,22 @@ class Parser:
                                 except Exception:
                                     self.hash_titles[self.str_qry_id] = nested_hash
                                 if is_semantic_mode:
+                                    sem_num = 4
+                                else:
+                                    sem_num = 1
+                                try:
+                                    word_sem = self.make_lower_case(word3)
+                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
+                                    list_title_token.append(list_sem[0][0])
+                                    list_sem = []
+                                except Exception:
                                     try:
-                                        word_sem = self.make_lower_case(word3)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                        word_sem = self.make_upper_case(word3)
+                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
                                         list_title_token.append(list_sem[0][0])
                                         list_sem = []
-                                    except Exception:
-                                        try:
-                                            word_sem = self.make_upper_case(word3)
-                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                            list_title_token.append(list_sem[0][0])
-                                            list_sem = []
-                                        except Exception as e:
-                                            a = 0
+                                    except Exception as e:
+                                        a = 0
                             word4 = word_split[1]
                             if self.clean_term(word4, 0):
                                 nested_hash = {word4.lower(): ""}
@@ -848,34 +857,40 @@ class Parser:
                                 except Exception:
                                     self.hash_titles[self.str_qry_id] = nested_hash
                                 if is_semantic_mode:
+                                    sem_num = 4
+                                else:
+                                    sem_num = 1
+                                try:
+                                    word_sem = self.make_lower_case(word4)
+                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
+                                    list_title_token.append(list_sem[0][0])
+                                    list_sem = []
+                                except Exception:
                                     try:
-                                        word_sem = self.make_lower_case(word4)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                        word_sem = self.make_upper_case(word4)
+                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
                                         list_title_token.append(list_sem[0][0])
                                         list_sem = []
-                                    except Exception:
-                                        try:
-                                            word_sem = self.make_upper_case(word4)
-                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                            list_title_token.append(list_sem[0][0])
-                                            list_sem = []
-                                        except Exception as e:
-                                            a = 0
+                                    except Exception as e:
+                                        a = 0
                         del word_split
                     except Exception:
                         a = 0
                 if is_semantic_mode:
+                    sem_num = 4
+                else:
+                    sem_num = 1
+                try:
+                    word_sem = self.make_lower_case(word)
+                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
+                    list_title_token.append(list_sem[0][0])
+                except Exception:
                     try:
-                        word_sem = self.make_lower_case(word)
-                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                        word_sem = self.make_upper_case(word)
+                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=sem_num)
                         list_title_token.append(list_sem[0][0])
-                    except Exception:
-                        try:
-                            word_sem = self.make_upper_case(word)
-                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                            list_title_token.append(list_sem[0][0])
-                        except Exception as e:
-                            a = 0
+                    except Exception as e:
+                        a = 0
                 nested_hash = {word.lower(): ""}
                 try:
                     self.hash_titles[self.str_qry_id].update(nested_hash)
