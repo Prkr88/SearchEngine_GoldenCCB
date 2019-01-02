@@ -14,22 +14,23 @@ class Ranker:
         self.k = 2
         self.avgdl = avgdl
         self.N = 472350
-        self.b = 0.5
+        self.b = 0.8
         self.l = 0.2
         self.h_const = 10
         self.w_bm25 = 0.05
         self.w_cossim = 0.95
         self.hash_doc_data = hash_doc_data
         self.hash_cos_data = hash_cos_data
-        self.title_hit_bonus = 5
-        self.title_hit_fine = 0.05
-        self.term_hit_bonus = 5
+        self.title_hit_bonus = 3
+        self.title_hit_fine = 0.25
+        self.term_hit_bonus = 10
         self.term_hit_fine = 1
 
     def set_hash_titles(self, hash_titles):
         self.hash_titles = hash_titles
 
     def start_rank(self, hash_docs, qry_max_tf, qry_id):
+        self.hash_results = {}
         self.start_rank_bm25(hash_docs, qry_id)
         self.start_rank_cossim(hash_docs, qry_max_tf, qry_id)
         return self.start_filter_results()
@@ -43,7 +44,7 @@ class Ranker:
             except Exception:
                 doc_size = self.avgdl
             for term, value in hash_terms.items():
-                term_hit = self.set_term_hit(term, qry_id)
+                # term_hit = self.set_term_hit(term, qry_id)
                 try:
                     max_tf_d = self.hash_doc_data[doc_id][0]
                 except Exception:
@@ -63,6 +64,7 @@ class Ranker:
                 bm25 += value
             # tuple_results = tuple_results + (doc_id, bm25)
             if bm25 > 0:
+                bm25 += title_hit
                 # bm25 = float("{0:.5f}".format(bm25 * title_hit * self.w_bm25))
                 bm25 = float("{0:.8f}".format(bm25 * self.w_bm25))
                 # tuple_results.append((doc_id, bm25))
@@ -89,9 +91,9 @@ class Ranker:
                 i += 1
         for bool_value in bool_hits:
             if bool_value:
-                title_hit *= self.title_hit_bonus
+                title_hit += self.title_hit_bonus
             else:
-                title_hit *= self.title_hit_bonus
+                title_hit -= self.title_hit_fine
         return title_hit
 
     def start_rank_cossim(self, hash_docs, qry_max_tf, qry_id):
@@ -109,9 +111,10 @@ class Ranker:
                 h = value[3]
                 term_hit = self.set_term_hit(term, qry_id)
                 tf_q_sum = ((tf_ttl_q * tf_q) / qry_max_tf)
-                nmr += tf_q_sum * tf_d * idf + (self.h_const * h) + term_hit
-                # nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
-            nmr += title_hit
+                # tf_q_sum = tf_q
+                # nmr += tf_q_sum * tf_d * idf + (self.h_const * h) + term_hit
+                nmr += tf_q_sum * tf_d * idf + (self.h_const * h)
+            nmr *= title_hit
             sigma_w_ij = self.hash_cos_data[doc_id]
             dnmr = sqrt(sigma_w_ij * sigma_w_iq)
             cossim = (nmr / dnmr) * self.w_cossim
@@ -125,8 +128,8 @@ class Ranker:
 
     def start_filter_results(self):
         tuple_results = sorted(self.hash_results.items(), key=lambda kv: kv[1], reverse=True)
-        if len(tuple_results) > 1000:
-            tuple_results = tuple_results[0:1000]
+        if len(tuple_results) > 50:
+            tuple_results = tuple_results[0:50]
         # tuple_results = sorted(tuple_results, key=lambda tup: tup[1])
         # tuple_results = sorted(tuple_results, key=lambda tup: (-tup[1], tup[0]))
         # if len(tuple_results) > 1000:
@@ -144,7 +147,6 @@ class Ranker:
         # self.h_const = h
         # self.b = b
         # self.l = l
-
 
     def doc_decompressor(self, doc_id):
         doc_list = doc_id.split('-')

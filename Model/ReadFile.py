@@ -195,17 +195,17 @@ class ReadFile:
             qry_parser.start_parse(str_single_qry, 0, semantic_model, 1, mode_semantic, stemmer)
         hash_titles = qry_parser.hash_titles
         hash_qry_terms = qry_parser.hash_terms
-        searcher.ranker.set_params(5, 0.05, 5, 1)
+        # searcher.ranker.set_params(5, 0.05, 5, 1)
         searcher.search(hash_qry_terms, hash_titles)
-        for i in range(5, 16):
-            offset = 1
-            searcher.ranker.set_params(i, 0.05, 5, 1)
-            # searcher.ranker.set_params(offset*i, 1-offset*i, 4, 0.8, 0.1)
-            searcher.search(hash_qry_terms, hash_titles)
-            searcher.write_to_trec_eval()
-            searcher.tuple_results = []
-            searcher.all_tuple_results = []
-            print(str(i))
+        # for i in range(5, 16):
+        #     offset = 1
+        #     searcher.ranker.set_params(i, 0.05, 5, 1)
+        #     # searcher.ranker.set_params(offset*i, 1-offset*i, 4, 0.8, 0.1)
+        #     searcher.search(hash_qry_terms, hash_titles)
+        #     searcher.write_to_trec_eval()
+        #     searcher.tuple_results = []
+        #     searcher.all_tuple_results = []
+        #     print(str(i))
 
 
     # function sets path list of files for the process pool jobs #

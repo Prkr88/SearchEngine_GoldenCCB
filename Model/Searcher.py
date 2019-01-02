@@ -113,6 +113,7 @@ class Searcher:
             self.hash_seeker = {}
             self.hash_docs = {}
             self.hash_posting = {}
+            self.tuple_results = []
             qry_max_tf = 1
             for q_term, l_data in qry_val.items():  # loops query term by query term
                 file_key = 0
@@ -163,8 +164,8 @@ class Searcher:
     #     treceval_results_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'
 
     def write_to_trec_eval(self):
-        if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'):
-            treceval_results_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'
+        if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'):
+            treceval_results_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'
             temp = self.data_path
             self.data_path = treceval_results_path
             self.save_final_results()

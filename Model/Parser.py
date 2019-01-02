@@ -985,7 +985,10 @@ class Parser:
                 for stem_word in stem_list:
                     stem_word = self.stemmer.stem(stem_word)
                     sentence = sentence + stem_word + ' '
-            self.list_tokens.extend(sentence.split())
+                sentence_list.append(sentence)
+            if len(sentence_list) > 0:
+                for sentence in sentence_list:
+                    self.list_tokens.extend(sentence.split())
         except Exception:
             a = 0
 

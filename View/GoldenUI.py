@@ -223,8 +223,8 @@ class Gu(QtWidgets.QMainWindow):
         self.listWidget_cities.setVisible(False)
         self.submit_limit_btn.setVisible(False)
         if self.controller == None:
-            if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
-                engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+            if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'):
+                engine_data_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'
             else:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setIcon(QtWidgets.QMessageBox.Warning)
