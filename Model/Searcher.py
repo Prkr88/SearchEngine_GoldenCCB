@@ -155,9 +155,16 @@ class Searcher:
             i += 1
         #print('\n')
 
+    # if os.path.exists(
+    #         'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'):
+    #     treceval_results_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'
+
+    # if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'):
+    #     treceval_results_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'
+
     def write_to_trec_eval(self):
-        if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'):
-            treceval_results_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data\\treceval'
+        if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'):
+            treceval_results_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data\\treceval'
             temp = self.data_path
             self.data_path = treceval_results_path
             self.save_final_results()
@@ -235,6 +242,8 @@ class Searcher:
 
     def set_hash_docs(self):
         for term, value in self.hash_posting.items():
+            if term == 'blood-alcohol':
+                bingo = True
             try:
                 resume = True
                 value_term = value.split('>')
