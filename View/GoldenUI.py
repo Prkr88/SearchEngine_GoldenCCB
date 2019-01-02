@@ -20,7 +20,7 @@ class Gu(QtWidgets.QMainWindow):
         self.vocabulary = {}
         self.controller = None
         self.vocabulary_display_mode = None
-        self.city_limit_list = []
+        self.city_limit_list = None
         self.queries_file_path = ""
         self.results = ""
         self.docs_data = {}
@@ -82,11 +82,10 @@ class Gu(QtWidgets.QMainWindow):
         #     vocabulary = self.controller.vocabulary
         mode_semantic = False
         query = ''
-        city_limit_list = []
         if self.serach_query_lineEdit.text() != '':
             query = self.serach_query_lineEdit.text()
         mode_semantic = self.stemmer_checkBox_2.isChecked()
-        self.controller.search(self.controller.vocabulary, self.semantic_model)
+        self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list, mode_semantic)
         #self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list , mode_semantic)
         self.results_screen()
 
@@ -225,8 +224,8 @@ class Gu(QtWidgets.QMainWindow):
         self.listWidget_cities.setVisible(False)
         self.submit_limit_btn.setVisible(False)
         if self.controller == None:
-            if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
-                engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+            if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'):
+                engine_data_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'
             else:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setIcon(QtWidgets.QMessageBox.Warning)

@@ -172,7 +172,7 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-    def start_evaluating_qry(self, searcher ,q_file_path, semantic_model, str_single_qry, mode_semantic):
+    def start_evaluating_qry(self, searcher ,q_file_path, semantic_model, str_single_qry, mode_semantic, stemmer):
         self.init_helpers()
         qry_parser = Parser(self.hash_stopwords, self.hash_keywords_months, self.hash_keywords_prices, self.hash_punc,
                             self.hash_punc_middle, self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
@@ -188,23 +188,24 @@ class ReadFile:
                     if skip_one == 1:
                         q_counter += 1
                         qry = "<top>" + qry
-                        qry_parser.start_parse(qry, 0, semantic_model, 0, mode_semantic)
+                        qry_parser.start_parse(qry, 0, semantic_model, 0, mode_semantic, stemmer)
                     else:
                         skip_one = 1
         else:
-            qry_parser.start_parse(str_single_qry, 0, semantic_model, 1, mode_semantic)
+            qry_parser.start_parse(str_single_qry, 0, semantic_model, 1, mode_semantic, stemmer)
         hash_titles = qry_parser.hash_titles
         hash_qry_terms = qry_parser.hash_terms
-        searcher.ranker.set_params(0.05, 0.95, 4 , 0.8, 0.1)
+        searcher.ranker.set_params(5, 0.05, 5, 1)
         searcher.search(hash_qry_terms, hash_titles)
-        # for i in range(1, 21):
-        #     offset = 0.01
-        #     searcher.ranker.set_params(offset*i, 1-offset*i, 4, 0.8 , 0.1)
-        #     searcher.search(hash_qry_terms, hash_titles)
-        #     searcher.write_to_trec_eval()
-        #     searcher.tuple_results = []
-        #     searcher.all_tuple_results = []
-        #     print(str(i))
+        for i in range(5, 16):
+            offset = 1
+            searcher.ranker.set_params(i, 0.05, 5, 1)
+            # searcher.ranker.set_params(offset*i, 1-offset*i, 4, 0.8, 0.1)
+            searcher.search(hash_qry_terms, hash_titles)
+            searcher.write_to_trec_eval()
+            searcher.tuple_results = []
+            searcher.all_tuple_results = []
+            print(str(i))
 
 
     # function sets path list of files for the process pool jobs #
@@ -282,7 +283,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc, 1, None, 0, 0)
+                    parser_object.start_parse(doc, 1, None, 0, 0, False)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter

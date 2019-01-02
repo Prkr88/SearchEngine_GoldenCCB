@@ -765,165 +765,218 @@ class Parser:
             return
 
     def analyze_title(self, semantic_model, is_semantic_mode):
-        self.str_txt_title = self.str_txt_title.replace('\n', ' * ')
-        list_title = self.str_txt_title.split()
-        list_title_token = []
-        word_sem = ''
-        list_sem = []
-        for word in list_title:
-            if self.clean_term(word, 0):
-                if "-" in word:
-                    try:
-                        word_split = word.rstrip().split('-', 1)
-                        word1 = word_split[0]
-                        if self.clean_term(word1, 0):
-                            nested_hash = {word1.lower(): ""}
-                            try:
-                                self.hash_titles[self.str_qry_id].update(nested_hash)
-                            except Exception:
-                                self.hash_titles[self.str_qry_id] = nested_hash
-                            if is_semantic_mode:
-                                try:
-                                    word_sem = self.make_lower_case(word1)
-                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                    list_title_token.append(list_sem[0][0])
-                                    list_sem = []
-                                except Exception:
-                                    try:
-                                        word_sem = self.make_upper_case(word1)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception as e:
-                                        a = 0
-                        word2 = word_split[1]
-                        if self.clean_term(word2, 0):
-                            nested_hash = {word2.lower(): ""}
-                            try:
-                                self.hash_titles[self.str_qry_id].update(nested_hash)
-                            except Exception:
-                                self.hash_titles[self.str_qry_id] = nested_hash
-                            if is_semantic_mode:
-                                try:
-                                    word_sem = self.make_lower_case(word2)
-                                    list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                    list_title_token.append(list_sem[0][0])
-                                    list_sem = []
-                                except Exception:
-                                    try:
-                                        word_sem = self.make_upper_case(word2)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception as e:
-                                        a = 0
-                        if "-" in word2:
-                            word_split = word2.rstrip().split('-', 1)
-                            word3 = word_split[0]
-                            if self.clean_term(word3, 0):
-                                nested_hash = {word3.lower(): ""}
-                                try:
-                                    self.hash_titles[self.str_qry_id].update(nested_hash)
-                                except Exception:
-                                    self.hash_titles[self.str_qry_id] = nested_hash
-                                if is_semantic_mode:
-                                    try:
-                                        word_sem = self.make_lower_case(word3)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception:
-                                        try:
-                                            word_sem = self.make_upper_case(word3)
-                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                            list_title_token.append(list_sem[0][0])
-                                            list_sem = []
-                                        except Exception as e:
-                                            a = 0
-                            word4 = word_split[1]
-                            if self.clean_term(word4, 0):
-                                nested_hash = {word4.lower(): ""}
-                                try:
-                                    self.hash_titles[self.str_qry_id].update(nested_hash)
-                                except Exception:
-                                    self.hash_titles[self.str_qry_id] = nested_hash
-                                if is_semantic_mode:
-                                    try:
-                                        word_sem = self.make_lower_case(word4)
-                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                        list_title_token.append(list_sem[0][0])
-                                        list_sem = []
-                                    except Exception:
-                                        try:
-                                            word_sem = self.make_upper_case(word4)
-                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                                            list_title_token.append(list_sem[0][0])
-                                            list_sem = []
-                                        except Exception as e:
-                                            a = 0
-                        del word_split
-                    except Exception:
-                        a = 0
-                if is_semantic_mode:
-                    try:
-                        word_sem = self.make_lower_case(word)
-                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                        list_title_token.append(list_sem[0][0])
-                    except Exception:
+        try:
+            self.str_txt_title = self.str_txt_title.replace('\n', ' * ')
+            list_title = self.str_txt_title.split()
+            list_title_token = []
+            word_sem = ''
+            list_sem = []
+            for word in list_title:
+                if self.clean_term(word, 0):
+                    if "-" in word:
                         try:
-                            word_sem = self.make_upper_case(word)
-                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
-                            list_title_token.append(list_sem[0][0])
-                        except Exception as e:
+                            word_split = word.rstrip().split('-', 1)
+                            word1 = word_split[0]
+                            if self.clean_term(word1, 0):
+                                if self.stemmer:
+                                    word1 = self.stemmer.stem(word1)
+                                nested_hash = {word1.lower(): ""}
+                                try:
+                                    self.hash_titles[self.str_qry_id].update(nested_hash)
+                                except Exception:
+                                    self.hash_titles[self.str_qry_id] = nested_hash
+                                if is_semantic_mode:
+                                    try:
+                                        word_sem = self.make_lower_case(word1)
+                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                        new_sem = list_sem[0][0]
+                                        if self.stemmer:
+                                            new_sem = self.stemmer.stem(new_sem)
+                                        list_title_token.append(new_sem)
+                                        list_sem = []
+                                    except Exception:
+                                        try:
+                                            word_sem = self.make_upper_case(word1)
+                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                            new_sem = list_sem[0][0]
+                                            if self.stemmer:
+                                                new_sem = self.stemmer.stem(new_sem)
+                                            list_title_token.append(new_sem)
+                                            list_sem = []
+                                        except Exception as e:
+                                            a = 0
+                            word2 = word_split[1]
+                            if self.clean_term(word2, 0):
+                                if self.stemmer:
+                                    word2 = self.stemmer.stem(word2)
+                                nested_hash = {word2.lower(): ""}
+                                try:
+                                    self.hash_titles[self.str_qry_id].update(nested_hash)
+                                except Exception:
+                                    self.hash_titles[self.str_qry_id] = nested_hash
+                                if is_semantic_mode:
+                                    try:
+                                        word_sem = self.make_lower_case(word2)
+                                        list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                        new_sem = list_sem[0][0]
+                                        if self.stemmer:
+                                            new_sem = self.stemmer.stem(new_sem)
+                                        list_title_token.append(new_sem)
+                                        list_sem = []
+                                    except Exception:
+                                        try:
+                                            word_sem = self.make_upper_case(word2)
+                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                            new_sem = list_sem[0][0]
+                                            if self.stemmer:
+                                                new_sem = self.stemmer.stem(new_sem)
+                                            list_title_token.append(new_sem)
+                                            list_sem = []
+                                        except Exception as e:
+                                            a = 0
+                            if "-" in word2:
+                                word_split = word2.rstrip().split('-', 1)
+                                word3 = word_split[0]
+                                if self.clean_term(word3, 0):
+                                    if self.stemmer:
+                                        word3 = self.stemmer.stem(word3)
+                                    nested_hash = {word3.lower(): ""}
+                                    try:
+                                        self.hash_titles[self.str_qry_id].update(nested_hash)
+                                    except Exception:
+                                        self.hash_titles[self.str_qry_id] = nested_hash
+                                    if is_semantic_mode:
+                                        try:
+                                            word_sem = self.make_lower_case(word3)
+                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                            new_sem = list_sem[0][0]
+                                            if self.stemmer:
+                                                new_sem = self.stemmer.stem(new_sem)
+                                            list_title_token.append(new_sem)
+                                            list_sem = []
+                                        except Exception:
+                                            try:
+                                                word_sem = self.make_upper_case(word3)
+                                                list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                                new_sem = list_sem[0][0]
+                                                if self.stemmer:
+                                                    new_sem = self.stemmer.stem(new_sem)
+                                                list_title_token.append(new_sem)
+                                                list_sem = []
+                                            except Exception as e:
+                                                a = 0
+                                word4 = word_split[1]
+                                if self.clean_term(word4, 0):
+                                    if self.stemmer:
+                                        word4 = self.stemmer.stem(word4)
+                                    nested_hash = {word4.lower(): ""}
+                                    try:
+                                        self.hash_titles[self.str_qry_id].update(nested_hash)
+                                    except Exception:
+                                        self.hash_titles[self.str_qry_id] = nested_hash
+                                    if is_semantic_mode:
+                                        try:
+                                            word_sem = self.make_lower_case(word4)
+                                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                            new_sem = list_sem[0][0]
+                                            if self.stemmer:
+                                                new_sem = self.stemmer.stem(new_sem)
+                                            list_title_token.append(new_sem)
+                                            list_sem = []
+                                        except Exception:
+                                            try:
+                                                word_sem = self.make_upper_case(word4)
+                                                list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                                new_sem = list_sem[0][0]
+                                                if self.stemmer:
+                                                    new_sem = self.stemmer.stem(new_sem)
+                                                list_title_token.append(new_sem)
+                                                list_sem = []
+                                            except Exception as e:
+                                                a = 0
+                            del word_split
+                        except Exception:
                             a = 0
-                nested_hash = {word.lower(): ""}
-                try:
-                    self.hash_titles[self.str_qry_id].update(nested_hash)
-                except Exception:
-                    self.hash_titles[self.str_qry_id] = nested_hash
-        self.list_tokens = list_title
-        if len(list_title_token) > 0:
-            for token in list_title_token:
-                self.list_tokens.append(token)
-        # print('title' + '\n')
-        # for word in self.list_tokens:
-        #     print(word)
+                    if is_semantic_mode:
+                        try:
+                            word_sem = self.make_lower_case(word)
+                            list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                            new_sem = list_sem[0][0]
+                            if self.stemmer:
+                                new_sem = self.stemmer.stem(new_sem)
+                            list_title_token.append(new_sem)
+                        except Exception:
+                            try:
+                                word_sem = self.make_upper_case(word)
+                                list_sem = semantic_model.wv.most_similar(positive=word_sem, topn=1)
+                                new_sem = list_sem[0][0]
+                                if self.stemmer:
+                                    new_sem = self.stemmer.stem(new_sem)
+                                list_title_token.append(new_sem)
+                            except Exception as e:
+                                a = 0
+                    if self.stemmer:
+                        word = self.stemmer.stem(word)
+                    nested_hash = {word.lower(): ""}
+                    try:
+                        self.hash_titles[self.str_qry_id].update(nested_hash)
+                    except Exception:
+                        self.hash_titles[self.str_qry_id] = nested_hash
+            self.list_tokens = list_title
+            if len(list_title_token) > 0:
+                for token in list_title_token:
+                    self.list_tokens.append(token)
+        except Exception:
+            a = 0
 
     def analyze_desc(self):
-        self.str_txt_desc = self.str_txt_desc.replace('\n', ' * ')
-        self.list_tokens.extend(self.str_txt_desc.split())
-        # print('desc' + '\n')
-        # for word in self.str_txt_desc.split():
-        #     print(word)
+        try:
+            self.str_txt_desc = self.str_txt_desc.replace('\n', ' * ')
+            if self.stemmer:
+                stem_list = self.str_txt_desc.split()
+                for stem_word in stem_list:
+                    stem_word = self.stemmer.stem(stem_word)
+                    self.list_tokens.append(stem_word)
+            else:
+                self.list_tokens.extend(self.str_txt_desc.split())
+        except Exception:
+            a = 0
 
     def analyze_narr(self):
-        self.str_txt_narr = self.str_txt_narr.replace('-', ' ')
-        self.str_txt_narr = self.str_txt_narr.split()
-        sentence_list = []
-        sentence = ''
-        for word in self.str_txt_narr:
-            last_ch = word[-1:]
-            if self.clean_term(word, 0) and last_ch != '.' and last_ch != ':':
-                sentence = sentence + word + ' '
-            elif last_ch == '.' or last_ch == ':' or last_ch == '*':
-                if sentence[-4:] == 'not ' and word == 'relevant:':
-                    break
-                word = word[:-1]
-                if self.clean_term(word, 0):
-                    sentence = sentence + word
-                if sentence != '' and 'non relevant' not in sentence and 'not relevant' not in sentence:
-                    if 'relevant' in sentence:
-                        sentence = sentence.replace('relevant', '')
-                    sentence_list.append(sentence)
-                sentence = ''
-        self.list_tokens.extend(sentence.split())
-        # print('narr' + '\n')
-        # for sentence in sentence_list:
-            # print(sentence)
+        try:
+            self.str_txt_narr = self.str_txt_narr.replace('-', ' ')
+            self.str_txt_narr = self.str_txt_narr.split()
+            sentence_list = []
+            sentence = ''
+            for word in self.str_txt_narr:
+                last_ch = word[-1:]
+                if last_ch == ';' or last_ch == ',':
+                    word = word[:-1]
+                if self.clean_term(word, 0) and last_ch != '.' and last_ch != ':':
+                    sentence = sentence + word + ' '
+                elif last_ch == '.' or last_ch == ':' or last_ch == '*' or last_ch == '?':
+                    if sentence[-4:] == 'not ' and word == 'relevant:':
+                        break
+                    word = word[:-1]
+                    if self.clean_term(word, 0):
+                        sentence = sentence + word
+                    if sentence != '' and 'non relevant' not in sentence and 'not relevant' not in sentence:
+                        if 'relevant' in sentence:
+                            sentence = sentence.replace('relevant', '')
+                        sentence_list.append(sentence)
+                    sentence = ''
+            if self.stemmer:
+                stem_list = sentence.split()
+                for stem_word in stem_list:
+                    stem_word = self.stemmer.stem(stem_word)
+                    sentence = sentence + stem_word + ' '
+            self.list_tokens.extend(sentence.split())
+        except Exception:
+            a = 0
 
     # main function of the parsing sequence. receives a long string and divides it to tokens #
 
-    def start_parse(self, s_content, is_doc, semantic_model, is_single_qry, is_semantic_mode):
+    def start_parse(self, s_content, is_doc, semantic_model, is_single_qry, is_semantic_mode, is_stemmer_mode):
         if is_doc:
             self.doc_counter += 1
             if s_content:  # sets current document
@@ -949,6 +1002,8 @@ class Parser:
             self.set_city()
             self.set_headers()
         else:  # is query
+            if is_stemmer_mode:
+                self.stemmer = EnglishStemmer()
             if is_single_qry:
                 self.str_qry_id = str(randint(100, 999))
                 self.str_txt_title = s_content.replace('*', '')

@@ -23,7 +23,7 @@ class Searcher:
     tuple_results = []
     all_tuple_results = []
     all_hash_results = {}
-    list_user_cities = []
+    list_user_cities = None
     mode_stem = False
     mode_sem = False
     data_path = ""

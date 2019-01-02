@@ -36,7 +36,7 @@ class Controller:
         self.doc_entities = {}
         self.hash_docs_data = {}  # {key = docID : value =[maxTf,uniqueCount,docSize,entities] #
         self.doc_counter = 0
-        self.city_list_to_limit = []
+        self.city_list_to_limit = None
         self.queries_file_path = ""
         self.results_list = []
         self.hash_cos_data = {}
@@ -77,7 +77,7 @@ class Controller:
         if self.searcher is None:
             self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data, self.hash_cos_data,self.stemmer ,mode_semantic)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.searcher, self.queries_file_path, semantic_model, str_single_qry, mode_semantic)
+        rf.start_evaluating_qry(self.searcher, self.queries_file_path, semantic_model, str_single_qry, mode_semantic, self.stemmer)
 
 
     def create_vocabulary(self):
