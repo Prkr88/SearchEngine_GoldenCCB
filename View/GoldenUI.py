@@ -80,7 +80,14 @@ class Gu(QtWidgets.QMainWindow):
         #     self.controller = Controller(vocabulary)
         # else:
         #     vocabulary = self.controller.vocabulary
-        self.controller.search(self.controller.vocabulary, self.semantic_model)
+        mode_semantic = False
+        query = ''
+        city_limit_list = []
+        if self.serach_query_lineEdit.text() != '':
+            query = self.serach_query_lineEdit.text()
+        mode_semantic = self.stemmer_checkBox_2.isChecked()
+        self.controller.search(self.controller.vocabulary, self.semantic_model, query, self.city_limit_list,
+                               mode_semantic)
         self.results_screen()
 
     def show_dictionary(self):
@@ -218,8 +225,8 @@ class Gu(QtWidgets.QMainWindow):
         self.listWidget_cities.setVisible(False)
         self.submit_limit_btn.setVisible(False)
         if self.controller == None:
-            if os.path.exists('C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'):
-                engine_data_path = 'C:\\Users\\Prkr_Xps\\Documents\\InformationSystems\\Year_C\\SearchEngine\\Engine_Data'
+            if os.path.exists('C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'):
+                engine_data_path = 'C:\\Users\\edoli\\Desktop\\SE_PA\\Engine_Data'
             else:
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setIcon(QtWidgets.QMessageBox.Warning)

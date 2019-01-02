@@ -130,7 +130,7 @@ class ReadFile:
 
     def set_qry_stopwords(self):
         list_terms = {'description:', 'description', 'and/or' 'associated', 'background', 'contain', 'current', 'consistent', 'col.', 'considered', 'concerns', 'document', 'documents', 'discuss', 'discussing', 'focus', 'factor', 'following', 'include',
-                      'information', 'identify', 'incidents', 'instances', 'issues', 'topic', 'lt.', 'narrative:', 'narrative', 'play', 'purpose', 'provide', 'participants', 'mr.', 'ms.', 'minister.', 'i.e.', 'etc.', 'status', 'reliable', 'regarding',
+                      'information', 'identify', 'incidents', 'instances', 'impact', 'issues', 'topic', 'lt.', 'narrative:', 'narrative', 'play', 'purpose', 'provide', 'participants', 'mr.', 'ms.', 'minister.', 'i.e.', 'etc.', 'status', 'reliable', 'regarding',
                       'role'}
         for word in list_terms:
             self.hash_qry_stopwords[word] = ""
@@ -172,27 +172,31 @@ class ReadFile:
         i = pool.map_async(self.parse_file, files_list, chunksize=1)
         i.wait()
 
-    def start_evaluating_qry(self, searcher ,q_file_path, semantic_model):
+    def start_evaluating_qry(self, searcher ,q_file_path, semantic_model, str_single_qry, mode_semantic):
         self.init_helpers()
-        #file_path = 'C:/Users/edoli/Desktop/SE_PA/queries.txt'
-        file_path = q_file_path
-        qry_parser = Parser(self.hash_stopwords,self.hash_keywords_months,self.hash_keywords_prices,self.hash_punc,self.hash_punc_middle,self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
-        skip_one = 0
-        with open(file_path, 'r') as file:
-            q_counter = 0
-            data = file.read()
-            data_list = data.split("<top>")
-            del data
-            for qry in data_list:
-                if skip_one == 1:
-                    q_counter += 1
-                    qry = "<top>" + qry
-                    qry_parser.start_parse(qry, 0, semantic_model)
-                else:
-                    skip_one = 1
+        qry_parser = Parser(self.hash_stopwords, self.hash_keywords_months, self.hash_keywords_prices, self.hash_punc,
+                            self.hash_punc_middle, self.hash_alphabet, self.stemmer, self.hash_qry_stopwords)
+        if str_single_qry == '':
+            file_path = q_file_path
+            skip_one = 0
+            with open(file_path, 'r') as file:
+                q_counter = 0
+                data = file.read()
+                data_list = data.split("<top>")
+                del data
+                for qry in data_list:
+                    if skip_one == 1:
+                        q_counter += 1
+                        qry = "<top>" + qry
+                        qry_parser.start_parse(qry, 0, semantic_model, 0, mode_semantic)
+                    else:
+                        skip_one = 1
+        else:
+            qry_parser.start_parse(str_single_qry, 0, semantic_model, 1, mode_semantic)
         hash_titles = qry_parser.hash_titles
         hash_qry_terms = qry_parser.hash_terms
         searcher.search(hash_qry_terms, hash_titles)
+
 
     # function sets path list of files for the process pool jobs #
 
@@ -269,7 +273,7 @@ class ReadFile:
                 if skip_one == 1:
                     doc_counter += 1
                     doc = "<DOC>" + doc
-                    parser_object.start_parse(doc, 1, None)
+                    parser_object.start_parse(doc, 1, None, 0, 0)
                 else:
                     skip_one = 1
         parser_object.hash_terms['#doc_number'] = parser_object.doc_counter

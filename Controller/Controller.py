@@ -73,13 +73,12 @@ class Controller:
         end = time.time()
         self.total_time = (end - start)
 
-    def search(self, vocabulary, semantic_model):
+    def search(self, vocabulary, semantic_model, str_single_qry, list_user_cities, mode_semantic):
         if self.searcher is None:
-            # list_user_cities = ['BEIJING', 'TOKYO']
-            list_user_cities = None
             self.searcher = Searcher(vocabulary, list_user_cities, self.post_path, self.hash_docs_data, self.hash_cos_data)
         rf = ReadFile(self.data_path, self.post_path, self.stemmer, self)
-        rf.start_evaluating_qry(self.searcher,self.queries_file_path, semantic_model)
+        rf.start_evaluating_qry(self.searcher, self.queries_file_path, semantic_model, str_single_qry, mode_semantic)
+
 
     def create_vocabulary(self):
         counter = 0
@@ -297,6 +296,7 @@ class Controller:
 
     def set_cities_list_limit(self):
         path = self.post_path.replace('/Engine_Data','')
+        path = self.post_path.replace('\\Engine_Data', '')
         with open(path + '/Engine_Data/posting_files/cities_index.txt', 'r', encoding='utf-8') as cities_file:
             line = str(cities_file.readline())
             while line:
